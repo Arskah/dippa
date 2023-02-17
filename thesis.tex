@@ -44,18 +44,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Uncomment one of these:
-%% the 1st when using pdflatex, which directly typesets your document in
-%% pdf (use jpg or pdf figures), or
-%% the 2nd when producing a ps file (use eps figures, don't use ps figures!).
+%% the 1st when using pdflatex, which directly typesets your document in pdf (use jpg or pdf figures), or the 2nd when producing a ps file (use eps figures, don't use ps figures!).
 \documentclass[english,12pt,a4paper,pdftex,sci,utf8]{aaltothesis}
 %\documentclass[english,12pt,a4paper,dvips]{aaltothesis}
 
-%% To the \documentclass above
+%% To the \documentclass above:
 %% specify your school: arts, biz, chem, elec, eng, sci
 %% specify the character encoding scheme used by your editor: utf8, latin1
 
 %% Use one of these if you write in Finnish (see the Finnish template):
-%%
 %\documentclass[finnish,12pt,a4paper,pdftex,elec,utf8]{aaltothesis}
 %\documentclass[finnish,12pt,a4paper,dvips]{aaltothesis}
 
@@ -64,11 +61,7 @@
 %% Use this if you write hard core mathematics, these are usually needed
 \usepackage{amsfonts,amssymb,amsbsy}
 
-%% Use the macros in this package to change how the hyperref package below
-%% typesets its hypertext -- hyperlink colour, font, etc. See the package
-%% documentation. It also defines the \url macro, so use the package when
-%% not using the hyperref package.
-%%
+%% Use the macros in this package to change how the hyperref package below typesets its hypertext -- hyperlink colour, font, etc. See the package documentation. It also defines the \url macro, so use the package when not using the hyperref package.
 %\usepackage{url}
 
 %% Use this if you want to get links and nice output. Works well with pdflatex.
@@ -82,8 +75,7 @@
 %% All that is printed on paper starts here
 \begin{document}
 
-%% Change the school field to specify your school if the automatically
-%% set name is wrong
+%% Change the school field to specify your school if the automatically set name is wrong
 % \university{aalto-yliopisto}
 % \university{aalto University}
 % \school{Sähkötekniikan korkeakoulu}
@@ -91,13 +83,11 @@
 
 %% Only for B.Sc. thesis: Choose your degree programme.
 %\degreeprogram{Electronics and electrical engineering}
-%%
 
 %% ONLY FOR M.Sc. AND LICENTIATE THESIS: Specify your department,
 %% professorship and professorship code.
-%%
-\department{Department of Radio Science and Technology}
-\professorship{Circuit theory}
+\department{Department of Computer Science}
+\professorship{Computer Science}
 %%
 
 %% Valitse yksi näistä kolmesta
@@ -108,7 +98,7 @@
 %\univdegree{Lic}
 
 %% Your own name (should be self explanatory...)
-\author{Teemu Teekkari}
+\author{Aarni Halinen}
 
 %% Your thesis title comes here and again before a possible abstract in
 %% Finnish or Swedish . If the title is very long and latex does an
@@ -116,44 +106,31 @@
 %% linebreak with the \\ control character.
 %% Do not hyphenate titles.
 %%
-\thesistitle{Thesis template}
+\thesistitle{Kubernetes inter-pod container isolation}
 
 \place{Espoo}
 
 %% For B.Sc. thesis use the date when you present your thesis.
-%%
-%% Kandidaatintyön päivämäärä on sen esityspäivämäärä!
-\date{16.1.2015}
+\date{1.6.2023}
 
 %% B.Sc. or M.Sc. thesis supervisor
-%% Note the "\" after the comma. This forces the following space to be
-%% a normal interword space, not the space that starts a new sentence.
-%% This is done because the fullstop isn't the end of the sentence that
-%% should be followed by a slightly longer space but is to be followed
-%% by a regular space.
-%%
-\supervisor{Prof.\ Pirjo Professori} %{Prof.\ Pirjo Professori}
+%% Note the "\" after the comma. This forces the following space to be a normal interword space, not the space that starts a new sentence.
+%% This is done because the fullstop isn't the end of the sentence that should be followed by a slightly longer space but is to be followed by a regular space.
+\supervisor{Prof.\ Mario Di Francesco} %{Prof.\ Pirjo Professori}
 
-%% B.Sc. or M.Sc. thesis advisors(s). You can give upto two advisors in
-%% this template. Check with your supervisor how many official advisors
-%% you can have.
-%%
-%\advisor{Prof.\ Pirjo Professori}
-\advisor{D.Sc.\ (Tech.) Olli Ohjaaja}
-%\advisor{M.Sc.\ Polli Pohjaaja}
+%% B.Sc. or M.Sc. thesis advisors(s). You can give upto two advisors in this template. Check with your supervisor how many official advisors you can have.
+\advisor{M.Sc.\ (Tech.)\ José\ Luis\ Martin\ Navarro}
+\advisor{M.Sc.\ (Tech.)\ Jacopo\ Bufalino}
 
 %% Aalto logo: syntax:
 %% \uselogo{aaltoRed|aaltoBlue|aaltoYellow|aaltoGray|aaltoGrayScale}{?|!|''}
 %%
 %% Logo language is set to be the same as the document language.
 %% Logon kieli on sama kuin dokumentin kieli
-%%
 \uselogo{aaltoRed}{''}
 
 %% Create the coverpage
-%%
 \makecoverpage
-
 
 %% Note that when writting your master's thesis in English, place
 %% the English abstract first followed by the possible Finnish abstract
@@ -162,12 +139,7 @@
 %% All the information required in the abstract (your name, thesis title, etc.)
 %% is used as specified above.
 %% Specify keywords
-%%
-%% Kaikki tiivistelmässä tarvittava tieto (nimesi, työnnimi, jne.) käytetään
-%% niin kuin se on yllä määritelty.
-%% Avainsanat
-%%
-\keywords{For keywords choose concepts that are central to your thesis}
+\keywords{Kubernetes, Container, Docker, Security}
 %% Abstract text
 \begin{abstractpage}[english]
   Your abstract in English. Try to keep the abstract short; approximately
@@ -186,65 +158,39 @@
 \end{abstractpage}
 
 %% Force a new page so that the possible English abstract starts on a new page
-%%
-%% Pakotetaan uusi sivu varmuuden vuoksi, jotta
-%% mahdollinen suomenkielinen ja englanninkielinen tiivistelmä
-%% eivät tule vahingossakaan samalle sivulle
 \newpage
 %
 %% Abstract in Finnish.  Delete if you don't need it.
-\thesistitle{Opinnäyteohje}
-\advisor{TkT Olli Ohjaaja}
-\degreeprogram{Electronics and electrical engineering}
-\department{Radiotieteen ja -tekniikan laitos}
-\professorship{Piiriteoria}
-%% Avainsanat
-\keywords{Vastus, Resistanssi,\\ Lämpötila}
-%% Tiivistelmän tekstiosa
-\begin{abstractpage}[finnish]
-  Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-  kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-  sekä mitä tuloksia on saatu.
-  Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-  kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-  sekä mitä tuloksia on saatu.
+% \thesistitle{Opinnäyteohje}
+% \advisor{TkT Olli Ohjaaja}
+% \degreeprogram{Electronics and electrical engineering}
+% \department{Radiotieteen ja -tekniikan laitos}
+% \professorship{Piiriteoria}
+% %% Avainsanat
+% \keywords{Vastus, Resistanssi,\\ Lämpötila}
+% %% Tiivistelmän tekstiosa
+% \begin{abstractpage}[finnish]
+%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
+%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
+%   sekä mitä tuloksia on saatu.
+%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
+%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
+%   sekä mitä tuloksia on saatu.
 
-  Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-  kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-  sekä mitä tuloksia on saatu.
-  Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-  kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-  sekä mitä tuloksia on saatu.
-  Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-  kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-  sekä mitä tuloksia on saatu.
-\end{abstractpage}
+%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
+%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
+%   sekä mitä tuloksia on saatu.
+%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
+%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
+%   sekä mitä tuloksia on saatu.
+%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
+%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
+%   sekä mitä tuloksia on saatu.
+% \end{abstractpage}
 
-%% Force new page so that the Swedish abstract starts from a new page
-\newpage
-%
-%% Swedish abstract. Delete if you don't need it.
-%%
-\thesistitle{Arbetets titel}
-\advisor{TkD Olli Ohjaaja} %
-\degreeprogram{Electronik och electroteknik}
-\department{Institutionen för radiovetenskap och -teknik}%
-\professorship{Kretsteori}  %
-%% Abstract keywords
-\keywords{Nyckelord p\aa{} svenska,\\ Temperatur}
-%% Abstract text
-\begin{abstractpage}[swedish]
- Sammandrag p\aa{} svenska.
- Try to keep the abstract short, approximately
- 100 words should be enough. Abstract explains your research topic,
- the methods you have used, and the results you obtained.
-\end{abstractpage}
+% \newpage
 
-%% Preface
-%%
-%% Esipuhe
 \mysection{Preface}
-%\mysection{Esipuhe}
 I want to thank Professor Pirjo Professori
 and my instructor Olli Ohjaaja for their
 good and poor guidance.\\
@@ -256,15 +202,10 @@ Otaniemi, 16.1.2015
 {\hfill Eddie E.\ A.\ Engineer \hspace{1cm}}
 
 %% Force new page after preface
-%%
-%% Pakotetaan varmuuden vuoksi esipuheen jälkeinen osa
-%% alkamaan uudelta sivulta
 \newpage
-
 
 %% Table of contents.
 \thesistableofcontents
-
 
 %% Symbols and abbreviations
 \mysection{Symbols and abbreviations}
@@ -272,10 +213,6 @@ Otaniemi, 16.1.2015
 \subsection*{Symbols}
 
 \begin{tabular}{ll}
-$\mathbf{B}$  & magnetic flux density  \\
-$c$              & speed of light in vacuum $\approx 3\times10^8$ [m/s]\\
-$\omega_{\mathrm{D}}$    & Debye frequency \\
-$\omega_{\mathrm{latt}}$ & average phonon frequency of lattice \\
 $\uparrow$       & electron spin direction up\\
 $\downarrow$     & electron spin direction down
 \end{tabular}
@@ -284,24 +221,13 @@ $\downarrow$     & electron spin direction down
 
 \begin{tabular}{ll}
 $\nabla \times \mathbf{A}$              & curl of vectorin $\mathbf{A}$\\
-$\displaystyle\frac{\mbox{d}}{\mbox{d} t}$ & derivative with respect to
-variable $t$\\[3mm]
-$\displaystyle\frac{\partial}{\partial t}$  & partial derivative with respect
-to variable $t$ \\[3mm]
-$\sum_i $                       & sum over index $i$\\
-$\mathbf{A} \cdot \mathbf{B}$    & dot product of vectors $\mathbf{A}$ and
-$\mathbf{B}$
 \end{tabular}
 
 \subsection*{Abbreviations}
 
 \begin{tabular}{ll}
-AC         & alternating current \\
-APLAC      & an object-oriented analog circuit simulator and design tool \\
-           & (originally Analysis Program for Linear Active Circuits) \\
-BCS        & Bardeen-Cooper-Schrieffer \\ %% dash between the names
-DC         & direct current \\
-TEM        & transverse eletromagnetic
+K8s         & Kubernetes \\
+STRIDE      & an object-oriented analog circuit simulator and design tool \\
 \end{tabular}
 
 
@@ -313,24 +239,13 @@ TEM        & transverse eletromagnetic
 %% \clearpage is similar to \newpage, but it also flushes the floats (figures
 %% and tables).
 %% There is no need to change these
-%%
 \cleardoublepage
 \storeinipagenumber
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
+\section{Introduction}
 
-%% Text body begins. Note that since the text body
-%% is mostly in Finnish the majority of comments are
-%% also in Finnish after this point. There is no point in explaining
-%% Finnish-language specific thesis conventions in English. Someday
-%% this text will possibly be translated to English.
-%%
-\section{Johdanto}
-%\section{Introduction}
-
-%% Ensimm\"ainen sivu tyhj\"aksi
-%%
 %% Leave first page empty
 \thispagestyle{empty}
 
@@ -361,75 +276,66 @@ Kandidaatinty\"on johdannon on oltava diplomity\"on
 johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 
 
-%% Opinn\"aytteess\"a jokainen osa alkaa uudelta sivulta, joten \clearpage
-%%
 %% In a thesis, every section starts a new page, hence \clearpage
 \clearpage
 
 \section{Background}
-%\section{Aikaisempi tutkimus}
 
-T\"ass\"a osassa selvitet\"a\"an, mit\"a tutkimuksen kohteena olevasta
-aiheesta tiedet\"a\"an entuudestaan. Selvityksen tulee kattaa
-tasapainoisesti koko tutkimuskentt\"a.
+% T\"ass\"a osassa selvitet\"a\"an, mit\"a tutkimuksen kohteena olevasta
+% aiheesta tiedet\"a\"an entuudestaan. Selvityksen tulee kattaa
+% tasapainoisesti koko tutkimuskentt\"a.
 
-Kun opinn\"aytety\"ot\"a kirjoitetaan, on noudatettava
-ohjeita, jotka koskevat opinn\"aytteen rakennetta,
-k\"ayt\"ant\"oj\"a, muotoseikkoja sek\"a ulkoasua. Esitell\"a\"an n\"ait\"a
-ohjeita tarkemmin.
+% Kun opinn\"aytety\"ot\"a kirjoitetaan, on noudatettava
+% ohjeita, jotka koskevat opinn\"aytteen rakennetta,
+% k\"ayt\"ant\"oj\"a, muotoseikkoja sek\"a ulkoasua. Esitell\"a\"an n\"ait\"a
+% ohjeita tarkemmin.
 
-%% Osan hienojaottelua alaosiin, eik\"a v\"altt\"am\"att\"a edes tarpeen,
-%% t\"ass\"a vain esimerkkin\"a. K\"ayt\"a harkintasi mukaan
-%% osan jaottelua, joskus alaotsikot selvent\"av\"at asioita ja
-%% joskus vain sirpaloittavat tarpeettomasti teksti\"a.
-%%  Jaottelu menee seuraavasti:
-%% \section{osan otsikko}
-%% \subsection{alaotsikko}
-%% \subsubsection{ala-alaotsikko}
-%% T\"at\"a pitem\"alle ei pid\"a jaotella.
-%%
-%% Three levels of hierarchy in sectioning should be enough
+% \subsection*{Rakenne}
 
-\subsection*{Rakenne}
+% Opinn\"aytteen rakenteen tulee olla hyv\"an tieteellisen
+% kirjoittamisen k\"ayt\"ann\"on mukainen ja sis\"alt\"a\"a v\"ahint\"a\"an seuraavat
+% osat:
 
-Opinn\"aytteen rakenteen tulee olla hyv\"an tieteellisen
-kirjoittamisen k\"ayt\"ann\"on mukainen ja sis\"alt\"a\"a v\"ahint\"a\"an seuraavat
-osat:
+% \begin{enumerate}
+% \item Nimi\"olehti
+% \item Tiivistelm\"a
+% \item Sis\"allysluettelo
+% \item Symboli- ja lyhenneluettelo
+% \item \label{a} Johdanto
+% \item  Aikaisempi tutkimus. Ty\"on luonteen niin vaatiessa otsikko voi olla my\"os
+%         >>Teoreettinen tausta>>  tai n\"aiden otsikoiden yhdistelm\"a.
+% \item Tutkimusaineisto ja -menetelm\"at %% yhdysmerkki - eli tavuviiva.
+% \item Tulokset
+% \item \label{o} Tarkastelu. Ty\"on luonteen niin vaatiessa otsikko voi
+%       olla my\"os >>Johtop\"a\"at\"okset>> tai >>Yhteenveto>>
+%       tai edell\"a mainittujen otsikoiden yhdistelm\"a.
+% \item L\"ahteet
+% \item Liitteet.
+% \end{enumerate}
 
+\subsection*{Microservices?}
+\clearpage
+
+\subsection*{Containerization and Docker}
+\subsubsection*{Breakout (Priviledge escalation)}
 \begin{enumerate}
-\item Nimi\"olehti
-\item Tiivistelm\"a
-\item Sis\"allysluettelo
-\item Symboli- ja lyhenneluettelo
-\item \label{a} Johdanto
-%% T\"ass\"a alla on esimerkki lainausmerkkien k\"ayt\"ost\"a. Suomalaisen tekstin
-%% lainausmerkit eiv\"at mene oikein latexissa (tai monissa muissakaan
-%% julkaisuj\"arjestelmiss\"a) kun k\"aytet\"a\"an
-%% "-merkki\"a, koska latex k\"aytt\"a\"a amerikkalaista lainausmerkkien
-%% tulostustapaa. Vaihtoehtona voi k\"aytt\"a\"a kulmalainausmerkkej\"a, jotka
-%% my\"os tulostuvat oikein.
-\item  Aikaisempi tutkimus. Ty\"on luonteen niin vaatiessa otsikko voi olla my\"os
-        >>Teoreettinen tausta>>  tai n\"aiden otsikoiden yhdistelm\"a.
-\item Tutkimusaineisto ja -menetelm\"at %% yhdysmerkki - eli tavuviiva.
-\item Tulokset
-\item \label{o} Tarkastelu. Ty\"on luonteen niin vaatiessa otsikko voi
-      olla my\"os >>Johtop\"a\"at\"okset>> tai >>Yhteenveto>>
-      tai edell\"a mainittujen otsikoiden yhdistelm\"a.
-\item L\"ahteet
-\item Liitteet.
+  \item Mounted docker socket
+  \item Priviledged container
 \end{enumerate}
 
-Tiivistelm\"an ja symboli- sek\"a lyhenneluetteloiden
-v\"aliin voi sijoittaa halutessaan esipuheen.
+\subsection*{Kubernetes}
+\subsubsection*{apiserver}
+\subsubsection*{etcd}
+\subsubsection*{scheduler}
+\subsubsection*{controller-manager}
 
-Ty\"on osat \ref{a}-\ref{o} muodostavat \textit{tekstiosan.}  Ty\"on
-yksitt\"aisi\"a osia voidaan jakaa alaotsikoilla alaosiin, joita ei ole
-yll\"a esitetty. Alaotsikoiden k\"aytt\"aminen selvent\"a\"a parhaimmillaan
-teksti\"a, ja pahimmillaan sirpaloittaa sit\"a.  Sirpaloitumista voi est\"a\"a
-huolehtimalla siit\"a, ett\"a samalla sivulla ei esiinny useampaa
-alaotsikkoa.  Tekstin j\"asentelyss\"a on yleens\"a ongelmia, jos osassa on
-vain yksi alaosa, tai kirjoittaja joutuu k\"aytt\"am\"a\"an useampaa kuin
-kahta tasoa (osa ja alaosat): alaosien alaosat ovat harvoin tarpeen.
+\subsection*{Kubernetes security boundaries}
+\subsubsection*{Namespaces}
+\subsubsection*{Pods}
+
+\subsection*{Security analysis?}
+\subsubsection*{STRIDE}
+
 \subsection*{Sivut ja kirjaintyypit}
 
 Opinn\"aytteen tulee olla kirjoitettu koneella tai
