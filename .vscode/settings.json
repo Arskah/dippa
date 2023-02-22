@@ -4,6 +4,7 @@
     "editor.formatOnPaste": false,
     "editor.suggestSelection": "recentlyUsedByPrefix"
   },
+  "latex-workshop.latex.outDir": "%DIR%/output",
   "latex-workshop.view.pdf.viewer": "tab",
   "latex-workshop.latex.tools": [
     {
@@ -26,6 +27,7 @@
         "-synctex=1",
         "-interaction=nonstopmode",
         "-file-line-error",
+        "--output-directory=%OUTDIR%",
         "%DOC%"
       ],
       "env": {}
@@ -37,6 +39,8 @@
         "-synctex=1",
         "-interaction=nonstopmode",
         "-file-line-error",
+        "-aux-directory=%OUTDIR%",
+        "--output-directory=%OUTDIR%",
         "%DOC%"
       ],
       "env": {}
@@ -45,48 +49,49 @@
       "name": "bibtex",
       "command": "bibtex",
       "args": [
-        "%DOCFILE%"
+        "%OUTDIR%/%DOCFILE%"
       ],
       "env": {}
     }
   ],
+  "latex-workshop.latex.recipe.default": "first",
   "latex-workshop.latex.recipes": [
-    {
-      "name": "pdfLaTeX",
-      "tools": [
-        "pdflatex"
-      ]
-    },
     {
       "name": "latexmk 🔃",
       "tools": [
         "latexmk"
       ]
     },
-    {
-      "name": "xelatex",
-      "tools": [
-        "xelatex"
-      ]
-    },
-    {
-      "name": "pdflatex ➞ bibtex ➞ pdflatex`×2",
-      "tools": [
-        "pdflatex",
-        "bibtex",
-        "pdflatex",
-        "pdflatex"
-      ]
-    },
-    {
-      "name": "xelatex ➞ bibtex ➞ xelatex`×2",
-      "tools": [
-        "xelatex",
-        "bibtex",
-        "xelatex",
-        "xelatex"
-      ]
-    }
+    // {
+    //   "name": "pdflatex ➞ bibtex ➞ pdflatex`×2",
+    //   "tools": [
+    //     "pdflatex",
+    //     "bibtex",
+    //     "pdflatex",
+    //     "pdflatex"
+    //   ]
+    // },
+    // {
+    //   "name": "pdfLaTeX",
+    //   "tools": [
+    //     "pdflatex"
+    //   ]
+    // },
+    // {
+    //   "name": "xelatex",
+    //   "tools": [
+    //     "xelatex"
+    //   ]
+    // },
+    // {
+    //   "name": "xelatex ➞ bibtex ➞ xelatex`×2",
+    //   "tools": [
+    //     "xelatex",
+    //     "bibtex",
+    //     "xelatex",
+    //     "xelatex"
+    //   ]
+    // }
   ],
   "latex-workshop.latex.autoBuild.run": "onSave"
 }

@@ -25,5 +25,7 @@ sudo tlmgr install <list-of-packages>
 - tex4ht
 - helvetic
 - silence
+- biblatex
+- biber
 
 Also using `LaTex Workshop` VS Code extension: <https://marketplace.visualstudio.com/items?itemName=James-Yu.latex-workshop>
