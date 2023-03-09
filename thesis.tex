@@ -285,6 +285,8 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 
 \section{Background}
 
+\subsection{Principle of least priviledge, Zero trust...}
+
 \subsection{Microservices?}
 \subsection{Containerization and Docker}
 \subsubsection{Docker components}
@@ -300,7 +302,8 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
   \item Mounted docker socket, creating priviledged containers
 \end{enumerate}
 
-\subsection{Kubernetes system components}
+
+\subsection{Kubernetes system components, control plane}
 \subsubsection{apiserver}
 \subsubsection{etcd}
 \subsubsection{scheduler}
@@ -309,10 +312,18 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 \subsection{Kubernetes resources}
 \subsubsection{Namespaces}
 \subsubsection{Pods}
-\subsubsection{Network policies}
 \subsubsection{Admission control}
 
-\subsection{Principle of least priviledge, Zero trust...}
+\subsection{Kubernetes networking}
+\subsubsection{Network policies}
+\subsubsection{Container Network Interfaces}
+\subsubsection{Cilium}
+\subsubsection{eBPF}
+
+\begin{enumerate}
+  \item eXpress Data Path
+  \item Traffic control
+\end{enumerate}
 
 \clearpage
 
@@ -324,7 +335,7 @@ kerrotaan tutkimuksen toteutustapa ja k\"aytetyt menetelm\"at.
 
 \clearpage
 
-\section{Results}
+\section{Evaluation}
 
 T\"ass\"a osassa esitet\"a\"an tulokset ja vastataan tutkielman alussa
 esitettyihin tutkimuskysymyksiin. Tieteellisen kirjoitelman
@@ -342,7 +353,7 @@ voi luotettavuuden arviointi olla my\"os siell\"a.
 
 \clearpage
 
-\section{Summary}
+\section{Conclusion}
 
 Opinn\"aytteen tekij\"a vastaa siit\"a, ett\"a opinn\"ayte on t\"ass\"a dokumentissa
 ja opinn\"aytteen tekemist\"a k\"asittelevill\"a luennoilla sek\"a
