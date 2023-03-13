@@ -312,13 +312,68 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 \subsection{Kubernetes resources}
 \subsubsection{Namespaces}
 \subsubsection{Pods}
+\subsubsection{Services}
 \subsubsection{Admission control}
 
-\subsection{Kubernetes networking}
+\subsection{Kubernetes network model}
+
+% https://kubernetes.io/docs/concepts/services-networking/
+% https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/
+
+% The key requirements of the Kubernetes network model include i) Pods are IP addressable and must be able to communicate with all other Pods (on the same or different host) without the need for network address translation (NAT), and ii) all the agents on a host (e.g., Kubelet) are able to communicate with all the Pods on that host. CNI plugins may differ in their architecture but meet the above network rules.
+
+Integral part of Kubernetes cluster is how nodes and resources are networked together. Specifically, the networking model needs to address four different type of networking problems: i) intra-Pod (ie. container-to-container within same Pod) communication, ii) inter-Pod communication between Pods, iii) Service-to-Pod communication and iv) communication from external sources to Services \cite{k8s-docs-cluster-networking}. The model also requires that each Pod is IP addressable and can communicate with other Pods without network address translation (NAT), even when Pods are scheduled on different hosts. \cite{qi2020assessing}. All agents on a host should also be able to communicate with Pods on the same host. The implementation of this model is not part of Kubernetes, but is handed to special plugins that implement Container Network Interface (CNI) specification.
+
+% When a new Pod is added, the CNI plugin coordinates with the container runtime and connects the container network namespace with the host network namespace (e.g., , veth pair), assigns a unique IP address to the new Pod, applies the desired network policies and distributes routing information to the rest of the cluster.
+
+\subsubsection{Container Network Interface}
+
+The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become de facto industry standard for container networking and it is backed by Cloud Nativce Computing Foundation (CNCF) \cite{qi2020assessing}. CNI was first developed for the container runtime \texttt{rkt}, but it is supported by all container runtimes and there is a large number of implementations to choose from \cite{hausenblas2018container}. Most of the container orchestrators have adopted the specification as their networking solution. The biggest outlier is Docker Swarm, which instead implements \texttt{libnetwork} \cite{libnetwork}.
+
+The specification has five distinct definitions: i) a format for network configuration, ii) a execution protocol between the container runtimes and the plugin binary, iii) a procedure for the runtime to interpret the configuration and execute the plugins, iv) a procedure for deletegating functionality between the plugins and v) data types for plugins to return their results to the runtime \cite{cni}. The configuration is defined as a JSON file and it includes a list of plugins and their configuration. The file is consumed at plugin execution time by the runtime, and passed to the plugins. The execution protocol defines a set of operations (ADD, DEL, CHECK) for adding and removing containers from the network, while also defining a set of OS environment variables that are used as parameters by the plugins. When the runtime mutates a container network, it results in a series of ADD, DELETE or CHECK executions. These are then executed in same order as defined in the \texttt{plugins} list, or reversed order for DELETE executions. Each plugin then returns either \texttt{Success} or \texttt{Error} JSON object. The execution of a series of operations ends when it encounters the first Error response, or when all the operations have been performed.
+
+% Kubernetes Network Policy is the means to enforce rules
+% indicating which network traffic is allowed and which Pods
+% can communicate with each other. The policies applied to Pod
+% network traffic can be based on their applicability to ingress
+% traffic (entering the Pod) and egress traffic (outgoing traffic).
+% The control strategies include “allow” and “deny”. By default,
+% a Pod is in a non-isolated state. Once a network policy is
+% applied to a Pod, all traffic that is not explicitly allowed will
+% be rejected by the network policy. However, other Pods that do
+% not have network policies applied to them are not affected. CNI
+% plugins in Kubernetes can implement elaborate traffic control
+% and isolation mechanisms.
+
+% Network policies help to provide the guardrails needed to
+% restrict traffic between pods (in and/or across namepaces) as
+% well as between pods and external networks, by explicitly
+% specifying allowed and denied connections. A network policy
+% specification consists of a podSelector to specify pods
+% that will be subject to the policy and policyTypes to
+% specify the types of policies, i.e., ingress and/or egress. Ingress
+% rules specify allowed inbound traffic to the target pods, and
+% egress rules specify allowed outbound traffic from the target
+% pods. Each rule is comprised of a NetworkPolicyPeer
+% for selecting pods on the other side of the connection to/from
+% which traffic is allowed, through a Classless Inter-Domain
+% Routing (CIDR) notation that specifies IP address blocks,
+% namespaces, or pod labels; and a NetworkPolicyPort
+% that allows to explicitly specify ports or protocols that may
+% communicate with the pod. Network policies are additive, and
+% if multiple policies select a pod, traffic is restricted to what is
+% allowed by the union of those policies’ ingress/egress rules.
+
 \subsubsection{Network policies}
-\subsubsection{Container Network Interfaces}
-\subsubsection{Cilium}
+
+Since Kubernetes does not provide networking between the Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature for CNI plugins is enforcing network traffic rules. Kubernetes provides a common resource called \texttt{NetworkPolicy} for CNI plugins to consume. The NetworkPolicy specification consists of a \texttt{podSelector} that specifies pods that are subject to the policy and \texttt{policyTypes} to specify Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
+
+\subsubsection{Cilium and other CNI plugins}
+
+There is dozens of CNI plugins
+
 \subsubsection{eBPF}
+
 
 \begin{enumerate}
   \item eXpress Data Path
