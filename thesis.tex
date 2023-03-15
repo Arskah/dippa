@@ -399,6 +399,9 @@ Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that sup
 
 \subsubsection{Extended Berkeley Packet Filter}
 
+Berkeley Packet Filter (BPF, or nowadays often cBPF) was originally developed in early 1990s as a high-performance tool for user-space packet captures \cite{mccanne1993bsd}. BPF works by deploying the filtering part of the application, \texttt{packet filter}, in the kernel-space as an agent. The \texttt{packet filter} is provided with a program (often denoted as BPF program) consisting of BPF instructions, which works as a set of rules for selecting which packets are of interest in the user-space application and should be copied from kernel-space to user-space. The instuctions are executed in a register-based pseudo machine. Since network monitors are often interested only in subset of network traffic, this limits the number of expensive copy operations across the kernel/user-space protection boundary only to packets that are of interest in the user-space application. A notable usecase for BPF is \textit{libpcap} library, which is used by network monitoring tool called \texttt{tcpdump}.
+
+Later in the 2010s the Linux community realized that BPF and it's ability to instrument the kernel could benefit other areas than packet filtering as well \cite{vieira2020fast}. This reworked version of BPF was first merged in to Linux kernel in 2014 and is publicly called extended Berkeley Packet Filter (eBPF) to distinguish it from the original cBPF. The kernel development community continues to call the newer version BPF, but instead of the original acronym consider it a name of a technology. Similarly to the kernel community, the term BPF always refers to the eBPF in this thesis.
 
 \begin{enumerate}
   \item eXpress Data Path
