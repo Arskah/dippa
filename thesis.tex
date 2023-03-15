@@ -403,10 +403,16 @@ Berkeley Packet Filter (BPF, or nowadays often cBPF) was originally developed in
 
 Later in the 2010s the Linux community realized that BPF and it's ability to instrument the kernel could benefit other areas than packet filtering as well \cite{vieira2020fast}. This reworked version of BPF was first merged in to Linux kernel in 2014 and is publicly called extended Berkeley Packet Filter (eBPF) to distinguish it from the original cBPF. The kernel development community continues to call the newer version BPF, but instead of the original acronym consider it a name of a technology. Similarly to the kernel community, the term BPF always refers to the eBPF in this thesis.
 
-\begin{enumerate}
-  \item eXpress Data Path
-  \item Traffic control
-\end{enumerate}
+The eBPF programs are compiled to bytecode and loaded to kernel with \texttt{bpf()} system call \cite{miano2021framework}. Most often programs are written in restricted C and compiled with LLVM Clang compiler to bytecode. It also possible to use eBPF assembly instructions and \texttt{bpf\_asm} utility for converting instructions to bytecode. eBPF programs follow a event-driven architecture: a loaded eBPF program is hooked to a particular type of event and each occurence of the event triggers the program execution.
+
+% TODO: Yhidstä johonkin kappaleeseen
+For networking purposes, there are two eBPF hooks available for intercepting and mangling, forwarding or dropping network packets: eXpress Data Path (XDP) and Traffic Control (TC) \cite{miano2021framework}. In Cloudflares DDoS testing benchmark \cite{cloudflare-xdp}, XDP program was capable to drop 10 million and TC program 2 million packets per second, while common \texttt{iptables} INPUT rule was able to drop less than one million packets per second.
+
+% XDP programs intercept RX packets right out of the NIC driver, possibly before the allocation of the Linux socket buffer (sk_buff), allowing, e.g., early packet drop. TC programs intercept data when it reaches the kernel traffic control function, either in RX or TX direction. We refer the reader to [39], [40] for a more in-depth understanding of the eBPF subsystem.
+
+XDP programs intercept incoming packets right out of network interface controller (NIC) driver, even before memory allocation of \textit{skbuff}, which improves performance significantly.
+
+TC programs intercept both incoming and outgoinjg packets when they reach kernel traffic control function within the Linux network stack.
 
 \clearpage
 
