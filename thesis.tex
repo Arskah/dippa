@@ -326,9 +326,26 @@ Integral part of Kubernetes cluster is how nodes and resources are networked tog
 
 % When a new Pod is added, the CNI plugin coordinates with the container runtime and connects the container network namespace with the host network namespace (e.g., , veth pair), assigns a unique IP address to the new Pod, applies the desired network policies and distributes routing information to the rest of the cluster.
 
+% https://www.tkng.io/cni/
+
+% Connectivity - making sure that a Pod gets its default eth0 interface with IP reachable from the root network namespace of the hosting Node.
+% Reachability - making sure that Pods from other Nodes can reach each other directly (without NAT).
+
+% Connectivity requirement is the most straight-forward one to understand – every Pod must have a NIC to communicate with anything outside of its own network namespace. Some local processes on the Node (e.g. kubelet) need to reach PodIP from the root network namespace (e.g. to perform health and readiness checks), hence the root NS connectivity requirement.
+
+% Reachability, on the other hand, may require a bit of unpacking:
+% - Every Pod gets a unique IP from a PodCIDR range configured on the Node.
+% - This range is assigned to the Node during kubelet bootstrapping phase.
+% - Nodes are not aware of PodCIDRs assigned to other Nodes, allocations are normally managed by the controller-manager based on the --cluster-cidr configuration flag.
+% - Depending on the type of underlying connectivity, establishing end-to-end reachability between PodCIDRs may require different methods:
+%   - If all Nodes are in the same Layer2 domain, the connectivity can be established by configuring a full mesh of static routes on all Nodes with NextHop set to the internal IP of the peer Nodes.
+%   - If some Nodes are in different Layer2 domains, the connectivity can be established with either:
+%     - Orchestrating the underlay – usually done with BGP for on-prem or some form of dynamically-provisioned static routes for public cloud environments.
+%     - Encapsulating in the overlay – VXLAN is still the most popular encap type.
+
 \subsubsection{Container Network Interface}
 
-The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become de facto industry standard for container networking and it is backed by Cloud Nativce Computing Foundation (CNCF) \cite{qi2020assessing}. CNI was first developed for the container runtime \texttt{rkt}, but it is supported by all container runtimes and there is a large number of implementations to choose from \cite{hausenblas2018container}. Most of the container orchestrators have adopted the specification as their networking solution. The biggest outlier is Docker Swarm, which instead implements \texttt{libnetwork} \cite{libnetwork}.
+The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become de facto industry standard for container networking. It is backed by Cloud Nativce Computing Foundation (CNCF) \cite{qi2020assessing}. CNI was first developed for the container runtime \texttt{rkt}, but it is supported by all container runtimes and there is a large number of implementations to choose from \cite{hausenblas2018container}. Most of the container orchestrators have adopted the specification as their networking solution. The biggest outlier is Docker Swarm, which instead implements \texttt{libnetwork} \cite{libnetwork}.
 
 The specification has five distinct definitions: i) a format for network configuration, ii) a execution protocol between the container runtimes and the plugin binary, iii) a procedure for the runtime to interpret the configuration and execute the plugins, iv) a procedure for deletegating functionality between the plugins and v) data types for plugins to return their results to the runtime \cite{cni}. The configuration is defined as a JSON file and it includes a list of plugins and their configuration. The file is consumed at plugin execution time by the runtime, and passed to the plugins. The execution protocol defines a set of operations (ADD, DEL, CHECK) for adding and removing containers from the network, while also defining a set of OS environment variables that are used as parameters by the plugins. When the runtime mutates a container network, it results in a series of ADD, DELETE or CHECK executions. These are then executed in same order as defined in the \texttt{plugins} list, or reversed order for DELETE executions. Each plugin then returns either \texttt{Success} or \texttt{Error} JSON object. The execution of a series of operations ends when it encounters the first Error response, or when all the operations have been performed.
 
@@ -370,9 +387,17 @@ Since Kubernetes does not provide networking between the Pods, it has no capabil
 
 \subsubsection{Cilium and other CNI plugins}
 
-There is dozens of CNI plugins
+TODO: CNI plugins, daemons and binary \cite{qi2020understanding}.
 
-\subsubsection{eBPF}
+While all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layer they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
+
+In this thesis, we focus on three different CNI plugins: Cilium, Calico and Multus.
+
+Cilium \cite{cilium} is one of the most advanced and powerful CNI plugins for Kubernetes. It works by creating virtual ethernet device for each Pod and sets one side of the link into Pod's network namespace \cite{cilium-tkng}. Cilium then attaches extended Berkeley Packet Filter (eBPF) programs to ingress traffic control (\texttt{tc}) hooks of these virutal ethernet devices for intercepting all incoming packets from the Pod. The packets are intercepted and processed before the network stack and thus \texttt{iptables}, reducing latency 20\%-30\% and even doubling the throughput of packets in some scenarios \cite{budigiri2021network}.
+
+Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that supports policies in layers 3-7 instead of standard L3/L4. With \texttt{CiliumClusterwideNetworkPolicy}, network rules can applied to every namespace in the cluster, or even to nodes when using \texttt{nodeSelector}.
+
+\subsubsection{Extended Berkeley Packet Filter}
 
 
 \begin{enumerate}
