@@ -287,11 +287,33 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 
 \subsection{Principle of least priviledge, Zero trust...}
 
-\subsection{Microservices?}
+\subsection{Microservices architecture}
 \subsection{Containerization and Docker}
-\subsubsection{Docker components}
-\subsubsection{Linux control groups and namespaces}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/figure-1.png}
+  \caption{Virtualization models \cite{combe2016docker}}
+  \label{figure-1}
+\end{figure}
+
+Different virtualization models are illustrated in figure~\ref{figure-1}. Whereas traditional virtualization techniques virtualize workloads on top of a hypervisor which shares hardware resources between the virtual machines, containerization is a technique where virtualization happens on a operating system level \cite{merkel2014docker}. Processes executing in containers run on the host machine kernel. However, each container is isolated to its own network, process namespace and so on; two containers on the same host OS do not know that they share resources. Furthermore, containers are similarly isolated from accessing host OS resources.
+
+BSD jails and \textit{chroot} can be considered early forms of containerization technology, so the idea of containers is not new \cite{combe2016docker}. Recent Linux container solutions rely on two main implementations: Linux Containers (LXC) -based solution that relies on kernel features such as control groups (cgroups) and namespaces, and a custom kernel and Linux distribution called Open Virtuozzo (OpenVZ). Docker \cite{docker} is a hugely popular container runtime that is based on LXC and provides an easy-to-use API and tooling for creating and managing containers. Docker also provides containerization for other OSes as well. However, in this thesis we focus only on the Linux implementation.
+
+\subsubsection{Linux containers}
+6 ns:
+mnt
+pid
+net
+ipc
+uts (hostname)
+user (UIDs)
+
+control groups for resource management
+
 \subsubsection{Linux capabilities, priviledged containers, Container breakout}
+\subsubsection{Docker}
 
 \cite{bui2015analysis}
 
@@ -322,7 +344,7 @@ johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 
 % The key requirements of the Kubernetes network model include i) Pods are IP addressable and must be able to communicate with all other Pods (on the same or different host) without the need for network address translation (NAT), and ii) all the agents on a host (e.g., Kubelet) are able to communicate with all the Pods on that host. CNI plugins may differ in their architecture but meet the above network rules.
 
-Integral part of Kubernetes cluster is how nodes and resources are networked together. Specifically, the networking model needs to address four different type of networking problems: i) intra-Pod (ie. container-to-container within same Pod) communication, ii) inter-Pod communication between Pods, iii) Service-to-Pod communication and iv) communication from external sources to Services \cite{k8s-docs-cluster-networking}. The model also requires that each Pod is IP addressable and can communicate with other Pods without network address translation (NAT), even when Pods are scheduled on different hosts. \cite{qi2020assessing}. All agents on a host should also be able to communicate with Pods on the same host. The implementation of this model is not part of Kubernetes, but is handed to special plugins that implement Container Network Interface (CNI) specification.
+Integral part of Kubernetes cluster is how nodes and resources are networked together. Specifically, the networking model needs to address four different type of networking problems: i) intra-Pod (ie. container-to-container within same Pod) communication, ii) inter-Pod communication between Pods, iii) Service-to-Pod communication and iv) communication from external sources to Services \cite{k8s-docs-cluster-networking}. The model also requires that each Pod is IP addressable and can communicate with other Pods without network address translation (NAT), even when Pods are scheduled on different hosts \cite{qi2020assessing}. All agents on a host should also be able to communicate with Pods on the same host. The implementation of this model is not part of Kubernetes, but is handed to special plugins that implement Container Network Interface (CNI) specification.
 
 % When a new Pod is added, the CNI plugin coordinates with the container runtime and connects the container network namespace with the host network namespace (e.g., , veth pair), assigns a unique IP address to the new Pod, applies the desired network policies and distributes routing information to the rest of the cluster.
 
@@ -407,8 +429,6 @@ The eBPF programs are compiled to bytecode and loaded to kernel with \texttt{bpf
 
 % TODO: Yhidstä johonkin kappaleeseen
 For networking purposes, there are two eBPF hooks available for intercepting and mangling, forwarding or dropping network packets: eXpress Data Path (XDP) and Traffic Control (TC) \cite{miano2021framework}. In Cloudflares DDoS testing benchmark \cite{cloudflare-xdp}, XDP program was capable to drop 10 million and TC program 2 million packets per second, while common \texttt{iptables} INPUT rule was able to drop less than one million packets per second.
-
-% XDP programs intercept RX packets right out of the NIC driver, possibly before the allocation of the Linux socket buffer (sk_buff), allowing, e.g., early packet drop. TC programs intercept data when it reaches the kernel traffic control function, either in RX or TX direction. We refer the reader to [39], [40] for a more in-depth understanding of the eBPF subsystem.
 
 XDP programs are attached to a network interface controller (NIC) and can handle only incoming packets \cite{hoiland2018express}. The programs are called directly by the NIC driver if it has XDP support, thus executing before packets enters the network stack. This skips expensive packet parsing and memory allocation operations, and allow XDP programs to run at very high throughput. Thus, even the main networking buffer \textit{skbuff} is not populated. Some SmartNICs even support offloading the program to the NIC's own processor from host CPU, improving host machine performance even further \cite{cilium-program-types}. If the driver does not support XDP, generic XDP is used and the programs run after the packet has been parsed by the network stack.
 
