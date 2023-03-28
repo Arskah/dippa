@@ -279,11 +279,24 @@ joka on 2--4 sivua. %% t\"ass\"a on my\"os lyhyt ajatusviiva l. en dash.
 Kandidaatinty\"on johdannon on oltava diplomity\"on
 johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
 
+% The sidecar pattern allows attaching new functionality to application without modifying main application source code.
+
+\subsection{Problem Statement}
+
+While the sidecar pattern makes it easier to add peripheral tasks to applications, it opens up questions about application security. In Kubernetes, there is limited amount of security features available on container-level. Most of the security related policies and capabilities are defined for the Pod, which essentially means that any capability required by the main application is inherited in the sidecar. Any privilege or network policy granted for the main application can be used by the sidecar for escalation and lateral movement.
+
+Most often, developers rely on containers by third parties for the sidecar tasks. The source code of the sidecar containers, even if it were open, can be hard or even impossible to verify for known vulnerabilities. This, combined with the limited security features for sidecars, makes any exploitable security issue in the sidecar an optimal launchpad for attack against the whole cluster. Furthermore, malicious actors can use supply chain attacks and typosquatting to trick victims into installing malicious sidecars to their clusters.
+
+This thesis proposes a solution for limiting capabilities of sidecar without limiting those of the main container, thus extending the principle of least privilege to within the pod.
+
+\subsection{Thesis outline}
+
+The following chapter \ref{section-bg} gives background about containers, Kubernetes and explains their common attack vectors. It also discusses Kubernetes networking and container network interface plugins. Chapter \ref{section-methods} proposes ideas for isolating sidecars from main application container. The chapter discusses both container and networking security in the context of Kubernetes Pod. Chapter \ref{section-solution} introduces an implementation based on the findings of the previous chapter. The pros and cons of the solution are discussed in Chapter \ref{section-discussion}. Finally, Chapter \ref{section-conclusion} discusses future research and concludes the thesis.
 
 %% In a thesis, every section starts a new page, hence \clearpage
 \clearpage
 
-\section{Background}
+\section{Background} \label{section-bg}
 
 \subsection{Principle of least priviledge, Zero trust...}
 
@@ -336,6 +349,9 @@ control groups for resource management
 \subsubsection{Pods}
 \subsubsection{Services}
 \subsubsection{Admission control}
+
+% https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar
+\subsection{Sidecar pattern}
 
 \subsection{Kubernetes network model}
 
@@ -409,7 +425,13 @@ Since Kubernetes does not provide networking between the Pods, it has no capabil
 
 \subsubsection{Cilium and other CNI plugins}
 
-TODO: CNI plugins, daemons and binary \cite{qi2020understanding}.
+% TODO: CNI plugins, daemons and binary \cite{qi2020understanding}.
+
+% Multus: Daemonset that runs privileged container + initContainer. Init installs multus binary (cp operation), container runs shell script https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/images/entrypoint.sh.
+
+% Src: https://www.youtube.com/watch?v=0jJBUdYOmRU
+% Configurations in /etc/cni/net.d on nodes
+% Kubelet monitors the directory, no need to restart it when installing CNI
 
 While all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layer they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
 
@@ -438,7 +460,7 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \clearpage
 
-\section{Research material and methods}
+\section{Research material and methods} \label{section-methods}
 
 T\"ass\"a osassa kuvataan k\"aytetty tutkimusaineisto ja
 tutkimuksen metodologiset valinnat, sek\"a
@@ -446,7 +468,7 @@ kerrotaan tutkimuksen toteutustapa ja k\"aytetyt menetelm\"at.
 
 \clearpage
 
-\section{Evaluation}
+\section{Evaluation} \label{section-solution}
 
 T\"ass\"a osassa esitet\"a\"an tulokset ja vastataan tutkielman alussa
 esitettyihin tutkimuskysymyksiin. Tieteellisen kirjoitelman
@@ -464,12 +486,16 @@ voi luotettavuuden arviointi olla my\"os siell\"a.
 
 \clearpage
 
-\section{Conclusion}
+\section{Discussion} \label{section-discussion}
 
 Opinn\"aytteen tekij\"a vastaa siit\"a, ett\"a opinn\"ayte on t\"ass\"a dokumentissa
 ja opinn\"aytteen tekemist\"a k\"asittelevill\"a luennoilla sek\"a
 harjoituksissa annettujen ohjeiden mukainen muotoseikoiltaan,
 rakenteeltaan ja ulkoasultaan.
+
+\clearpage
+
+\section{Conclusion} \label{section-conclusion}
 
 \clearpage
 
