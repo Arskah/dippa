@@ -284,22 +284,20 @@ The following chapter \ref{section-bg} gives background about containers, Kubern
   \label{figure-1}
 \end{figure}
 
-Different virtualization models are illustrated in figure~\ref{figure-1}. Whereas traditional virtualization techniques virtualize workloads on top of a hypervisor which shares hardware resources between the virtual machines, containerization is a technique where virtualization happens on a operating system level \cite{merkel2014docker}. Processes executing in containers run on the host machine kernel. However, each container is isolated to its own network, process namespace and so on; two containers on the same host OS do not know that they share resources. Furthermore, containers are similarly isolated from accessing host OS resources.
+Figure~\ref{figure-1} illustrates common virtualization models. Whereas traditional virtualization techniques virtualize workloads on top of a hypervisor which shares hardware resources between the virtual machines, containerization is a technique where virtualization happens on a operating system level \cite{merkel2014docker}. Processes executing in containers run on the host machine kernel. However, each container is isolated to its own network, process namespace and so on; two containers on the same host OS do not know that they share resources. Furthermore, containers are similarly isolated from accessing host OS resources.
 
 BSD jails and \textit{chroot} can be considered early forms of containerization technology, so the idea of containers is not new \cite{combe2016docker}. Recent Linux container solutions rely on two main implementations: Linux Containers (LXC) -based solution that relies on kernel features such as control groups (cgroups) and namespaces, and a custom kernel and Linux distribution called Open Virtuozzo (OpenVZ). Docker \cite{docker} is a hugely popular container runtime that is based on LXC and provides an easy-to-use API and tooling for creating and managing containers. Docker also provides containerization for other OSes as well. However, in this thesis we focus only on the Linux implementation.
 
 \subsubsection{Linux containers}
-6 ns:
-mnt
-pid
-net
-ipc
-uts (hostname)
-user (UIDs)
 
-control groups for resource management
+The Linux containers technology implements container isolation and containement using Linux kernel feature called namespaces \cite{lin2018measurement}. Namespaces \cite{manpages-namespace} are a construct that wraps a global system resource in an abstraction which makes it appear to the processes in the namespace that they have their own, isolated, instance of the global resource. There are total of eight namespaces: i) Cgroup which is used for resource management, ii) Inter-process communication (IPC) which isolates POSIX message queues etc., iii) Network which isolates network devices, stack ports etc., iv) Mount for file system isolation, v) Process ID (PID), vi) Time, vii) User for isolating user and group identifiers and viii) UTS which isolates hostnames and NIS domain names. For example, network namespace provides each container their own loopback device and even \texttt{iptables} rules. In another example, mount namespace makes sure that container has no visibility nor access to the host's file system. Compared to other namespaces that concern isolation of kernel data, cgroups focuses on limiting available system resources per namespace \cite{lin2018measurement}. Each namespace can be set with their own limits on CPU and memory usage and available devices. For example, Docker users can limit available resources with \textit{--cpu}, \textit{--memory} and \textit{--devices} options.
 
-\subsubsection{Linux capabilities, priviledged containers, Container breakout}
+% One critical security risk of the container mechanism is that all containers running on the same host share the same Linux kernel. If a process inside the container compromises the Linux kernel, the isolation provided by the container mechanism becomes invalid. Therefore, several Linux kernel security mechanisms are adopted to constrain the capability of the processes inside the containers, such as Capability [48], Seccomp [29] and Mandatory Access Control (MAC) mechanisms. Through Capability mechanism, the superuser privilege (i.e., ROOT privilege) is divided into 38 distinct units, known as capabilities. Each capability represents a permission to process some speci"c kernel resources. For example, the CAP_NET_ADMIN capability denotes the permissions to perform network-related operations. By default, the containers created by Docker own 14 capabilities [21]. The Seccomp mechanism constrains the system calls a process can invoke. Docker de"nes the available system calls for a container through a Seccomp pro"le "le, which by default includes more than 300 system calls [26]. Both Capability and Seccomp are Discretionary Access Control (DAC) mechanisms, and SELinux [52] and AppArmor [24] are two MAC mechanisms adopted by containers. SELinux has been integrated in CentOS / RHEL / Fedora distros, and AppArmor has been integrated in Debian/Ubuntu distros. AppArmor utilizes a path-based enforcement model [5], while SELinux adopts a label-based enforcement model [52].
+
+\subsubsection{Linux capabilities}
+
+\subsubsection{Container breakout}
+
 \subsubsection{Docker}
 
 \cite{bui2015analysis}
@@ -435,6 +433,41 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 \clearpage
 
 \section{Research material and methods} \label{section-methods}
+
+\subsection{Prevent container breakout with Pod Security Admission}
+
+\subsection{IPTables}
+
+\begin{itemize}
+  \item If executed from containers in Pod (init, lifecycle, wrapper container), it breaks Security admission rules (root user and NET\_ADMIN)
+  \item Can be executed from Node itself, using DaemonSet (sort of a CNI plugin), but a bit hacky.
+  \item Use owner module for catching egress packets (userId, groupId, processId)
+\end{itemize}
+
+\subsection{eBPF program firewall}
+
+\begin{itemize}
+  \item XDP works only for ingress
+  \item TC needs some way to catch egress from sidecar
+\end{itemize}
+
+\subsection{Own pod for sidecar}
+
+\begin{itemize}
+  \item Guaranteed to work, since own network namespaces. What type of issues arise from this?
+  \item Need to force pods to same node, for common volumes (if using host as storage)
+  \item Implementation by hand, or Admission controller that catches sidecars?
+  \item Loopback is not the same anymore. DNAT that changes localhost to external? => impossible with IPTables!
+\end{itemize}
+
+\subsection{Multus}
+
+\begin{itemize}
+  \item Requires breaking sidecar pattern with multiple Pods
+  \item Allows use of custom IP addresses
+  \item Hard to implement between nodes, affinity rules
+  \item Loopback not easy to hijack for forwarding to new IPs
+\end{itemize}
 
 \clearpage
 
