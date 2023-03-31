@@ -294,19 +294,7 @@ The Linux containers technology implements container isolation and containement 
 
 % One critical security risk of the container mechanism is that all containers running on the same host share the same Linux kernel. If a process inside the container compromises the Linux kernel, the isolation provided by the container mechanism becomes invalid. Therefore, several Linux kernel security mechanisms are adopted to constrain the capability of the processes inside the containers, such as Capability [48], Seccomp [29] and Mandatory Access Control (MAC) mechanisms. Through Capability mechanism, the superuser privilege (i.e., ROOT privilege) is divided into 38 distinct units, known as capabilities. Each capability represents a permission to process some speci"c kernel resources. For example, the CAP_NET_ADMIN capability denotes the permissions to perform network-related operations. By default, the containers created by Docker own 14 capabilities [21]. The Seccomp mechanism constrains the system calls a process can invoke. Docker de"nes the available system calls for a container through a Seccomp pro"le "le, which by default includes more than 300 system calls [26]. Both Capability and Seccomp are Discretionary Access Control (DAC) mechanisms, and SELinux [52] and AppArmor [24] are two MAC mechanisms adopted by containers. SELinux has been integrated in CentOS / RHEL / Fedora distros, and AppArmor has been integrated in Debian/Ubuntu distros. AppArmor utilizes a path-based enforcement model [5], while SELinux adopts a label-based enforcement model [52].
 
-Since all containers and the host machine run on same kernel, any container that manages to breakout from isolation may compromise other containers, the host and the whole kernel. To combat this container breakout, several Linux kernel security mechanisms are adopted to constrain the capabilities of containers \cite{lin2018measurement}. The mechanisms include Discretionary Access Control (DAC) mechanisms like Capability \cite{manpages-capabilities} and Secure computing mode (Seccomp) \cite{manpages-seccomp}, and Mandatory Access Control (MAC) mechanisms like Security-Enhanced Linux (SELinux) and AppArmor \cite{apparmor}. With Capability, the superuser (i.e. the root user) privilege is divided into distinct units, each of which represent a permission to process some specific kernel resources. The feature turns the binary "root/non-root" security mechanism into fine-grained access control system, which makes it easier to follow the principle of least privilege. For example, processes like web servers that just need to bind on a Internet domain privileged port (numbers less than 1024) do not need to run as root; they can just be granted with \texttt{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}. The Seccomp mechanism constrains which system calls a process can invoke. The available system calls are defined for a container through Seccomp profile which is defined as a JSON file. The Docker default Seccomp profile \cite{docker-default-seccomp} includes over 300 system calls. SELinux is integrated to CentOS/RHEL/Fedora distributions and utilizes a label-based enforcement model, while AppArmor is available in Debian and Ubuntu and adopts a path-based enforcement model \cite{lin2018measurement}.
-
-\subsubsection{Container breakout scenarios}
-
-\cite{bui2015analysis}
-
-\begin{enumerate}
-  \item Priviledged container
-  \item CAP\_SYS\_ADMIN, mounting /proc and chroot
-  \item CAP\_SYS\_PTRACE, shellcode injection to running program, nc 172.17.0.1 on port running shell
-  \item Mounted docker socket, creating priviledged containers
-\end{enumerate}
-
+Since all containers and the host machine run on same kernel, any container that manages to breakout from isolation may compromise other containers, the host and the whole kernel. To combat this container breakout, several Linux kernel security mechanisms are adopted to constrain the capabilities of containers \cite{lin2018measurement}. The mechanisms include Discretionary Access Control (DAC) mechanisms like Capability \cite{manpages-capabilities} and Secure computing mode (Seccomp) \cite{manpages-seccomp}, and Mandatory Access Control (MAC) mechanisms like Security-Enhanced Linux (SELinux) and AppArmor \cite{apparmor}. With Capability, the superuser (i.e. the root user) privilege is divided into distinct units, each of which represent a permission to process some specific kernel resources. The feature turns the binary "root/non-root" security mechanism into fine-grained access control system, which makes it easier to follow the principle of least privilege. For example, processes like web servers that just need to bind on a Internet domain privileged port (numbers less than 1024) do not need to run as root; they can just be granted with \texttt{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}. The Seccomp mechanism constrains which system calls a process can invoke. The available system calls are defined for a container through Seccomp profile which is defined as a JSON file. The Docker default Seccomp profile \cite{docker-default-seccomp} includes over 300 system calls. SELinux is integrated to CentOS/RHEL/Fedora distributions and utilizes a label-based enforcement model, while AppArmor is available in Debian and Ubuntu distros and adopts a path-based enforcement model \cite{lin2018measurement}.
 
 \subsection{Kubernetes system components, control plane}
 \subsubsection{apiserver}
@@ -411,6 +399,10 @@ Cilium \cite{cilium} is one of the most advanced and powerful CNI plugins for Ku
 
 Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that supports policies in layers 3-7 instead of standard L3/L4. With \texttt{CiliumClusterwideNetworkPolicy}, network rules can applied to every namespace in the cluster, or even to nodes when using \texttt{nodeSelector}.
 
+% TODO: Calico
+
+% TODO: Multus
+
 \subsubsection{Extended Berkeley Packet Filter}
 
 Berkeley Packet Filter (BPF, or nowadays often cBPF) was originally developed in early 1990s as a high-performance tool for user-space packet captures \cite{mccanne1993bsd}. BPF works by deploying the filtering part of the application, \texttt{packet filter}, in the kernel-space as an agent. The \texttt{packet filter} is provided with a program (often denoted as BPF program) consisting of BPF instructions, which works as a set of rules for selecting which packets are of interest in the user-space application and should be copied from kernel-space to user-space. The instuctions are executed in a register-based pseudo machine. Since network monitors are often interested only in subset of network traffic, this limits the number of expensive copy operations across the kernel/user-space protection boundary only to packets that are of interest in the user-space application. A notable usecase for BPF is \textit{libpcap} library, which is used by network monitoring tool called \texttt{tcpdump}.
@@ -431,6 +423,17 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 \clearpage
 
 \section{Research material and methods} \label{section-methods}
+
+\subsection{Container breakout scenarios}
+
+\cite{bui2015analysis}
+
+\begin{itemize}
+  \item Privileged container
+  \item CAP\_SYS\_ADMIN, mounting /proc and chroot
+  \item CAP\_SYS\_PTRACE, shellcode injection to running program, nc 172.17.0.1 on port running shell
+  \item Mounted docker socket, creating priviledged containers
+\end{itemize}
 
 \subsection{Prevent container breakout with Pod Security Admission}
 
