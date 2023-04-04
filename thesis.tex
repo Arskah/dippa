@@ -296,16 +296,34 @@ The Linux containers technology implements container isolation and containement 
 
 Since all containers and the host machine run on same kernel, any container that manages to breakout from isolation may compromise other containers, the host and the whole kernel. To combat this container breakout, several Linux kernel security mechanisms are adopted to constrain the capabilities of containers \cite{lin2018measurement}. The mechanisms include Discretionary Access Control (DAC) mechanisms like Capability \cite{manpages-capabilities} and Secure computing mode (Seccomp) \cite{manpages-seccomp}, and Mandatory Access Control (MAC) mechanisms like Security-Enhanced Linux (SELinux) and AppArmor \cite{apparmor}. With Capability, the superuser (i.e. the root user) privilege is divided into distinct units, each of which represent a permission to process some specific kernel resources. The feature turns the binary "root/non-root" security mechanism into fine-grained access control system, which makes it easier to follow the principle of least privilege. For example, processes like web servers that just need to bind on a Internet domain privileged port (numbers less than 1024) do not need to run as root; they can just be granted with \texttt{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}. The Seccomp mechanism constrains which system calls a process can invoke. The available system calls are defined for a container through Seccomp profile which is defined as a JSON file. The Docker default Seccomp profile \cite{docker-default-seccomp} includes over 300 system calls. SELinux is integrated to CentOS/RHEL/Fedora distributions and utilizes a label-based enforcement model, while AppArmor is available in Debian and Ubuntu distros and adopts a path-based enforcement model \cite{lin2018measurement}.
 
-\subsection{Kubernetes system components, control plane}
-\subsubsection{apiserver}
-\subsubsection{etcd}
-\subsubsection{scheduler}
-\subsubsection{controller-manager}
+\subsubsection{Docker}
 
-\subsection{Kubernetes resources}
-\subsubsection{Namespaces}
-\subsubsection{Pods}
-\subsubsection{Services}
+\subsection{Kubernetes}
+
+Kubernetes (K8s) \cite{kubernetes} is an open-source container orchestrator, i.e. a system for automating deployment, scaling and management of containerized applications. It allows creation of a cluster which consists of a set of servers, called Nodes, on which application containers are scheduled by the system. The automation provides resilience and efficient resource utilization for workloads in the cluster: if a container or node dies, the system tries to restart and re-schedule containers so that the desired cluster state is maintained. K8s is hosted by the Cloud Nativce Computing Foundation (CNCF), but it's origins are at Google where it was created as an open-source option for Google's propietary Borg and Omega orchestrators \cite{burns2016borg}. K8s was open-sourced in 2014.
+
+\subsubsection{Kubernetes objects}
+
+Pods are the basic scheduling unit in K8s. Pods consists of one or more tightly-coupled containers with shared storage volume and networking \cite{k8s-docs-pods}. Containers in a pod are always co-located and co-scheduled and run in a shared context, i.e. a set of Linux namespaces. Network, UTS and IPC namespaces are shared by default, and process namespace can be shared with \texttt{v1.PodSpec.shareProcessNamespace}. The common network namespace means that containers in a pod can communicate with each other via localhost, have common IP address and cannot re-use same port numbers. In addition to normal application container, Pods can include special \texttt{initContainers} that are only run on Pod startup. These pods are used for modifying Pod context before the actual workload starts. Multiple \texttt{initContainers} are run sequentially and a failing container blocks the execution of the following initialization and normal workloads. All Pods accross the cluster share same subnet and can access each other via IP address. However, connecting to a Pod with IP address is sub-optimal since Pods are ephermal and restarting a dead pod may receive a new IP address. Furthermore, horizontally scaled Pods with multiple replicas have as many IP addresses, thus making load balancing difficult. Kubernetes concept called Services solves these issues.
+
+Services are an object for exposing groups of Pods over an network \cite{k8s-docs-services}. The object defines a set of enpoints, i.e. the targeted pods, along with a policy about how to make the pods accessible. The targeted pods are determined with a \texttt{selector} field in the object specification. Meanwhile, the \texttt{type} field determines how the Service is exposed. There are four different \texttt{ServiceTypes} levels: i) the default \texttt{ClusterIP} which exposes Service inside the cluster with its own IP address, ii) \texttt{NodePort} which exposes service in each Node's IP address on static port (by default within a range of 30000-32767), iii) \texttt{LoadBalancer} which exposes the Service externally using cloud provider's load balancer and iv) \texttt{ExternalName} which is used to map Service to DNS name instead of a group of Pods. The field is designed as a nested functionality; each \texttt{ServiceType} level adds up to the previous one. Ingress object can also be used for exposing Services to outside of cluster. The Ingress object requires installation of an Ingress Controller to the cluster. Cloud providers often have their own controllers and all the examples in this thesis are executed on a local cluster where no external access is needed. Thus, the controllers are left as an exercise for the reader.
+
+Namespaces
+
+DaemonSets
+
+
+
+\subsubsection{Control plane}
+
+\begin{itemize}
+  \item API server
+  \item etcd
+  \item Scheduler
+  \item Controller manager
+  \item Kubelet
+\end{itemize}
+
 \subsubsection{Admission control}
 
 % https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar
@@ -341,7 +359,7 @@ Integral part of Kubernetes cluster is how nodes and resources are networked tog
 
 \subsubsection{Container Network Interface}
 
-The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become de facto industry standard for container networking. It is backed by Cloud Nativce Computing Foundation (CNCF) \cite{qi2020assessing}. CNI was first developed for the container runtime \texttt{rkt}, but it is supported by all container runtimes and there is a large number of implementations to choose from \cite{hausenblas2018container}. Most of the container orchestrators have adopted the specification as their networking solution. The biggest outlier is Docker Swarm, which instead implements \texttt{libnetwork} \cite{libnetwork}.
+The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become de facto industry standard for container networking. It is backed by CNCF \cite{qi2020assessing}. CNI was first developed for the container runtime \texttt{rkt}, but it is supported by all container runtimes and there is a large number of implementations to choose from \cite{hausenblas2018container}. Most of the container orchestrators have adopted the specification as their networking solution. The biggest outlier is Docker Swarm, which instead implements \texttt{libnetwork} \cite{libnetwork}.
 
 The specification has five distinct definitions: i) a format for network configuration, ii) a execution protocol between the container runtimes and the plugin binary, iii) a procedure for the runtime to interpret the configuration and execute the plugins, iv) a procedure for deletegating functionality between the plugins and v) data types for plugins to return their results to the runtime \cite{cni}. The configuration is defined as a JSON file and it includes a list of plugins and their configuration. The file is consumed at plugin execution time by the runtime, and passed to the plugins. The execution protocol defines a set of operations (ADD, DEL, CHECK) for adding and removing containers from the network, while also defining a set of OS environment variables that are used as parameters by the plugins. When the runtime mutates a container network, it results in a series of ADD, DELETE or CHECK executions. These are then executed in same order as defined in the \texttt{plugins} list, or reversed order for DELETE executions. Each plugin then returns either \texttt{Success} or \texttt{Error} JSON object. The execution of a series of operations ends when it encounters the first Error response, or when all the operations have been performed.
 
@@ -379,7 +397,7 @@ The specification has five distinct definitions: i) a format for network configu
 
 \subsubsection{Network policies}
 
-Since Kubernetes does not provide networking between the Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature for CNI plugins is enforcing network traffic rules. Kubernetes provides a common resource called \texttt{NetworkPolicy} for CNI plugins to consume. The NetworkPolicy specification consists of a \texttt{podSelector} that specifies pods that are subject to the policy and \texttt{policyTypes} to specify Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
+Since Kubernetes does not provide networking between the Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature for CNI plugins is enforcing network traffic rules. Kubernetes provides a common object called \texttt{NetworkPolicy} for CNI plugins to consume. The NetworkPolicy specification consists of a \texttt{podSelector} that specifies pods that are subject to the policy and \texttt{policyTypes} to specify Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
 \subsubsection{Cilium and other CNI plugins}
 
@@ -397,7 +415,7 @@ In this thesis, we focus on three different CNI plugins: Cilium, Calico and Mult
 
 Cilium \cite{cilium} is one of the most advanced and powerful CNI plugins for Kubernetes. It works by creating virtual ethernet device for each Pod and sets one side of the link into Pod's network namespace \cite{cilium-tkng}. Cilium then attaches extended Berkeley Packet Filter (eBPF) programs to ingress traffic control (\texttt{tc}) hooks of these virutal ethernet devices for intercepting all incoming packets from the Pod. The packets are intercepted and processed before the network stack and thus \texttt{iptables}, reducing latency 20\%-30\% and even doubling the throughput of packets in some scenarios \cite{budigiri2021network}.
 
-Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that supports policies in layers 3-7 instead of standard L3/L4. With \texttt{CiliumClusterwideNetworkPolicy}, network rules can applied to every namespace in the cluster, or even to nodes when using \texttt{nodeSelector}.
+Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that supports policies in layers 3-7 instead of standard L3/L4. Cilium also provides \\\texttt{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to every namespace in the cluster or even to nodes when using \texttt{nodeSelector}.
 
 % TODO: Calico
 
