@@ -312,15 +312,26 @@ Instead of creating Pods directly, \textbf{Deployment} workload resources are us
 
 \textbf{Namespaces} provide isolation for cluster objects and allow grouping of objects under a single name. New K8s cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}. Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined. \texttt{kube-system} is the namespace for all objects created by the K8s system which we focus more on the next section \ref{control-plane}. Namespaces also provide a scope for naming; names of resources need to be unique within a namespace, but not across namespaces. Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example in multi-tenancy setups. Pod Security Standards \cite{k8s-docs-pss} are also defined per namespace.
 
-\subsubsection{Control plane} \label{control-plane}
+\subsubsection{Kubernetes components} \label{control-plane}
 
-\begin{itemize}
-  \item API server
-  \item etcd
-  \item Scheduler
-  \item Controller manager
-  \item Kubelet
-\end{itemize}
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/k8s-arch.png}
+  \caption{Kubernetes cluster architecture \cite{k8s-docs-control-plane}}
+  \label{figure-2}
+\end{figure}
+
+The figure \ref{figure-2} describes Kubernetes cluster with control plane and three worker nodes. The control plane consists of components that control, monitor and store the state of the cluster; essentially these are the components that are needed for complete and working Kubernetes cluster \cite{k8s-docs-control-plane}. The control plane components can be run on any worker node. However, clusters often have specialized master node for control plane components, which does not run any other containers. For fault-tolerance and high availability, control plane components should run on multiple Nodes in production environments. The control plane consists of these main components:
+
+\textbf{API server} is a frontend component of the control plane. It is a stateless HTTP server which validates and authenticates commands given to the cluster. For valid commands, the server then forwards these to other control plane components. For example the \texttt{kubectl} CLI tool sends commands to the API server with HTTP. The main implementation of the server is \texttt{kube-apiserver}. The server can be horizontally scaled by running several instances on multiple Nodes and load balancing traffic between the instances.
+
+\textbf{Etcd} \cite{etcd} is a strongly consistent, distributed key-value store. It is the stateful component of the control plane: all of the cluster data is stored in etcd. Thus, the stability of the component is critical for the whole cluster. To tolerate failures, etcd implements a leader-based architecture. Multiple etcd clients automaitcally elect a leader instance as the source of truth. Other instances periodically update their state from the leader instance, so that the state stays eventually conistent across all the instances. On leader failure, the other instances automatically elect new leader to keep the system functioning.
+
+\textbf{Scheduler} watches for newly created Pods that have no assigned worker node, and selects one of the active Nodes for them to run on \cite{k8s-docs-control-plane}. The scheduling takes into account resource availibility on Nodes, Pod resource requirements, object specification affinity rules and hardware, software and policy constraints, among others.
+
+\textbf{Controller manager} is a control plane component that runs all the controller loop processes \cite{k8s-docs-control-plane}. Controller loops, like the Deployment controller, continously watch the current and desired cluster state. When the states differ, they send commands via the API server so that the cluster moves towards the desired state. All the built-in controllers are compiled into a single binary, even though the controllers are logically different processes.
+
+Each Node also has components that are essential for Kubernetes to work properly. \textbf{Kubelet} is an agent that makes sure containers are running in a Pod \cite{k8s-docs-control-plane}. It receives a set of pod specification from the API server and ensures that containers are running on the Node, follow the pod specifications and are healthy. Any container which is not created by Kubernetes is not managed by \texttt{kubelet}. \textbf{kube-proxy} maintains network rules on Nodes, and also implement part of the Service concept.
 
 \subsubsection{Admission control}
 
