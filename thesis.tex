@@ -331,7 +331,7 @@ The figure \ref{figure-2} describes Kubernetes cluster with control plane and th
 
 \textbf{Controller manager} is a control plane component that runs all the controller loop processes \cite{k8s-docs-control-plane}. Controller loops, like the Deployment controller, continously watch the current and desired cluster state. When the states differ, they send commands via the API server so that the cluster moves towards the desired state. All the built-in controllers are compiled into a single binary, even though the controllers are logically different processes.
 
-Each Node also has components that are essential for Kubernetes to work properly. \textbf{Kubelet} is an agent that makes sure containers are running in a Pod \cite{k8s-docs-control-plane}. It receives a set of pod specification from the API server and ensures that containers are running on the Node, follow the pod specifications and are healthy. Any container which is not created by Kubernetes is not managed by \texttt{kubelet}. \textbf{kube-proxy} maintains network rules on Nodes, and also implement part of the Service concept.
+Each Node also has components that are essential for Kubernetes to work properly. \textbf{Kubelet} is an agent that makes sure containers are running in a Pod \cite{k8s-docs-control-plane}. It receives a set of pod specification from the API server and ensures that containers are running on the Node, follow the pod specifications and are healthy. Any container which is not created by Kubernetes is not managed by \texttt{kubelet}. \textbf{Kube-proxy} maintains network rules on Nodes, and also implement part of the Service concept.
 
 \subsubsection{Admission control}
 
