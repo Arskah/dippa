@@ -298,6 +298,19 @@ Since all containers and the host machine run on same kernel, any container that
 
 \subsubsection{Docker}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/docker-engine.png}
+  \caption{Architecture of Docker engine \cite{bui2015analysis}}
+  \label{figure-docker}
+\end{figure}
+
+Docker is an open-source container technology written in Go and launched in 2013 \cite[text]{docker-what}. The platform consists of Docker Engine packaging tool, Docker image registries like the public image repository Docker Hub and Docker desktop application \cite{docker-overview}. In general, the engine architecture is similar to container-based virtualization, as visible in figure \ref{figure-docker} \cite{bui2015analysis}. The containers run on top of Docker daemon which manages and executes all the containers. The daemon is exposed to Docker clients via RESTful HTTP API. The Docker client is a command line tool which provides user interface for commanding the daemon and thus containers. By exposing the API outside the host machine, the architecture enables remote control of daemon with the client. For security reasons, remote communication should be secured with TLS.
+
+Docker image is a read-only template with instructions for creating a Docker container \cite{docker-overview}. The images are often based on another image, such as OS images \texttt{ubuntu} and \texttt{alpine}, with some additional customizations like installation of web server binaries. The customizations are added to the image as series of data layers so that each new command creates a new layer. This process makes the distribution of image more efficient since only the changes between layers need to be distributed \cite{bui2015analysis}. The layering is achieved with special filesystem inspired by UnionFS which allows files and directories in different file systems to be combined into a single consistent file system.
+
+Docker users can share their custom images publicly or privately in Docker Hub, or even host their own image registry platform. Most cloud providers also offer container registry services so even propietary software can be published in a private registry and used by other cloud services, like Kubernetes clusters. Whenever the image is not found locally, the client automatically tries to search and pull image from connected registries.
+
 \subsection{Kubernetes}
 
 Kubernetes (K8s) \cite{kubernetes} is an open-source container orchestrator, i.e. a system for automating deployment, scaling and management of containerized applications. It allows creation of a cluster which consists of a set of servers, called Nodes, on which application containers are scheduled by the system. The automation provides resilience and efficient resource utilization for workloads in the cluster: if a container or node dies, the system tries to restart and re-schedule containers so that the desired cluster state is maintained. K8s is hosted by the Cloud Nativce Computing Foundation (CNCF), but it's origins are at Google where it was created as an open-source option for Google's propietary Borg and Omega orchestrators \cite{burns2016borg}. K8s was open-sourced in 2014.
