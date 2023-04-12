@@ -344,9 +344,11 @@ The figure \ref{figure-2} describes Kubernetes cluster with control plane and th
 
 \textbf{Controller manager} is a control plane component that runs all the controller loop processes \cite{k8s-docs-control-plane}. Controller loops, like the Deployment controller, continously watch the current and desired cluster state. When the states differ, they send commands via the API server so that the cluster moves towards the desired state. All the built-in controllers are compiled into a single binary, even though the controllers are logically different processes.
 
-Each Node also has components that are essential for Kubernetes to work properly. \textbf{Kubelet} is an agent that makes sure containers are running in a Pod \cite{k8s-docs-control-plane}. It receives a set of pod specification from the API server and ensures that containers are running on the Node, follow the pod specifications and are healthy. Any container which is not created by Kubernetes is not managed by \texttt{kubelet}. \textbf{Kube-proxy} maintains network rules on Nodes, and also implement part of the Service concept.
+Each Node also has components that are essential for Kubernetes to work properly. \textbf{Kubelet} is an agent that makes sure containers are running in a Pod \cite{k8s-docs-control-plane}. It receives a set of pod specification from the API server and ensures that containers are running on the Node, follow the pod specifications and are healthy. Any container which is not created by Kubernetes is not managed by \texttt{kubelet}. \textbf{Kube-proxy} maintains network rules on Nodes. Part of the Serivce objects' networking is implemented by \textbf{kube-proxy}; the proxy writes \texttt{iptables} rules that route the traffic \cite{cilium-proxy-free}.
 
-\subsubsection{Admission control}
+\subsubsection{Admission controllers}
+
+\cite{k8s-docs-admission}
 
 % https://learn.microsoft.com/en-us/azure/architecture/patterns/sidecar
 \subsubsection{Sidecar pattern}
@@ -437,16 +439,33 @@ Since Kubernetes does not provide networking between the Pods, it has no capabil
 % Configurations in /etc/cni/net.d on nodes
 % Kubelet monitors the directory, no need to restart it when installing CNI
 
-While all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layer they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
+While all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods. In this thesis, we focus on three different CNI plugins: Cilium, Calico and Multus.
 
-In this thesis, we focus on three different CNI plugins: Cilium, Calico and Multus.
+\subsubsection{Cilium}
 
 Cilium \cite{cilium} is one of the most advanced and powerful CNI plugins for Kubernetes. It works by creating virtual ethernet device for each Pod and sets one side of the link into Pod's network namespace \cite{cilium-tkng}. Cilium then attaches extended Berkeley Packet Filter (eBPF) programs to ingress traffic control (\texttt{tc}) hooks of these virutal ethernet devices for intercepting all incoming packets from the Pod. The packets are intercepted and processed before the network stack and thus \texttt{iptables}, reducing latency 20\%-30\% and even doubling the throughput of packets in some scenarios \cite{budigiri2021network}.
 
-Cilium provides Custom Resource Definition \texttt{CiliumNetworkPolicy} that supports policies in layers 3-7 instead of standard L3/L4. Cilium also provides \\\texttt{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to every namespace in the cluster or even to nodes when using \texttt{nodeSelector}.
+The Cilium system consists of an agent (\texttt{cilium-agent}) daemon running on each Node, one or more operator (\texttt{cilium-operator}) Pods and a CLI client (\texttt{cilium}) \cite{cilium-components}. The agent daemons subscribe to events from Kubernetes API and manage containers' networking and eBPF programs. The CLI tool, which is installed on each agent, interacts with the REST API of the agent and allows inspecting the state and status of the local agent. The tool should not be confused with Cilium management CLI tool, also incidentally named \texttt{cilium}, which is typically installed remote from the cluster. The operator is responsible for all management operations which should be handled once for the entire cluster, rather than once for each Node. This includes for example registering of Custom Resource Definitions (CRDs).
+
+% TODO: Move OSI layer to somewhere else
+While default Kubernetes Network Policy provides security on OSI layers L3 (identity, e.g. IP address) and L4 (ports), Cilium provides CRDs that also support for L7 policies (HTTP methods) \cite{cilium-policy-language}. If L7 policies exist, the traffic is directed to Envoy instance bundled into the agent Pod which filters the traffic. Unlike on layers 3 and 4, policy violation does not result in dropped packet but an application protocol specific denied message. For example, HTTP traffic is denied with \texttt{HTTP 403 Forbidden} and DNS requests with \texttt{DNS REFUSED}. Cilium provides \texttt{CiliumNetworkPolicy} CRD that supports all L3, L4 and L7 policies. Cilium also provides \texttt{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to every namespace in the cluster or even to nodes when using \texttt{nodeSelector}.
+
+As even more advanced features, Cilium also includes natively \texttt{kube-proxy} replacement, encryption for Cilium-managed traffic and Service Mesh, among others. By default, \texttt{kube-proxy} uses \texttt{iptables} to route the Service traffic \cite{cilium-proxy-free}. With \texttt{kubeProxyReplacement} installation option, Cilium implements Service load-balancing as a XDP program on Node NICs. For encryption, Cilium supports both IPsec and WireGuard implementations \cite{cilium-encryption}. The Service mesh performs variety of features directly in eBPF, thus functioning without sidecar containers or proxying requests through the agent Pod's Envoy \cite{cilium-service-mesh}. Since all features are not available as eBPF programs or on all kernel versions,  Cilium automatically probes the underlying kernel and automatically reverts to Envoy proxy when needed. For capabilities beyong the built-in mesh, Cilium also provides an integration with Istio.
+
+% \begin{itemize}
+  % \item More on network rules (probes and uses most recent features from Kernel)
+  % \item Transparent encryption https://docs.cilium.io/en/v1.13/security/threat-model/
+  % \item Security on different levels: https://docs.cilium.io/en/v1.13/security/network/intro/
+  % \item Cilium Service Mesh https://isovalent.com/blog/post/cilium-service-mesh/
+  % \item Kube-proxy replacement
+  % \item Cilium components (Agent (includes Envoy), client, operator, plugin). Hubble?
+% \end{itemize}
+
+\subsubsection{Calico}
 
 % TODO: Calico
 
+\subsubsection{Multus}
 % TODO: Multus
 
 \subsubsection{Extended Berkeley Packet Filter}
