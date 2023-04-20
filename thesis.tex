@@ -393,7 +393,7 @@ The CNI specification has five distinct definitions: i) a format for network con
 %     - Orchestrating the underlay – usually done with BGP for on-prem or some form of dynamically-provisioned static routes for public cloud environments.
 %     - Encapsulating in the overlay – VXLAN is still the most popular encap type.
 
-The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}.
+The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}. For connectivity, each Pod must have a NIC for communication outside its networking namespace. The NIC must have IP address reachable from the host Node, so that cluster processes like Kubelet health and readiness checks can reach the Pod. Reachability means that all Pods can be reached from other Nodes directly without NAT. Thus, each Pod receives an unique IP address from the \texttt{PodCIDR} range configured on the Node by the Kubelet bootstrapping phase. The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network (for example with VXLAN) or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
 
 % Kubernetes Network Policy is the means to enforce rules
 % indicating which network traffic is allowed and which Pods
