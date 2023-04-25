@@ -466,11 +466,14 @@ As even more advanced features, Cilium also includes natively \texttt{kube-proxy
 % \end{itemize}
 
 \subsubsection{Multus}
-% TODO: Multus
 
 Traditionally CNI plugins only provide a single network interface for a Pod, apart from loopback device. Multus \cite{multus-cni} is a CNI plugin that allows attaching multiple network interfaces for a Pod. It does not provide any connectivity or reachability for the containers like other plugins. Instead, it is installed as the first plugin in the CNI plugin chain. When executed, the plugin delegates interface creation to other installed plugins. Since Multus does not provide any networking and thus does not independently, it is often called "meta plugin" to distinguish it from common CNI plugins like the previous Calico and Cilium.
 
 Multus system includes a binary, a CNI configuration file and a namespaced \texttt{NetworkAttachmentDefinition} CRD that is used to define network interfaces used in Pods. The binary and the configuration file are often installed to cluster Nodes via a DaemonSet. The daemon consists of an \textit{initContainer} that copies the binary into the \texttt{/opt/cni/bin} directory, and a daemon container that setups the configuration file and optionally spawns a HTTP server for additional features such as metrics \cite{multus-cni}. The configuration file satisfies the CNI specification with few extra attributes of which the combination of \texttt{clusterNetwork} and \texttt{defaultNetworks} or \texttt{delegates} are imperative for the CNI plugin to function \cite{multus-cni-config}. The \texttt{clusterNetwork} specifies the main network of the cluster, which implements the \texttt{eth0} interface and Pod IP address. The \texttt{defaultNetworks} is an optional array of networks that should be added for any Pods by default. The values can be names of the \texttt{NetworkAttachmentDefinition} objects or paths to CNI plugin's JSON configuration files. Optionally, the \texttt{delegates} attribute can be used; it supports similar format of values. In this scenario, the first element of the array functions as \texttt{clusterNetwork} and the rest are infered as \texttt{defaultNetworks}.
+
+% TODO: Add examples of NetworkAttachmentDefinition and Pod annotations
+
+Attaching additional interfaces to workloads is most often configured by adding a special annotations field \texttt{k8s.v1.cni.cncf.io/networks} to workload resource definitions. In the simplest configuration, the field takes a comma-separated list of \texttt{NetworkAttachmentDefinition} names as input. The network interface identifiers can be modified by giving the attachment input in \textit{name@interface-identifier} format. Otherwise, Multus names the interfaces \textit{net0}, \textit{net1} and so on. If extra configuration for the networks is needed, the annotation also supports a JSON array format.
 
 \subsubsection{Extended Berkeley Packet Filter}
 
