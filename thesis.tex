@@ -196,73 +196,49 @@
 %% DO NOT MOVE OR REMOVE \setupthesisfonts
 \setupthesisfonts
 
-%%
 %% Add here the packges you need
-%%
 \usepackage{graphicx}
 
-
-%% For tables that span multiple pages; used to split a paraphrasing example in
-%% the appendix. If you don't need it, remove it.
-\usepackage{longtable}
-
-%% A package for generating Creative Commons copyright terms. If you don't use
-%% the CC copyright terms, remove it, since otherwise undesired information may
-%% be added to this document's metadata.
-\usepackage[type={CC}, modifier={by-nc-sa}, version={4.0}]{doclicense}
-%% Find below three examples for typesetting the CC license notice.
-
 % \usepackage{amsfonts,amssymb,amsbsy,csquotes}
+\usepackage{csquotes}
 \usepackage{biblatex}
 \addbibresource{./refs.bib}
 
-\usepackage{hyperref}
-\hypersetup{pdfpagemode=UseNone, pdfstartview=FitH,
-  colorlinks=true,urlcolor=red,linkcolor=blue,citecolor=black,
-  pdftitle={Default Title, Modify},pdfauthor={Your Name},
-  pdfkeywords={Modify keywords}}
+% \usepackage{hyperref}
+% \hypersetup{pdfpagemode=UseNone, pdfstartview=FitH,
+%   colorlinks=true,urlcolor=red,linkcolor=blue,citecolor=black,
+%   pdftitle={Default Title, Modify},pdfauthor={Your Name},
+%   pdfkeywords={Modify keywords}}
+
+%% For tables that span multiple pages; used to split a paraphrasing example in the appendix. If you don't need it, remove it.
+\usepackage{longtable}
+
+%% A package for generating Creative Commons copyright terms. If you don't use the CC copyright terms, remove it, since otherwise undesired information may be added to this document's metadata.
+\usepackage[type={CC}, modifier={by-nc-sa}, version={4.0}]{doclicense}
+%% Find below three examples for typesetting the CC license notice.
 
 %% Edit to conform to your degree programme
 %% Capitalise the words in the name of the degree programme: it's a name
 \degreeprogram{Computer, Communication and Information Sciences}
-%%
 
 %% Your major
-%%
 \major{Computer Science}
-%%
 
 %% Choose one of the three below
-%%
 %\univdegree{BSc}
 \univdegree{MSc}
 %\univdegree{Lic}
-%%
 
-%% Your name (self explanatory...)
-%%
 \thesisauthor{Aarni Halinen}
-%%
 
-%% Your thesis title and possible subtitle comes here and possibly, again,
-%% together with the Finnish or Swedish abstract. Do not hyphenate the title
-%% (and subtitle), and avoid writing too long a title. Should LaTeX typeset a
-%% long title (and/or subtitle) unsatisfactorily, you might have to force a
-%% linebreak using the \\ control characters. In this case...
+%% Your thesis title and possible subtitle comes here and possibly, again, together with the Finnish or Swedish abstract. Do not hyphenate the title (and subtitle), and avoid writing too long a title. Should LaTeX typeset a long title (and/or subtitle) unsatisfactorily, you might have to force a linebreak using the \\ control characters. In this case...
 %% * Remember, the title should not be hyphenated!
-%% * A possible 'and' in the title should not be the last word in the line; it
-%%   begins the next line.
-%% * Specify the title (and/or subtitle) again without the linebreak characters
-%%   in the optional argument in box brackets. This is done because the title
-%%   is part of the metadata in the pdf/a file, and the metadata cannot contain
-%%   linebreaks.
-%%
+%% * A possible 'and' in the title should not be the last word in the line; it begins the next line.
+%% * Specify the title (and/or subtitle) again without the linebreak characters in the optional argument in box brackets. This is done because the title is part of the metadata in the pdf/a file, and the metadata cannot contain linebreaks.
 \thesistitle{Kubernetes inter-pod container isolation}
-%\thesistitle[Title of the thesis]{Title of\\ the thesis}
-%%
-%% Either remove or leave \thesissubtitle{} empty if you don't use it
-%%
-% \thesissubtitle{A possible subtitle}
+% \thesistitle[Title of the thesis]{Title of\\ the thesis}
+%% Either remove or leave \thesissubtitle{} empty if you don't use it \thesissubtitle{A possible subtitle}
+% \thesissubtitle{}
 
 \place{Espoo}
 
@@ -270,21 +246,14 @@
 \date{1 June 2023}
 
 %% Thesis supervisor
-%% Note the "\" character in the title after the period and before the space
-%% and the following character string.
-%% This is because the period is not the end of a sentence after which a
-%% slightly longer space follows, but what is desired is a regular interword
-%% space.
+%% Note the "\" character in the title after the period and before the space and the following character string. This is because the period is not the end of a sentence after which a slightly longer space follows, but what is desired is a regular interword space.
 \supervisor{Prof.\ Mario Di Francesco}
 
-%% Advisor(s)---two at the most---of the thesis. Check with your supervisor how
-%% many official advisors you can have.
+%% Advisor(s)---two at the most---of the thesis. Check with your supervisor how many official advisors you can have.
 \advisor{M.Sc.\ (Tech.)\ José\ Luis\ Martin\ Navarro}
 \advisor{M.Sc.\ (Tech.)\ Jacopo\ Bufalino}
 
-%% If you do your thesis work in a company of other institute, give the name of
-%% the company or instution here. Otherwise, leave the macro empty, comment it
-%% out, or remove it. This will remove this field from the abstract page.
+%% If you do your thesis work in a company of other institute, give the name of the company or instution here. Otherwise, leave the macro empty, comment it out, or remove it. This will remove this field from the abstract page.
 % \collaborativepartner{Company or institute name}
 
 %% Aaltologo: syntax:
@@ -395,8 +364,7 @@ metadata abstract text must be identical to the text on the abstract page.
 }
 
 %% You can prevent LaTeX from writing into the xmpdata file (it contains all the metadata to be written into the pdf file) by setting the writexmpdata switch to 'false'. This allows you to write the metadata in the correct format directly into the file thesistemplate.xmpdata.
-%\setboolean{writexmpdatafile}{false}
-
+% \setboolean{writexmpdatafile}{false}
 
 %% All that is printed on paper starts here
 \begin{document}
@@ -464,7 +432,7 @@ oltava sama kuin lomakkeessa oleva teksti.
 %% Preface
 %% This section is optional. Remove it if you do not want a preface.
 \mysection{Preface}
-%\mysection{Esipuhe}
+% \mysection{Esipuhe}
 I want to thank Professor Pirjo Professor and my instructors Dr Alan Advisor and
 Ms Elsa Expert for their guidance.
 
@@ -479,10 +447,8 @@ Otaniemi, 9 February 2023\\
 %% Force a new page after the preface
 \newpage
 
-
 %% Table of contents.
 \thesistableofcontents
-
 
 %% Symbols and abbreviations
 \mysection{Symbols and abbreviations}
@@ -528,12 +494,11 @@ This thesis proposes a solution for limiting capabilities of sidecar without lim
 
 \subsection{Thesis outline}
 
-The following chapter \ref{section-bg} gives background about containers, Kubernetes and explains their common attack vectors. It also discusses Kubernetes networking and container network interface plugins. Chapter \ref{section-methods} proposes ideas for isolating sidecars from main application container. The chapter discusses both container and networking security in the context of Kubernetes Pod. Chapter \ref{section-solution} introduces an implementation based on the findings of the previous chapter. The pros and cons of the solution are discussed in Chapter \ref{section-discussion}. Finally, Chapter \ref{section-conclusion} discusses future research and concludes the thesis.
+The following chapter \ref{sec:bg} gives background about containers, Kubernetes and explains their common attack vectors. It also discusses Kubernetes networking and container network interface plugins. Chapter \ref{sec:methods} proposes ideas for isolating sidecars from main application container. The chapter discusses both container and networking security in the context of Kubernetes Pod. Chapter \ref{sec:solution} introduces an implementation based on the findings of the previous chapter. The pros and cons of the solution are discussed in Chapter \ref{sec:discussion}. Finally, Chapter \ref{sec:conclusion} discusses future research and concludes the thesis.
 
-%% In a thesis, every section/chapter starts a new page, hence the \clearpage
 \clearpage
 
-\section{Background} \label{section-bg}
+\section{Background} \label{sec:bg}
 
 \subsection{Principle of least priviledge, Zero trust...}
 
@@ -765,7 +730,7 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \clearpage
 
-\section{Research material and methods} \label{section-methods}
+\section{Research material and methods} \label{sec:methods}
 
 \subsection{Container breakout scenarios}
 
@@ -815,17 +780,18 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \clearpage
 
-\section{Evaluation} \label{section-solution}
+\section{Evaluation} \label{sec:solution}
 
 \clearpage
 
-\section{Discussion} \label{section-discussion}
+\section{Discussion} \label{sec:discussion}
 
 \clearpage
 
-\section{Conclusion} \label{section-conclusion}
+\section{Conclusion} \label{sec:conclusion}
 
 \clearpage
+
 %% Bibliography/ list of references
 \thesisbibliography
 \printbibliography
