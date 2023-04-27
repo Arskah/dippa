@@ -1,215 +1,488 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                                                                %%
-%% An example for writting your thesis using LaTeX                %%
-%% Original version by Luis Costa,  changes by Perttu Puska       %%
-%% Support for Swedish added 15092014                             %%
-%%                                                                %%
-%% This example consists of the files                             %%
-%%         thesistemplate.tex (versio 2.01)                       %%
-%%         opinnaytepohja.tex (versio 2.01) (for text in Finnish) %%
-%%         aaltothesis.cls (versio 2.01)                          %%
-%%         kuva1.eps                                              %%
-%%         kuva2.eps                                              %%
-%%         kuva1.pdf                                              %%
-%%         kuva2.pdf                                              %%
-%%                                                                %%
-%%                                                                %%
-%% Typeset either with                                            %%
-%% latex:                                                         %%
-%%             $ latex opinnaytepohja                             %%
-%%             $ latex opinnaytepohja                             %%
-%%                                                                %%
-%%   Result is the file opinnayte.dvi, which                      %%
-%%   is converted to ps format as follows:                        %%
-%%                                                                %%
-%%             $ dvips opinnaytepohja -o                          %%
-%%                                                                %%
-%%   and then to pdf as follows:                                  %%
-%%                                                                %%
-%%             $ ps2pdf opinnaytepohja.ps                         %%
-%%                                                                %%
-%% Or                                                             %%
-%% pdflatex:                                                      %%
-%%             $ pdflatex opinnaytepohja                          %%
-%%             $ pdflatex opinnaytepohja                          %%
-%%                                                                %%
-%%   Result is the file opinnaytepohja.pdf                        %%
-%%                                                                %%
-%% Explanatory comments in this example begin with                %%
-%% the characters %%, and changes that the user can make          %%
-%% with the character %                                           %%
-%%                                                                %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                            %%
+%% thesistemplate.tex version 4.00 (2023/02/09)                               %%
+%% The LaTeX template file to be used with the aaltothesis.sty (version 4.00) %%
+%% style file.                                                                %%
+%% This package requires pdfx.sty v. 1.5.84 (2017/05/18) or newer.            %%
+%%                                                                            %%
+%% This is licensed under the terms of the MIT license below.                 %%
+%%                                                                            %%
+%% Written by Luis R.J. Costa.                                                %%
+%% Currently developed at Teacher services, Learning Services of Aalto        %%
+%% University by Luis R.J. Costa since May 2019.                              %%
+%%                                                                            %%
+%% Copyright 2017-2021 aaltothesis.cls by Luis R.J. Costa,                    %%
+%% luis.costa@aalto.fi.                                                       %%
+%% Copyright 2017-2018 Swedish translations in aaltothesis.cls by Elisabeth   %%
+%% Nyberg and Henrik Wallén henrik.wallen@aalto.fi.                           %%
+%% Finnish documentation in the template opinnatepohja.tex translated from    %%
+%% the English template documentation.                                        %%
+%% Copyright 2021 English template thesistemplate.tex by Luis R.J. Costa,     %%
+%% Maurice Forget, Henrik Wallén.                                             %%
+%% Copyright 2018-2022 Swedish template kandidatarbetsbotten.tex by Henrik    %%
+%% Wallen.                                                                    %%
+%%                                                                            %%
+%% Permission is hereby granted, free of charge, to any person obtaining a    %%
+%% copy of this software and associated documentation files (the "Software"), %%
+%% to deal in the Software without restriction, including without limitation  %%
+%% the rights to use, copy, modify, merge, publish, distribute, sublicense,   %%
+%% and/or sell copies of the Software, and to permit persons to whom the      %%
+%% Software is furnished to do so, subject to the following conditions:       %%
+%% The above copyright notice and this permission notice shall be included in %%
+%% all copies or substantial portions of the Software.                        %%
+%% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR %%
+%% IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,   %%
+%% FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL    %%
+%% THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER %%
+%% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING    %%
+%% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER        %%
+%% DEALINGS IN THE SOFTWARE.                                                  %%
+%%                                                                            %%
+%%                                                                            %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                            %%
+%%                                                                            %%
+%% An example for writting your thesis using LaTeX                            %%
+%% Original version and development work by Luis Costa, changes to the text   %%
+%% in the Finnish template by Perttu Puska.                                   %%
+%% Support for Swedish added 15092014                                         %%
+%% PDF/A-b support added on 15092017                                          %%
+%% PDF/A-2 support added on 24042018                                          %%
+%% Layout design and typesettin changed 15072021                              %%
+%%                                                                            %%
+%% This example consists of the files                                         %%
+%%       thesistemplate.tex (version 4.00) (for text in English)              %%
+%%       opinnaytepohja.tex (version 4.00) (for text in Finnish)              %%
+%%       kandidatarbetsbotten.tex (version 1.10) (for text in Swedish)        %%
+%%       aaltothesis.cls                                                      %%
+%%       linediagram.pdf (graphics file)                                      %%
+%%       curves.pdf      (graphics file)                                      %%
+%%       ledspole.jpg    (graphics file)                                      %%
+%%                                                                            %%
+%%                                                                            %%
+%% Typeset in Linux with                                                      %%
+%% pdflatex: (recommended method)                                             %%
+%%             $ pdflatex thesistemplate                                      %%
+%%             $ pdflatex thesistemplate                                      %%
+%%                                                                            %%
+%%   The result is the file thesistemplate.pdf that is PDF/A compliant, if    %%
+%%   you have chosen the proper \documenclass options (see comments below)    %%
+%%   and your included graphics files have no problems.                       %%
+%%                                                                            %%
+%%                                                                            %%
+%% Explanatory comments in this example begin with the characters %%, and     %%
+%% changes that the user can make with the character %                        %%
+%%                                                                            %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% WHAT is PDF/A
+%%
+%% PDF/A is the ISO-standardized version of the pdf. The standard's goal is to
+%% ensure that he file is reproducable even after a long time. PDF/A differs
+%% from pdf in that it allows only those pdf features that support long-term
+%% archiving of a file. For example, PDF/A requires that all used fonts are
+%% embedded in the file, whereas a normal pdf can contain only a link to the
+%% fonts in the system of the reader of the file. PDF/A also requires, among
+%% other things, data on colour definition and the encryption used.
+%% Currently three PDF/A standards exist:
+%% PDF/A-1: based on PDF 1.4, standard ISO19005-1, published in 2005.
+%%          Includes all the requirements essential for long-term archiving.
+%% PDF/A-2: based on PDF 1.7, standard ISO19005-2, published in 2011.
+%%          In addition to the above, it supports embedding of OpenType fonts,
+%%          transparency in the colour definition and digital signatures.
+%% PDF/A-3: based on PDF 1.7, standard ISO19005-3, published in 2012.
+%%          Differs from the above only in that it allows embedding of files in
+%%          any format (e.g., xml, csv, cad, spreadsheet or wordprocessing
+%%          formats) into the pdf file.
+%% PDF/A-4: based on PDF 2.0, standard ISO19005-4, published in November 2020.
+%%
+%% PDF/A-1 files are not necessarily PDF/A-2 -compatible and PDF/A-2 are not
+%% necessarily PDF/A-1 -compatible.
+%% Standards PDF/A-1, PDF/A-2 and PDF/A-3 have two levels:
+%% b: (basic) requires that the visual appearance of the document is reliably
+%%    reproduceable.
+%% a (accessible) in addition to the b-level requirements, specifies how
+%%   accessible the pdf file is to assistive software, say, for the physically
+%%   impaired.
+%% The PDF/A-4 standard does not have additional levels like in the earlier
+%% standards.
+%% For more details on PDF/A, see, e.g.,
+%% https://www.loc.gov/preservation/digital/formats/fdd/fdd000318.shtml or
+%% https://www.pdfa.org/resource/iso-19005-pdfa/
+%%
+%%
+%% WHICH PDF/A standard should my thesis conform to?
+%%
+%% Either to the PDF/A-1b or the PDF/A-2b standard. If all the figures and
+%% graphs used in thesis work do not require transparency features, use either
+%% PDF/A-1b or PFDF/A-2b. If you have figures with transparency
+%% characteristics, use the PDF/A-2b standard. However, drawing applications
+%% often use the transparency parameter, setting it to zero, to specify opacity
+%% and get the basic 2-D visualisation. As a result, validation of PDF/A-1b
+%% will fail. Use PDF/A-2b if PDF/A-1b validation fails.
+%% Do not use the PDF/A-3b standard for your thesis.
+%% The font to be used are specified in this templatenand they should not be
+%% changed. In addition to not adhering to Aalto's visual guidelines, you may
+%% have difficulties in producing a PDF/A-compliant PDF.
+%%
+%%
+%% Validate your PDF/A file at https://www.pdf-online.com/osa/validate.aspx
+%%
+%%
+%% WHAT graphics format can I use to produce my PDF/A compliant file?
+%%
+%% When using pdflatex to compile your work, favour the use of pdf, but you can
+%% use the jpg or png format especially for photographs. You will have PDF/A
+%% compliance problems with figures in pdf if the fonts are not embedded in the
+%% pdf file.
+%% If you choose to use latex to compile your work, the only acceptable file
+%% format for your figure is eps. DO NOT use the ps format for your figures.
 
-%% Uncomment one of these:
-%% the 1st when using pdflatex, which directly typesets your document in pdf (use jpg or pdf figures), or the 2nd when producing a ps file (use eps figures, don't use ps figures!).
-\documentclass[english,12pt,a4paper,pdftex,sci,utf8]{aaltothesis}
-%\documentclass[english,12pt,a4paper,dvips]{aaltothesis}
+%% USE one of the following three \documentclass set-ups:
+%% * the first when using pdflatex to directly typeset your document in the
+%%   chosen pdf/a format for online publishing (centred page layout),
+%% * the second for one-sided printing your thesis with the layout (wide left
+%%   margin), or
+%% * the third for two-sided printing.
+%%
+\documentclass[english, 12pt, a4paper, sci, utf8, a-2b, online]{aaltothesis}
+%\documentclass[english, 12pt, a4paper, sci, utf8, a-2b, print]{aaltothesis}
+%\documentclass[english, 12pt, a4paper, sci, utf8, a-2b, print, twoside]{aaltothesis}
 
-%% To the \documentclass above:
-%% specify your school: arts, biz, chem, elec, eng, sci
-%% specify the character encoding scheme used by your editor: utf8, latin1
+%% Use the following options in the \documentclass macro above:
+%% your school: arts, biz, chem, elec, eng, sci
+%% the character encoding scheme used by your editor: utf8, latin1
+%% thesis language: english, finnish, swedish
+%% make an archiveable PDF/A-1b or PDF/A-2b compliant file: a-1b, a-2b
+%%                    (with pdflatex, a normal pdf containing metadata is
+%%                     produced without the a-*b option)
+%% typset for online document or print on paper: online, print
+%%        online: typeset in symmetric layout and blue hypertext for online
+%%                publishing
+%%        print: typeset in a symmetric layout and black hypertext for printing
+%%               on paper
+%%          two-side printing: twoside (default is one-sided printing)
+%%               typeset in a wide margin on the binding side of the page and
+%%               black hypertext. Use with print only.
+%%
 
-%% Use one of these if you write in Finnish (see the Finnish template):
-%\documentclass[finnish,12pt,a4paper,pdftex,elec,utf8]{aaltothesis}
-%\documentclass[finnish,12pt,a4paper,dvips]{aaltothesis}
+%% Use one of these if you write in Finnish (or use the Finnish template
+%% opinnaytepohja.tex)
+%\documentclass[finnish, 12pt, a4paper, elec, utf8, a-1b, online]{aaltothesis}
+%\documentclass[finnish, 12pt, a4paper, elec, utf8, a-1b, print]{aaltothesis}
+%\documentclass[finnish, 12pt, a4paper, elec, utf8, a-1b, print, twoside]{aaltothesis}
 
+%% Use one of these if you write in Swedish (or use the Swedish template
+%% kandidatarbetsbotten.tex)
+%\documentclass[swedish, 12pt, a4paper, elec, utf8, a-2b, online]{aaltothesis}
+%\documentclass[swedish, 12pt, a4paper, elec, utf8, a-2b]{aaltothesis}
+%\documentclass[swedish, 12pt, a4paper, elec, dvips, online]{aaltothesis}
+
+%% FOR USERS OF AMS PACKAGES:
+%% * newtxmath used in this template loads amsmath, so
+%%   you needn't load it. If you want to use options in amsmath, load it here,
+%%   before \setupthesisfonts below to pass the options to amsmath.
+%% * If you want to use amsthm, load it here before \setupthesisfonts to avoid
+%%   a clash with newtxmath.
+%% * If using amsmath with options and you want to use amsthm, load amsthms
+%%   after amsmath, as described in the amsthm documentation.
+%% * Don't use amsbsym or amsfonts. The symbols [and macros] there are defined in
+%%   newtxmath and so clash if used.
+%\usepackage[options]{amsmath}
+%\usepackage{amsthm}
+
+%% DO NOT MOVE OR REMOVE \setupthesisfonts
+\setupthesisfonts
+
+%%
+%% Add here the packges you need
+%%
 \usepackage{graphicx}
 
-%% Use this if you write hard core mathematics, these are usually needed
-\usepackage{amsfonts,amssymb,amsbsy,csquotes}
 
-% \usepackage[backend=biber,natbib=true,style=numeric-comp,sorting=none]{biblatex}
+%% For tables that span multiple pages; used to split a paraphrasing example in
+%% the appendix. If you don't need it, remove it.
+\usepackage{longtable}
+
+%% A package for generating Creative Commons copyright terms. If you don't use
+%% the CC copyright terms, remove it, since otherwise undesired information may
+%% be added to this document's metadata.
+\usepackage[type={CC}, modifier={by-nc-sa}, version={4.0}]{doclicense}
+%% Find below three examples for typesetting the CC license notice.
+
+% \usepackage{amsfonts,amssymb,amsbsy,csquotes}
 \usepackage{biblatex}
 \addbibresource{./refs.bib}
 
-%% Use the macros in this package to change how the hyperref package below typesets its hypertext -- hyperlink colour, font, etc. See the package documentation. It also defines the \url macro, so use the package when not using the hyperref package.
-%\usepackage{url}
-
-%% Use this if you want to get links and nice output. Works well with pdflatex.
 \usepackage{hyperref}
 \hypersetup{pdfpagemode=UseNone, pdfstartview=FitH,
   colorlinks=true,urlcolor=red,linkcolor=blue,citecolor=black,
   pdftitle={Default Title, Modify},pdfauthor={Your Name},
   pdfkeywords={Modify keywords}}
 
+%% Edit to conform to your degree programme
+%% Capitalise the words in the name of the degree programme: it's a name
+\degreeprogram{Computer, Communication and Information Sciences}
+%%
+
+%% Your major
+%%
+\major{Computer Science}
+%%
+
+%% Choose one of the three below
+%%
+%\univdegree{BSc}
+\univdegree{MSc}
+%\univdegree{Lic}
+%%
+
+%% Your name (self explanatory...)
+%%
+\thesisauthor{Aarni Halinen}
+%%
+
+%% Your thesis title and possible subtitle comes here and possibly, again,
+%% together with the Finnish or Swedish abstract. Do not hyphenate the title
+%% (and subtitle), and avoid writing too long a title. Should LaTeX typeset a
+%% long title (and/or subtitle) unsatisfactorily, you might have to force a
+%% linebreak using the \\ control characters. In this case...
+%% * Remember, the title should not be hyphenated!
+%% * A possible 'and' in the title should not be the last word in the line; it
+%%   begins the next line.
+%% * Specify the title (and/or subtitle) again without the linebreak characters
+%%   in the optional argument in box brackets. This is done because the title
+%%   is part of the metadata in the pdf/a file, and the metadata cannot contain
+%%   linebreaks.
+%%
+\thesistitle{Kubernetes inter-pod container isolation}
+%\thesistitle[Title of the thesis]{Title of\\ the thesis}
+%%
+%% Either remove or leave \thesissubtitle{} empty if you don't use it
+%%
+% \thesissubtitle{A possible subtitle}
+
+\place{Espoo}
+
+%% The date for the bachelor's thesis is the day it is presented
+\date{1 June 2023}
+
+%% Thesis supervisor
+%% Note the "\" character in the title after the period and before the space
+%% and the following character string.
+%% This is because the period is not the end of a sentence after which a
+%% slightly longer space follows, but what is desired is a regular interword
+%% space.
+\supervisor{Prof.\ Mario Di Francesco}
+
+%% Advisor(s)---two at the most---of the thesis. Check with your supervisor how
+%% many official advisors you can have.
+\advisor{M.Sc.\ (Tech.)\ José\ Luis\ Martin\ Navarro}
+\advisor{M.Sc.\ (Tech.)\ Jacopo\ Bufalino}
+
+%% If you do your thesis work in a company of other institute, give the name of
+%% the company or instution here. Otherwise, leave the macro empty, comment it
+%% out, or remove it. This will remove this field from the abstract page.
+% \collaborativepartner{Company or institute name}
+
+%% Aaltologo: syntax:
+%% \uselogo{?|!|''}
+%% The logo language is set to be the same as the thesis language.
+%\uselogo{?}
+%\uselogo{!}
+\uselogo{''}
+
+%%%%%%%%%%%%%%%%%%               COPYRIGHT TEXT               %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Copyright of a work is with the creator/author of the work regardless of
+%% whether the copyright mark is explicitly in the work or not. You may, if you
+%% wish---we encourage you to do so---publish your work under a Creative
+%% Commons license (see creativecommons.org), in which case the license text
+%% must be visible in the work. Write here the copyright text you want using the
+%% macro \copyrighttext, which writes the text into the metadata of the pdf file
+%% as well.
+%%
+%% Syntax:
+%% \copyrigthtext{metadata text}{text visible on the page}
+%%
+%% CHOOSE ONE OF THE COPYRIGHT NOTICE STYLES BELOW.
+%% IF USING THE CC TERMS, CHOOSE THE LICENSE YOU WANT TO USE.
+%% The different CC licenses are listed at
+%% https://creativecommons.org/about/cclicenses/.
+%% If you use the icons from the dolicense.sty package, add the package above
+%% (\usepackage{dolicense}).
+%% IMPORTANT NOTE!! Manually write the CC text in the \copyrighttext metadata
+%% text field.
+%%
+%% NOTE: In the macros below, the text written in the metadata must have a
+%% \noexpand macro before the \copyright special character. When not in pdf/a
+%% mode (i.e. a-1b or a-2b are not specified in \documentclass), two \noexpands
+%% are required in the metadata text to correctly render the copyright mark in
+%% the pdf metadata. In pdf/a mode one \noexpand suffices.
+%%
+%% EXAMPLE OF PLAIN COPYRIGHT TEXT
+%% The macros \copyright and \year below must be separated by the \ character
+%% (space chacter) from the text that follows. The macros in the argument of the
+%% \copyrighttext macro automatically insert the year and the author's name.
+%% (Note! \ThesisAuthor is an internal macro of the aaltothesis.cls class file).
+%%
+%\copyrighttext{Copyright \noexpand\textcopyright\ \number\year\ \ThesisAuthor}
+%{Copyright \textcopyright{} \number\year{} \ThesisAuthor}
+%%
+%% Of course, the same text could have simply been written as
+%% \copyrighttext{Copyright \noexpand\copyright\ 2018 Eddie Engineer}
+%% {Copyright \copyright{} 2022 Eddie Engineer}
+%%
+%% EXAMPLES OF CC LICENSE: different ways to display the same license
+%% 1. A simple Creative Commons license text with a link to the copyright notice:
+%\copyrighttext{\noexpand\textcopyright\ \number\year. This work is
+%	licensed under a CC BY-NC-SA 4.0 license.}{\textcopyright{}
+%	\number\year. This work is licensed under a
+%	\href{https://creativecommons.org/licenses/by-nc-nd/4.0/}{CC BY-NC-SA 4.0}
+%	license.}
+%
+%% To get the URL of the license of your choice, go to
+%% https://creativecommons.org/about/cclicenses/, click on the chosen license
+%% you want to use, and copy-and-paste the URL in the macro \href above.
+%%
+%% 2. A short Creative Commons license text containing the respective CC icons
+%% (requires the package dolicense.sty to be added in the preamble as done
+%% above) and a link to the corresponding Creative Commons license webpage (see
+%% the dolicense package documentation for other license icons):
+%\copyrighttext{\noexpand\textcopyright\ \number\year. This work is licensed
+%	under a CC BY-NC-SA 4.0 license.}{
+%	\parbox{95mm}{\noindent\textcopyright\ \number\year. \doclicenseText}
+%	\hspace{1em}\parbox{35mm}{\doclicenseImage}
+%}
+%%
+%% 3. An expanded Creative Commons license text containing the respective CC
+%% icons text and as generated by the dolicense.sty package (the license is set
+%% via package options in \usepackage[options]{dolicense} above; see the
+%% dolicense package documentation for other license texts and icons):
+\copyrighttext{\noexpand\textcopyright\ \number\year. This work is licensed under a Creative Commons "Attribution-NonCommercial-ShareAlike 4.0 International" (BY-NC-SA 4.0) license.}{\noindent\textcopyright\ \number \year \ \doclicenseThis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% The English abstract:
+%% All the details (name, title, etc.) on the abstract page appear as specified
+%% above.
+%% Thesis keywords:
+%% Note! The keywords are separated using the \spc macro
+\keywords{Kubernetes, Container, Docker, Security}
+
+%% The abstract text. This text is included in the metadata of the pdf file as well as the abstract page.
+\thesisabstract{
+The abstract is a short description of the essential contents of the thesis:
+what was studied and how and what were the main findings. For a Finnish thesis,
+the abstract should be written in both Finnish and English; for a Swedish
+thesis, in Swedish and English. The abstracts for English theses written by
+Finnish or Swedish speakers should be written in English and either in Finnish
+or in Swedish, depending on the student’s language of basic education. Students
+educated in languages other than Finnish or Swedish write the abstract only in
+English. Students may include a second or third abstract in their native
+language, if they wish.
+The abstract text of this thesis is written on the readable abstract page as
+well as into the pdf file's metadata via the thesisabstract macro (see the
+comment in the TeX file). Write here the text that goes into the metadata. The
+metadata cannot contain special characters, linebreak or paragraph break
+characters, so these must not be used here. If your abstract does not contain
+special characters and it does not require paragraphs, you may take advantage of
+the abstracttext macro (see the comment in the TeX file below). Otherwise, the
+metadata abstract text must be identical to the text on the abstract page.
+}
+
+%% You can prevent LaTeX from writing into the xmpdata file (it contains all the metadata to be written into the pdf file) by setting the writexmpdata switch to 'false'. This allows you to write the metadata in the correct format directly into the file thesistemplate.xmpdata.
+%\setboolean{writexmpdatafile}{false}
+
 
 %% All that is printed on paper starts here
 \begin{document}
 
-%% Change the school field to specify your school if the automatically set name is wrong
-% \university{aalto-yliopisto}
-% \university{aalto University}
-% \school{Sähkötekniikan korkeakoulu}
-% \school{School of Electrical Engineering}
-
-%% Only for B.Sc. thesis: Choose your degree programme.
-%\degreeprogram{Electronics and electrical engineering}
-
-%% ONLY FOR M.Sc. AND LICENTIATE THESIS: Specify your department,
-%% professorship and professorship code.
-\department{Department of Computer Science}
-\professorship{Computer Science}
-%%
-
-%% Valitse yksi näistä kolmesta
-%%
-%% Choose one of these:
-%\univdegree{BSc}
-\univdegree{MSc}
-%\univdegree{Lic}
-
-%% Your own name (should be self explanatory...)
-\author{Aarni Halinen}
-
-%% Your thesis title comes here and again before a possible abstract in
-%% Finnish or Swedish . If the title is very long and latex does an
-%% unsatisfactory job of breaking the lines, you will have to force a
-%% linebreak with the \\ control character.
-%% Do not hyphenate titles.
-%%
-\thesistitle{Kubernetes inter-pod container isolation}
-
-\place{Espoo}
-
-%% For B.Sc. thesis use the date when you present your thesis.
-\date{1.6.2023}
-
-%% B.Sc. or M.Sc. thesis supervisor
-%% Note the "\" after the comma. This forces the following space to be a normal interword space, not the space that starts a new sentence.
-%% This is done because the fullstop isn't the end of the sentence that should be followed by a slightly longer space but is to be followed by a regular space.
-\supervisor{Prof.\ Mario Di Francesco} %{Prof.\ Pirjo Professori}
-
-%% B.Sc. or M.Sc. thesis advisors(s). You can give upto two advisors in this template. Check with your supervisor how many official advisors you can have.
-\advisor{M.Sc.\ (Tech.)\ José\ Luis\ Martin\ Navarro}
-\advisor{M.Sc.\ (Tech.)\ Jacopo\ Bufalino}
-
-%% Aalto logo: syntax:
-%% \uselogo{aaltoRed|aaltoBlue|aaltoYellow|aaltoGray|aaltoGrayScale}{?|!|''}
-%%
-%% Logo language is set to be the same as the document language.
-%% Logon kieli on sama kuin dokumentin kieli
-\uselogo{aaltoRed}{''}
-
 %% Create the coverpage
 \makecoverpage
 
-%% Note that when writting your master's thesis in English, place
-%% the English abstract first followed by the possible Finnish abstract
+%% Typeset the copyright text.
+%% If you wish, you may leave out the copyright text from the human-readable page of the pdf file. This may seem like a attractive idea for the printed document especially if "Copyright (c) yyyy Eddie Engineer" is the only text on the page. However, the recommendation is to print this copyright text.
+\makecopyrightpage
 
-%% English abstract.
-%% All the information required in the abstract (your name, thesis title, etc.)
-%% is used as specified above.
-%% Specify keywords
-\keywords{Kubernetes, Container, Docker, Security}
+\clearpage
+%% Note that when writing your thesis in English, place the English abstract first followed by the possible Finnish or Swedish abstract.
+
 %% Abstract text
-\begin{abstractpage}[english]
-  Your abstract in English. Try to keep the abstract short; approximately
-  100 words should be enough. The abstract explains your research topic,
-  the methods you have used, and the results you obtained.
-  Your abstract in English. Try to keep the abstract short; approximately
-  100 words should be enough. The abstract explains your research topic,
-  the methods you have used, and the results you obtained.
+%% All the details (name, title, etc.) on the abstract page appear as specified above.
 
-  Your abstract in English. Try to keep the abstract short; approximately
-  100 words should be enough. The abstract explains your research topic,
-  the methods you have used, and the results you obtained.
-  Your abstract in English. Try to keep the abstract short; approximately
-  100 words should be enough. The abstract explains your research topic,
-  the methods you have used, and the results you obtained.
+%% The text in the \thesisabstract macro is stored in the macro \abstractext, so you can use the text metadata abstract directly as follows:
+\begin{abstractpage}[english]
+  \abstracttext{}
 \end{abstractpage}
 
-%% Force a new page so that the possible English abstract starts on a new page
+%% Force a new page so that the possible Finnish or Swedish abstract does not begin on the same page
 \newpage
-%
 %% Abstract in Finnish.  Delete if you don't need it.
-% \thesistitle{Opinnäyteohje}
-% \advisor{TkT Olli Ohjaaja}
-% \degreeprogram{Electronics and electrical engineering}
-% \department{Radiotieteen ja -tekniikan laitos}
-% \professorship{Piiriteoria}
-% %% Avainsanat
-% \keywords{Vastus, Resistanssi,\\ Lämpötila}
-% %% Tiivistelmän tekstiosa
-% \begin{abstractpage}[finnish]
-%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-%   sekä mitä tuloksia on saatu.
-%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-%   sekä mitä tuloksia on saatu.
+%% Respecify those fields that differ from the earlier specification or simply respecify all fields.
+\thesistitle{Opinnäyteen otsikko}
+% \thesissubtitle{Opinnäytteen mahdollinen alaotsikko}
+\supervisor{Prof.\ Mario Di Francesco}
+\advisor{DI José\ Luis\ Martin\ Navarro}
+\advisor{DI Jacopo\ Bufalino}
+% \degreeprogram{Elektroniikka ja sähkötekniikka}
+% \major{Sopiva pääaine}
+% \collaborativepartner{Yhtiön tai laitoksen nimi}
+\date{1.6.2023}
+%% The keywords need not be separated by \spc now.
+\keywords{Vastus, resistanssi, lämpötila}
+%% Abstract text
+\begin{abstractpage}[finnish]
+Tiivistelmä on lyhyt kuvaus työn keskeisestä sisällöstä: mitä tutkittiin ja
+miten sekä mitkä olivat tärkeimmät tulokset. Suomenkielisen opinnäytteen
+tiivistelmä kirjoitetaan suomeksi ja englanniksi ja ruotsinkielisen vastaavasti
+ruotsiksi ja englanniksi. Suomen- tai ruotsinkielisten opiskelijoiden, joiden
+opinnäytteen kieli on englanti, tulee kirjoittaa tiivistelmänsä englanniksi ja
+koulusivistyskielellään. Muiden kuin koulusivistyskieleltään suomen- tai
+ruotsinkielisten tulee kirjoittaa tiivistelmänsä vain englanniksi. Opiskelija
+voi halutessaan lisätä opinnäytteeseensä toisen tai kolmannen tiivistelmän
+omalla äidinkielellään.
+Tämän opinnäytteen tiivistelmäteksti kirjoitetaan opinnäytteen luettavan osan
+lomakkeen lisäksi myös pdf-tiedoston metadataan. Kirjoita tähän metadataan
+kirjoitettavaa teksti. Metadatatekstissa ei saa olla erikoismerkkejä,
+rivinvaiho- tai kappaleenjakomerkkiä, joten näitä merkkeja ei saa käyttää tässä.
+Jos tiivistelmäsi ei sisällä erikoimerkkejä eikä kaipaa kappaleenjakoa, voit
+hyödynttää makroa abstracttext luodessasi lomakkeen tiivistelmää (katso
+kommentti tässä TeX-tiedostossa alla). Metadatatiivistelmatekstin on muuten
+oltava sama kuin lomakkeessa oleva teksti.
 
-%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-%   sekä mitä tuloksia on saatu.
-%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-%   sekä mitä tuloksia on saatu.
-%   Tiivistelmässä on lyhyt selvitys (noin 100 sanaa)
-%   kirjoituksen tärkeimmästä sisällöstä: mitä ja miten on tutkittu,
-%   sekä mitä tuloksia on saatu.
-% \end{abstractpage}
+\end{abstractpage}
 
-% \newpage
+%% Force new page so that the Swedish abstract starts from a new page
+\newpage
 
+\dothesispagenumbering{}
+
+%% Preface
+%% This section is optional. Remove it if you do not want a preface.
 \mysection{Preface}
-I want to thank Professor Pirjo Professori
-and my instructor Olli Ohjaaja for their
-good and poor guidance.\\
+%\mysection{Esipuhe}
+I want to thank Professor Pirjo Professor and my instructors Dr Alan Advisor and
+Ms Elsa Expert for their guidance.
+
+I also want to thank my partner for keeping me sane and alive.
 
 \vspace{5cm}
-Otaniemi, 16.1.2015
+Otaniemi, 9 February 2023\\
 
 \vspace{5mm}
-{\hfill Eddie E.\ A.\ Engineer \hspace{1cm}}
+{\hfill Aarni O.\ Halinen \hspace{1cm}}
 
-%% Force new page after preface
+%% Force a new page after the preface
 \newpage
+
 
 %% Table of contents.
 \thesistableofcontents
+
 
 %% Symbols and abbreviations
 \mysection{Symbols and abbreviations}
@@ -217,43 +490,33 @@ Otaniemi, 16.1.2015
 \subsection*{Symbols}
 
 \begin{tabular}{ll}
-$\uparrow$       & electron spin direction up\\
-$\downarrow$     & electron spin direction down
+  $\uparrow$       & electron spin direction up\\
+  $\downarrow$     & electron spin direction down
 \end{tabular}
 
 \subsection*{Operators}
 
 \begin{tabular}{ll}
-$\nabla \times \mathbf{A}$              & curl of vectorin $\mathbf{A}$\\
+  $\nabla \times \mathbf{A}$              & curl of vectorin $\mathbf{A}$\\
 \end{tabular}
 
 \subsection*{Abbreviations}
 
 \begin{tabular}{ll}
-K8s         & Kubernetes \\
-STRIDE      & an object-oriented analog circuit simulator and design tool \\
+  K8s         & Kubernetes \\
+  STRIDE      & an object-oriented analog circuit simulator and design tool \\
 \end{tabular}
 
 
-%% Tweaks the page numbering to meet the requirement of the thesis format:
-%% Begin the pagenumbering in Arabian numerals (and leave the first page
-%% of the text body empty, see \thispagestyle{empty} below).
-%% Additionally, force the actual text to begin on a new page with the
-%% \clearpage command.
-%% \clearpage is similar to \newpage, but it also flushes the floats (figures
-%% and tables).
-%% There is no need to change these
+%% \clearpage is similar to \newpage, but it also flushes the floats (figures and tables).
 \cleardoublepage
-\storeinipagenumber
-\pagenumbering{arabic}
-\setcounter{page}{1}
 
-%% Leave first page empty
+%% Text body begins. Note that since the text body is mostly in Finnish the majority of comments are also in Finnish after this point. There is no point in explaining Finnish-language specific thesis conventions in English.
+%% This text will be translated to English soon.
+\section{Introduction} \label{sec:intro}
+
+%% Leave page number of the first page empty
 \thispagestyle{empty}
-
-\section{Introduction}
-
-% The sidecar pattern allows attaching new functionality to application without modifying main application source code.
 
 \subsection{Problem Statement}
 
@@ -267,7 +530,7 @@ This thesis proposes a solution for limiting capabilities of sidecar without lim
 
 The following chapter \ref{section-bg} gives background about containers, Kubernetes and explains their common attack vectors. It also discusses Kubernetes networking and container network interface plugins. Chapter \ref{section-methods} proposes ideas for isolating sidecars from main application container. The chapter discusses both container and networking security in the context of Kubernetes Pod. Chapter \ref{section-solution} introduces an implementation based on the findings of the previous chapter. The pros and cons of the solution are discussed in Chapter \ref{section-discussion}. Finally, Chapter \ref{section-conclusion} discusses future research and concludes the thesis.
 
-%% In a thesis, every section starts a new page, hence \clearpage
+%% In a thesis, every section/chapter starts a new page, hence the \clearpage
 \clearpage
 
 \section{Background} \label{section-bg}
@@ -563,84 +826,72 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 \section{Conclusion} \label{section-conclusion}
 
 \clearpage
-
-%% The \phantomsection command is nessesary for hyperref to jump to the correct page, in other words it puts a hyper marker on the page.
-\phantomsection
-
+%% Bibliography/ list of references
 \thesisbibliography
 \printbibliography
 
 %% Appendices
+%% If you don't have appendices, your thesis ends here. Remove \clearpage, \thesisappendix and the following text below. The last command of this file is \end{document}.
 \clearpage
 
 \thesisappendix
 
-\section{Esimerkki liitteest\"a\label{LiiteA}}
+\section{Contents of an appendix}
+\label{app:contents}
 
-Liitteet eiv\"at ole opinn\"aytteen kannalta v\"altt\"am\"att\"omi\"a ja
-opinn\"aytteen tekij\"an on
-kirjoittamaan ryhtyess\"a\"an hyv\"a ajatella p\"arj\"a\"av\"ans\"a ilman liitteit\"a.
-Kokemattomat kirjoittajat, jotka ovat huolissaan
-tekstiosan pituudesta, paisuttavat turhan
-helposti liitteit\"a pit\"a\"akseen tekstiosan pituuden annetuissa rajoissa.
-T\"all\"a tavalla ei synny hyv\"a\"a opinn\"aytett\"a.
+Appendices are not essential in a thesis, and so you must plan the content of
+your thesis as if it does not contain an appendix. The appendix cannot be used
+as a dumping ground for text and ideas from an overgrown thesis.
 
+An appendix is an independent entity, even though it complements the thesis.
+So, the appendix is not, say, just a list or image or table, but contains
+explanatory text as well that indicates the purpose of its content. It can
+contain code listings, like the one below for a simplified list of commands to
+create an appendix.
+\begin{verbatim}
+  \clearpage
+  \appendix
+  \addcontentsline{toc}{section}Contents of an appendix}
+  \thispagestyle{empty}
+  \section*{Contents of an appendix}
+  ...
+  text
+\end{verbatim}
 
-% Intro
-T\"am\"an tekstin l\"ahteen\"a oleva tiedosto on opinn\"aytteen
-pohja, jota voi k\"aytt\"a\"a kandidaatinty\"oss\"a, diplomity\"oss\"a ja
-lisensiaatinty\"oss\"a. Tekstin
-l\"ahteen\"a oleva tiedosto on kirjoitettu  \LaTeX-tiedoston rakenteen
-opiskelemista ajatellen. Tiedoston kommentit sis\"alt\"av\"at
-tietoa, joka on hy\"odyllist\"a opinn\"aytett\"a kirjoitettaessa.
+Equation numbering in the appendix forms a separate, complete entity. Here are a couple of examples how equations in an appendix are numbered:
+% \begin{align}
+%   (x+a)^n &= \sum_{k=0}^n \binom{a}{b} x^n a^{n-k}, \label{appeq:1}\\
+%   \sin\alpha \pm \sin\beta &= 2\sin\left(\frac{\alpha\pm\beta}{2}\right)
+%   \sin\left(\frac{\alpha\mp\beta}{2}\right). \label{liitekaava2}
+% \end{align}
 
-%% Esimerkki luettelosta. Lyhyt ajatusviiva on k\"ayt\"oss\"a
-%% luettelossa, ja se on pituudeltaan
-%% en dash. Merkit\"a\"an latex-koodissa --.
-Johdanto selvitt\"a\"a samat asiat kuin tiivistelm\"a, mutta
-laveammin. Johdannossa kerrotaan yleens\"a seuraavat asiat
+% The appendix can contain figures that do not fit in to complement the text in
+% the thesis. The numbering of figures is like that of equations: see figure~\ref{appfig:refraction}.
 
-\begin{itemize}
-\item[--]Tutkimuksen taustaa ja tutkimusaiheen yleisluonteinen esittely
-\item[--]Tutkimuksen tavoitteet
-\item[--]P\"a\"akysymys ja osaongelmat
-\item[--]Tutkimuksen rajaus ja keskeiset k\"asitteet.
-\end{itemize}
+%% Example of a figure in the appendix. Note how b places the figure at the bottom of the page.
+% \begin{figure}[b]
+%   \centering
+%     \includegraphics[height=31mm]{./linediagram.pdf}
+%   \caption{Figure and caption to show the numbering in the appendix.}
+%   \label{appfig:refraction}
+% \end{figure}
 
-Lyhyiden opinn\"aytteiden johdannot ovat yleens\"a liian pitki\"a, joten
-johdannon paisuttamista on v\"altett\"av\"a. Diplomity\"oh\"on sopii johdanto,
-joka on 2--4 sivua. %% t\"ass\"a on my\"os lyhyt ajatusviiva l. en dash.
-Kandidaatinty\"on johdannon on oltava diplomity\"on
-johdantoa lyhyempi. Sopivasti tiivistetty johdanto ei kaipaa alaotsikoita.
+% The numbering of tables is like that for equations and figures, as is evident
+% from the caption of table~\ref{apptab:schedule}.
 
-% Methods
+%% Example of a table in the appendix. Note how h places the table in the current position.
+% \begin{table}[htb]
+%   \centering
+%   \caption{Caption for the table.}
+%   \label{apptab:schedule}
+%   \sffamily% change the font in the table to sans serif
+%   \fbox{
+%     \begin{tabular}{lp{0.5\linewidth}}
+%       9.00--9.55  & Safety instructions on the use of laboratories\\
+%       9.55--10.00 & Transfer to the laboratory
+%     \end{tabular}}
+% \end{table}
 
-T\"ass\"a osassa kuvataan k\"aytetty tutkimusaineisto ja
-tutkimuksen metodologiset valinnat, sek\"a
-kerrotaan tutkimuksen toteutustapa ja k\"aytetyt menetelm\"at.
-
-% Results
-
-T\"ass\"a osassa esitet\"a\"an tulokset ja vastataan tutkielman alussa
-esitettyihin tutkimuskysymyksiin. Tieteellisen kirjoitelman
-arvo mitataan t\"ass\"a osassa esitettyjen tulosten perusteella.
-
-Tutkimustuloksien merkityst\"a on aina syyt\"a arvioida ja tarkastella
-kriittisesti.  Joskus tarkastelu voi olla t\"ass\"a osassa, mutta se
-voidaan my\"os j\"att\"a\"a viimeiseen osaan, jolloin viimeisen osan nimeksi
-tulee >>Tarkastelu>>. Tutkimustulosten merkityst\"a voi arvioida my\"os
->>Johtop\"a\"at\"okset>>-otsikon alla viimeisess\"a osassa.
-
-% Evaluation
-
-T\"ass\"a osassa on syyt\"a my\"os arvioida tutkimustulosten luotettavuutta.
-Jos tutkimustulosten merkityst\"a arvioidaan >>Tarkastelu>>-osassa,
-voi luotettavuuden arviointi olla my\"os siell\"a.
-
-Opinn\"aytteen tekij\"a vastaa siit\"a, ett\"a opinn\"ayte on t\"ass\"a dokumentissa
-ja opinn\"aytteen tekemist\"a k\"asittelevill\"a luennoilla sek\"a
-harjoituksissa annettujen ohjeiden mukainen muotoseikoiltaan,
-rakenteeltaan ja ulkoasultaan.
 
 \clearpage
 
