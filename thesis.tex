@@ -552,11 +552,11 @@ Kubernetes (K8s) \cite{kubernetes} is an open-source container orchestrator, i.e
 
 \textbf{Pods} are the basic atomic scheduling unit in K8s. Pods consists of one or more tightly-coupled containers with shared storage volume and networking \cite{k8s-docs-pods}. Containers in a pod are always co-located and co-scheduled and run in a shared context, i.e. a set of Linux namespaces. Network, UTS and IPC namespaces are shared by default, and process namespace can be shared with \texttt{v1.PodSpec.shareProcessNamespace}. The common network namespace means that containers in a pod can communicate with each other via localhost, have common IP address and cannot re-use same port numbers. In addition to normal application container, Pods can include special \texttt{initContainers} that are only run on Pod startup. These pods are used for modifying Pod context before the actual workload starts. Multiple \texttt{initContainers} are run sequentially and a failing container blocks the execution of the following initialization and normal workloads. All Pods accross the cluster share same subnet and can access each other via IP address. However, connecting to a Pod with IP address is sub-optimal since Pods are ephermal and restarting a dead pod may receive a new IP address. Furthermore, horizontally scaled Pods with multiple replicas have as many IP addresses, thus making load balancing difficult. Kubernetes concept called Services solves these issues.
 
-Instead of creating Pods directly, \textbf{Deployment} workload resources are used for creating Pods in a cluster, even with singleton Pods \cite{k8s-docs-pods}. With Deployments, user describes the desired state in a declarative manner. The Kubernetes control loop then creates \textbf{ReplicaSet} based on the Deployment resource, which in turn guarantees the availibility of desired amount of Pods \cite{k8s-docs-deployment}. \textbf{DaemonSet} on the other hand is a workload resource that ensures all or some Nodes run a copy of a Pod. Typical usecases for daemons are running Node monitoring and logging, and network plugins which we discuss in depth in section \ref{cni}.
+Instead of creating Pods directly, \textbf{Deployment} workload resources are used for creating Pods in a cluster, even with singleton Pods \cite{k8s-docs-pods}. With Deployments, user describes the desired state in a declarative manner. The Kubernetes control loop then creates \textbf{ReplicaSet} based on the Deployment resource, which in turn guarantees the availibility of desired amount of Pods \cite{k8s-docs-deployment}. \textbf{DaemonSet} on the other hand is a workload resource that ensures all or some Nodes run a copy of a Pod. Typical usecases for daemons are running Node monitoring and logging, and network plugins which was discuss in depth in section \ref{cni}.
 
 \textbf{Services} are an object for exposing groups of Pods over an network \cite{k8s-docs-services}. The object defines a set of enpoints, i.e. the targeted pods, along with a policy about how to make the pods accessible. The targeted pods are determined with a \texttt{selector} field in the object specification. Meanwhile, the \texttt{type} field determines how the Service is exposed. There are four different \texttt{ServiceTypes} levels: i) the default \texttt{ClusterIP} which exposes Service inside the cluster with its own IP address, ii) \texttt{NodePort} which exposes service in each Node's IP address on static port (by default within a range of 30000-32767), iii) \texttt{LoadBalancer} which exposes the Service externally using cloud provider's load balancer and iv) \texttt{ExternalName} which is used to map Service to DNS name instead of a group of Pods. The field is designed as a nested functionality; each \texttt{ServiceType} level adds up to the previous one. Ingress object can also be used for exposing Services to outside of cluster. The Ingress object requires installation of an Ingress Controller to the cluster. Cloud providers often have their own controllers and all the examples in this thesis are executed on a local cluster where no external access is needed. Thus, the controllers are left as an exercise for the reader.
 
-\textbf{Namespaces} provide isolation for cluster objects and allow grouping of objects under a single name. New K8s cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}. Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined. \texttt{kube-system} is the namespace for all objects created by the K8s system which we focus more on the next section \ref{control-plane}. Namespaces also provide a scope for naming; names of resources need to be unique within a namespace, but not across namespaces. Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example in multi-tenancy setups. Pod Security Standards \cite{k8s-docs-pss}, which are used by Pod Security admission controller, are also defined at namespace level. Admission controllers are discussed in section \ref{admission-controllers}.
+\textbf{Namespaces} provide isolation for cluster objects and allow grouping of objects under a single name. New K8s cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}. Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined. \texttt{kube-system} is the namespace for all objects created by the K8s system which is discussed more in depth in the next section \ref{control-plane}. Namespaces also provide a scope for naming; names of resources need to be unique within a namespace, but not across namespaces. Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example in multi-tenancy setups. Pod Security Standards \cite{k8s-docs-pss}, which are used by Pod Security admission controller, are also defined at namespace level. Admission controllers are discussed in section \ref{admission-controllers}.
 
 \subsubsection{Kubernetes components} \label{control-plane}
 
@@ -735,9 +735,13 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \clearpage
 
+\section{Research material and methods} \label{sec:methods}
+
+\clearpage
+
 \section{Pod Privilege Escalation}
 
-This chapter discusses securing K8s Pods from privilege escalation. We start by introducing possible attack scenarios and then propose a solution for mitigating these issues. The solution itself sets some constraints on the network solution we discuss in next chapter. As a baseline requirement, the networking solution should not enable sidecar container breakouts. Finally, we discuss some noted limitations of the solution.
+This chapter discusses securing K8s Pods from privilege escalation. First, possible attack scenarios are introduced and a solution for mitigating these issues is proposed. The solution itself sets some constraints on the network solution, which is discussed more in depth in the next chapter. As a baseline requirement, the networking solution should not enable sidecar container breakouts. Finally, some of the noted limitations of the solution are discussed.
 
 \subsection{Example attack scenarios}
 
@@ -755,7 +759,7 @@ TODO: some extra issues (finding .kubeconfig files, running on control-plane -> 
 
 \subsection{Hardening containers}
 
-For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod configurations is to use Pod Security Admission controller, which we discussed in chapter \ref{admission-controllers}. The \texttt{restricted} Pod Security Standard aims on Pod hardening best practices \cite{k8s-docs-pss}, so we will use it in the solution. The table \ref{table:pod-hardening} describes all the fields affected by the standard.
+For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod configurations is to use Pod Security Admission controller, which was discussed in chapter \ref{admission-controllers}. The \texttt{restricted} Pod Security Standard aims on Pod hardening best practices \cite{k8s-docs-pss}, so it will be used in the solution. The table \ref{table:pod-hardening} describes all the fields affected by the standard.
 
 \begin{table}[H]
   \centering
@@ -830,16 +834,25 @@ For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod 
 
 \subsection{Solution}
 
+\clearpage
 
 \section{Network Isolation}
 
+\subsection{Requirements}
 
+By Pod definition, all containers in a Pod share network namespace. The containers have common network interfaces, including loopback device, and thus a common IP address. For building a zero trust network model inside the namespace, the Pod must be firewalled for both inter-Pod communications from the Pod network interface and intra-Pod communications on the loopback device.
 
-\section{Research material and methods} \label{sec:methods}
-
-
+For inter-pod communications, the built-in NetworkPolicy is not sufficient since the source IP address in shared among all the containers. Furthermore, the intra-Pod communication on the loopback device also has the same source IP address of \texttt{127.0.0.1}, which is also the destination address. The pair of source IP address and source ephemeral port would be an unique identifier for the communication; however, this would require application layer implementation to reserve ports per container.
 
 \subsection{IPTables}
+
+One possible solution for firewalling sidecar from the application is using IPTables.
+
+Usually IPTables rules only refer to IP addresses and ports. However, IPTables ships with an owner module, which support rules based on application's user, group, process (TODO: check this) and session identifier.
+
+Running IPTables in Pod context requires root user permissions with NET\_ADMIN and NET\_RAW capabilities.
+
+The execution context of
 
 \begin{itemize}
   \item If executed from containers in Pod (init, lifecycle, wrapper container), it breaks Security admission rules (root user and NET\_ADMIN)
