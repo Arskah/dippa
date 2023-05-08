@@ -755,6 +755,37 @@ TODO: some extra issues (finding .kubeconfig files, running on control-plane -> 
 
 \subsection{Hardening containers}
 
+For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod configurations is to use Pod Security Admission controller, which we discussed in chapter \ref{admission-controllers}. The \texttt{restricted} Pod Security Standard aims on Pod hardening best practices \cite{k8s-docs-pss}, so we will use it in the solution. The table \ref{table:pod-hardening} describes all the fields affected by the standard.
+
+\begin{table}[H]
+  \centering
+  \caption{Restricted security standard enforcement}
+  \label{table:pod-hardening}
+  \sffamily% change the font in the table to sans serif
+  \begin{tabularx}{\textwidth}{CCC}
+    \hline
+    \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
+    hostPID, hostIPC, hostNetwork & Controls whether container uses host's PID, IPC and network namespace. & false \\ \hline
+    privileged & Controls whether Pod can run privileged containers. & false \\ \hline
+    capabilities.add & Defines Linux capabilities for the container. & NET\_BIND\_SERVICE \\ \hline
+    capabilities.drop & Defines Linux capabilities for the container. & ALL \\ \hline
+    volumes[*] & All volume types are not allowed. For example, hostPath, that maps host directories, are not allowed. & \texttt{volumes[*].configMap}, \texttt{volumes[*].csi}, \texttt{volumes[*].downwardAPI}, \texttt{volumes[*].emptyDir}, \texttt{volumes[*].ephemeral}, \texttt{volumes[*].persistentVolumeClaim}, \texttt{volumes[*].projected}, \texttt{volumes[*].secret} \\ \hline
+    hostPort & Expose container via host's network port. & undefined \\ \hline
+    container.apparmor.security.beta.kubernetes.io/* annotation & Sets the AppArmor profile used by containers.
+    On supported hosts, the runtime/default AppArmor profile is applied by default. & runtime/default, localhost/* \\ \hline
+    seLinuxOptions & Sets the SELinux context of the container. & Set if supported by environment. \\ \hline
+    procMount & The default /proc masks are set up to reduce attack surface, and should be required. & Default \\ \hline
+    seccompProfile.type & Sets the seccomp profile used to sandbox containers. & RuntimeDefault or Localhost \\ \hline
+    sysctls[*].name & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & kernel.shm\_rmid\_forced, net.ipv4.ip\_local\_port\_range, net.ipv4.ip\_unprivileged\_port\_start, net.ipv4.tcp\_syncookies, net.ipv4.ping\_group\_range \\ \hline
+    allowPrivilegeEscalation & Restricts escalation to root privileges. & false \\ \hline
+    runAsNonRoot & Controls whether container can run as root user. & true \\ \hline
+    runAsUser, runAsGroup & Controls the user and group used by container. & Set both to non-zero to run as non-root. \\ \hline
+    windowsOptions.hostProcess & Runs Windows containers as privileged HostProcess. & false \\ \hline
+  \end{tabularx}
+\end{table}
+
+% resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
+% readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
 
 
 % The table \ref{table:container-hardening} describes secuirty related fields in Pod templates \cite{nsa-cisa-hardening}.
