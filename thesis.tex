@@ -742,6 +742,29 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \section{Research material and methods} \label{sec:methods}
 
+This chapter analyzes threats in K8s cluster from the perspective of sidecars and defines security requirements for solution introduced in following chapters. First, threat modelling is used to identify possible attack vectors and readily available mitigations. Then, the model is used to identify all issues that should be solved with the solution. Finally, an example development envrionment is introduced for testing out the solution.
+
+\subsection{Threat modelling}
+
+\begin{table}[H]
+  \centering
+  \caption{Threat model}
+  \label{table:threat-model}
+  \sffamily% change the font in the table to sans serif
+  \begin{tabularx}{\textwidth}{CCC}
+    \hline
+    \textbf{Threat} & \textbf{Description} & \textbf{Mitigation}\\ \hline
+    Permissive container configurations & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. Isolate privileged containers into own namespaces. \\ \hline
+    Permissive RBAC on service accounts & By default, Pods automatically mount service account to all containers. & Set \texttt{automountServiceAccountToken: false} and explicitly mount SAs when necessary. \\ \hline
+    No resource limits for containers & If no limits are set, single container can hog all available resources and affect availability of the service & Set resource limits to containers with \texttt{spec.containers[*].resources}. \\ \hline
+    Pod is allowed to access access control plane components &  & Firewall Pods from \texttt{kube-system} namespace with NetworkPolicies. Explicitly add allow policy when needed. \\ \hline
+    Sidecar can use main containers NetworkPolicy to access \texttt{kube-system} & NetworkPolicies affect Pod network devices. Sidecars share the device with the main container. & No built-in solution available! \\ \hline
+    Sidecar has network access to main container & Containers in a Pod share NICs. Main container is accessible via loopback device. & No built-in solution available! \\ \hline
+    Sidecar is used to sniff main application's traffic & TODO & TLS? \\ \hline
+    Unencrypted secrets & TODO & Encrypt at rest \\ \hline
+  \end{tabularx}
+\end{table}
+
 \clearpage
 
 \section{Pod Privilege Escalation}
