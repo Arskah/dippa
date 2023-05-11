@@ -491,15 +491,15 @@ During the last decade, the modern IT industry has shifted from monolithic softw
 
 During the same time period, containers have become widely used method for deploying applications. Containers are a lightweight virtualization technique in which the application is bundled with all its dependencies into a single, deployable unit that executes on top of the host machine kernel \cite{bui2015analysis}. As such, a single microservice is quite often build and deployed as a container. In more complex systems with multiple containers, an orchestrator is often used for managing the workloads. Kubernetes is one of the most widely used of these orcehstrator tools.
 
-Similar to how design patterns emerged from the birth of object oriented software systems, the modularity of containers and microservices have enabled the development of distributed system design patterns \cite{burns2016design}. The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as own containers from the main application container. Basically, sidecar pattern is an extension of the modularity of the microservices architecture inside the microservice itself. The benefits of sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services and provide a failure containement boundary for example. In Kubernetes, the basic unit of deployment is called a Pod, which may container one or more co-scheduled containers. The Pod is analogous to a microservice, while it contains one main container and all its sidecars, budled into a one deployable unit.
-
-Zero trust and principle of least privilege.
+Similar to how design patterns emerged from the birth of object oriented software systems, the modularity of containers and microservices have enabled the development of distributed system design patterns \cite{burns2016design}. The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as own containers from the main application container. Basically, sidecar pattern is an extension of the modularity of the microservices architecture inside the microservice itself. The benefits of sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services and provide a failure containement boundary, for example. In Kubernetes, the basic unit of deployment is called a Pod, which may include one or more co-scheduled containers. The Pod is analogous to a microservice, while it contains one main container and all its sidecars, bundled into a one deployable unit.
 
 \subsection{Problem Statement}
 
-While the sidecar pattern makes it easier to add peripheral tasks to applications, it opens up questions about application security. In Kubernetes, there are limited amount of security features available on container-level. Most of the security related policies and capabilities are defined for the Pod, which essentially means that any capability required by the main application is inherited in the sidecar. Any privilege or network policy granted for the main application can be used by the sidecar for escalation and lateral movement.
+While the sidecar pattern makes it easier to add peripheral tasks to applications, it opens up questions about application security. In Kubernetes, there are limited amount of security features available on container-level. Most of the security related policies and capabilities are defined for the Pod, which essentially means that any capability required by the main application is inherited in the sidecar. Thus, any privileged workload risks privilege escalation from the sidecar. In addition, Kubernetes' firewalling solution, Network policies, are granted for the whole Pod, and thus opens up paths for lateral movement.
 
 Most often, developers rely on containers by third parties for the sidecar tasks. The source code of the sidecar containers, even if it were open, can be hard or even impossible to verify for known vulnerabilities. This, combined with the limited security features for sidecars, makes any exploitable security issue in the sidecar an optimal launchpad for attack against the whole cluster. Furthermore, malicious actors can use supply chain attacks and typosquatting to trick victims into installing malicious sidecars to their clusters.
+
+Zero trust and principle of least privilege.
 
 This thesis proposes a solution for limiting capabilities of sidecar without limiting those of the main container, thus extending the principle of least privilege to within the pod.
 
@@ -512,8 +512,6 @@ The following chapter \ref{sec:bg} gives background about containers, Kubernetes
 \section{Background} \label{sec:bg}
 
 \subsection{Principle of least privilege, Zero trust...}
-
-\subsection{Microservices architecture}
 
 \subsection{Containerization and Docker}
 
@@ -931,7 +929,7 @@ create an appendix.
 \begin{verbatim}
   \clearpage
   \appendix
-  \addcontentsline{toc}{section}Contents of an appendix}
+  \addcontentsline{toc}{section}Contents of an appendix
   \thispagestyle{empty}
   \section*{Contents of an appendix}
   ...
