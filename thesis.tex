@@ -987,14 +987,14 @@ RUN echo 'export CACERT="${SERVICEACCOUNT}/ca.crt"' >> root/.bashrc
 
 \clearpage
 
-\section{Node.js server with StatsD} \label{app:node-webapp}
+\section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
-\begin{lstlisting}[caption=Node.js server with StatsD]
+\begin{lstlisting}[caption=Node.js server (\texttt{index.js})]
 const Koa = require('koa');
 const app = new Koa();
 
-const StatsD = require('node-statsd'),
-client = new StatsD();
+const StatsD = require('node-statsd');
+const client = new StatsD();
 
 const logMessage = async (ctx, next) => {
   await next();
@@ -1018,6 +1018,249 @@ app.use(async ctx => {
 });
 
 app.listen(8888);
+\end{lstlisting}
+
+\clearpage
+
+\begin{lstlisting}[caption=\texttt{package.json}]
+
+  {
+  "name": "node-app",
+  "version": "1.0.0",
+  "description": "Webserver w/ StatsD",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Aarni Halinen",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.14.2",
+    "node-statsd": "^0.1.1"
+  }
+}
+
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Dockerfile for the server]
+
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY index.js package.json package-lock.json ./
+RUN npm install --omit=dev
+
+ENTRYPOINT [ "npm", "start" ]
+
+\end{lstlisting}
+
+\clearpage
+
+\begin{lstlisting}[caption={Server's K8s deployment resource}]
+
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: node-app
+    namespace: app
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: node-app
+    template:
+      metadata:
+        labels:
+          app: node-app
+        annotations:
+          k8s.v1.cni.cncf.io/networks: '[{
+              "name": "localhost-replacement",
+              "interface": "br0",
+              "ips": [ "192.168.1.201/24" ]
+            }]'
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                  - minikube-m02
+        automountServiceAccountToken: false
+        containers:
+          - name: node-app
+            image: node-app
+            command: [ "node" ]
+            args: [ "index.js" ]
+            ports:
+              - containerPort: 8888
+                protocol: TCP
+            securityContext:
+              allowPrivilegeEscalation: true
+              readOnlyRootFilesystem: false
+              runAsUser: 0
+              runAsGroup: 0
+              runAsNonRoot: false
+              seccompProfile:
+                type: RuntimeDefault
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              limits:
+                cpu: "1"
+                memory: 1024Mi
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: node-app
+    namespace: app
+  spec:
+    ports:
+    - port: 8888
+      protocol: TCP
+      nodePort: 30001
+    selector:
+      app: node-app
+    type: NodePort
+\end{lstlisting}
+
+\clearpage
+
+\begin{lstlisting}[caption={StatsD container's K8s Deployment}]
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: node-app-statsd
+    namespace: app
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: node-app-statsd
+    template:
+      metadata:
+        labels:
+          app: node-app-statsd
+        annotations:
+          k8s.v1.cni.cncf.io/networks: '[{
+              "name": "localhost-replacement",
+              "interface": "br0",
+              "ips": [ "192.168.1.202/24" ]
+            }]'
+      spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                  - minikube-m02
+        automountServiceAccountToken: false
+        containers:
+          - name: statsd
+            # image: statsd/statsd
+            image: hypnza/statsd_dumpmessages
+            ports:
+              - containerPort: 8125
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              runAsUser: 101
+              runAsGroup: 101
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              limits:
+                cpu: "1"
+                memory: 256Mi
+
+\end{lstlisting}
+
+\clearpage
+
+\begin{lstlisting}[caption={Network interfaces and policies}]
+
+  apiVersion: "k8s.cni.cncf.io/v1"
+  kind: NetworkAttachmentDefinition
+  metadata:
+    name: localhost-replacement
+    namespace: app
+  spec:
+    config: '{
+        "cniVersion": "0.3.1",
+        "name": "localhost-replacement",
+        "capabilities": { "ips": true },
+        "type": "macvlan",
+        "master": "eth0",
+        "mode": "bridge",
+        "ipam": {
+          "type": "static"
+        }
+      }'
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: app
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: deny-all-br0
+  namespace: app
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: localhost-replacement
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: allow-statsd
+  namespace: app
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: localhost-replacement
+spec:
+  podSelector:
+    matchLabels:
+      app: node-app-statsd
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: node-app
+      ports:
+        - protocol: TCP
+          port: 8125
+
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Script for mapping localhost to br0 interface}]
+
+  sysctl -w net.ipv4.conf.all.route_localnet=1
+  iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
+  iptables -t nat -A POSTROUTING -j MASQUERADE
+
 \end{lstlisting}
 
 \clearpage
