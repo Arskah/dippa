@@ -21,55 +21,157 @@ Advisor: M.Sc.\ (Tech.)\ Jacopo\ Bufalino
 
 \begin{frame}
 \frametitle{Zero Trust Architecture}
+
+\begin{itemize}
+  \item A
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Containers}
+
+\begin{itemize}
+  \item Linux namespaces
+  \item Container breakout
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Kubernetes}
-This is some text in the first frame. This is some text in the first frame. This is some text in the first frame.
+
+\begin{itemize}
+  \item Industry standard container orchestrator
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Kubernetes Control Plane}
+
+\begin{itemize}
+  \item TODO: Add image
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Container Network Interface (CNI)}
+
+\begin{itemize}
+  \item Kubernetes has no built-in component that provides connectivity and reachability for Pods $\Rightarrow$ CNI plugins
+  \item Plugins may differ in architecture significantly
+  \item Calico and Cilium are powerful CNIs that work with IPTables and eBPF
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Network policies}
+
+\begin{itemize}
+  \item Default Kubernetes resouce, allows creationg of Ingress and Egress rules for Pods
+  \item Rules are applied to Pod's default NIC by the CNI plugin
+  \item Does not affect intra-Pod communication via loopback device
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Pod Security Admission control}
+
+\begin{itemize}
+  \item G
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Sidecar pattern}
+
+\begin{itemize}
+  \item H
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Sidecar pattern issues}
+
+\begin{itemize}
+  \item Containers within a Pod share namespace $\Rightarrow$ same PSA rules
+  \item Same NetworkPolicy for all containers in a Pod $\Rightarrow$ all containers have same Egress policy
+  \item No isolation on loopback device
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Network Isolation Solutions}
+\frametitle{Network Isolation Solution 1: IPTables or eBPF}
+
+\begin{itemize}
+  \item Add IPTables rules to sidecar after Pod is deployed
+  \item Containers share IP address $\Rightarrow$ need to use IPTables owner-module (user-id, similarly to Envoy proxy) to apply rules only for the sidecar
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Discussion}
+  \frametitle{Network Isolation Solution 2: Split containers to own namespace}
+
+  \begin{itemize}
+    \item Own Pods $\Rightarrow$ NPs can be used to restrict communication
+    \item Own Kubernetes namespaces $\Rightarrow$ own PSA rules
+    \item Not sidecar anymore (no loopback connectivity, deployed to different Nodes...)
+    \item Prevent scheduling on different Nodes with Node and Pod affinity
+  \end{itemize}
+  \end{frame}
+
+\begin{frame}
+\frametitle{Multus}
+
+\begin{itemize}
+  \item CNI plugin that allows multiple NICs per Pod
+  \item Uses other CNI plugins for implementation the NICs
+  \item Allows creation of another network segment between Pods
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Solution 2+: Re-routing loopback to Multus NIC}
+
+\begin{itemize}
+  \item Requires kernel flag to be set: net.ipv4.conf.all.route\_localnet=1
+  \item DNAT rule on IPTables in sufficient but eBPF solution is also possible
+  \item Open source Network Policy implementation for Multus network exists
+  \item Combined with affinity, sidecar is deployed on same Node and communicates via loopback!
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Refining the solutions}
+
+\begin{itemize}
+  \item Use a custom CNI plugin or controller loop to modify Pod network namespaces, however no available implementations yet exist
+  \item All solutions are somewhat hacky and unstable, including Multus network with policies
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Extra security}
+
+\begin{itemize}
+  \item Tetragon for observability?
+  \item Service meshes?
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Re-cap}
+
+\begin{itemize}
+  \item Kubernetes does not support Zero Trust Architecture
+  \item Custom CNIs and controllers can be used to build ZTA to Pod network namespace
+\end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{References}
+
+\begin{itemize}
+  \item N
+\end{itemize}
 \end{frame}
 
 \end{document}
