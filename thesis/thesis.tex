@@ -206,7 +206,8 @@
 \usepackage{float}
 
 % Code snippets
-\usepackage{listings}
+% \usepackage{listings}
+\usepackage{minted}[outputdir=/Users/arska/uni/dippa/thesis/output]
 
 % \usepackage{amsfonts,amssymb,amsbsy,csquotes}
 \usepackage{csquotes}
@@ -998,8 +999,10 @@ The execution context of
 
 \section{Dockerfile for penetration testing} \label{app:malicious-sidecar}
 
-\begin{lstlisting}[caption=Dockerfile for penetration testing]
+\begin{listing}
+\caption{Dockerfile for penetration testing}
 
+\begin{minted}{Docker}
 FROM --platform=linux/amd64 ubuntu:22.04
 
 RUN apt update
@@ -1028,14 +1031,17 @@ RUN echo 'export NAMESPACE="$(cat ${SERVICEACCOUNT}/namespace)"' >> root/.bashrc
 RUN echo 'export TOKEN="$(cat ${SERVICEACCOUNT}/token)"' >> root/.bashrc
 # Reference the internal certificate authority (CA)
 RUN echo 'export CACERT="${SERVICEACCOUNT}/ca.crt"' >> root/.bashrc
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
 \section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
-\begin{lstlisting}[caption=Node.js server (\texttt{index.js})]
+\begin{listing}
+\caption{Node.js server (\texttt{index.js})}
+
+\begin{minted}{javascript}
 const Koa = require('koa');
 const app = new Koa();
 
@@ -1064,12 +1070,15 @@ app.use(async ctx => {
 });
 
 app.listen(8888);
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption=\texttt{package.json}]
+\begin{listing}
+\caption{\texttt{package.json}}
 
+\begin{minted}{json}
   {
   "name": "node-app",
   "version": "1.0.0",
@@ -1085,11 +1094,13 @@ app.listen(8888);
     "node-statsd": "^0.1.1"
   }
 }
+\end{minted}
+\end{listing}
 
-\end{lstlisting}
+\begin{listing}
+\caption{Dockerfile for the server}
 
-\begin{lstlisting}[caption=Dockerfile for the server]
-
+\begin{minted}{Docker}
 FROM node:18-alpine
 
 WORKDIR /app
@@ -1098,13 +1109,17 @@ COPY index.js package.json package-lock.json ./
 RUN npm install --omit=dev
 
 ENTRYPOINT [ "npm", "start" ]
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption={Server's K8s deployment resource}]
+\section{Webserver and StatsD deployed with Multus networking} \label{app:multus-sidecar}
 
+\begin{listing}
+\caption{Server's K8s deployment resource}
+
+\begin{minted}{yaml}
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1173,11 +1188,15 @@ ENTRYPOINT [ "npm", "start" ]
     selector:
       app: node-app
     type: NodePort
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption={StatsD container's K8s Deployment}]
+\begin{listing}
+\caption{StatsD container's K8s Deployment}
+
+\begin{minted}{yaml}
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1230,13 +1249,15 @@ ENTRYPOINT [ "npm", "start" ]
               limits:
                 cpu: "1"
                 memory: 256Mi
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption={Network interfaces and policies}]
+\begin{listing}
+\caption{Network interfaces and policies}
 
+\begin{minted}{yaml}
   apiVersion: "k8s.cni.cncf.io/v1"
   kind: NetworkAttachmentDefinition
   metadata:
@@ -1298,16 +1319,18 @@ spec:
       ports:
         - protocol: TCP
           port: 8125
+\end{minted}
+\end{listing}
 
-\end{lstlisting}
+\begin{listing}
+\caption{Script for mapping localhost to br0 interface}
 
-\begin{lstlisting}[language=bash, caption={Script for mapping localhost to br0 interface}]
-
+\begin{minted}{bash}
   sysctl -w net.ipv4.conf.all.route_localnet=1
   iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
   iptables -t nat -A POSTROUTING -j MASQUERADE
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
