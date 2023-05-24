@@ -755,7 +755,7 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \section{Solution requirements} \label{sec:methods}
 
-This chapter analyzes threats in K8s cluster from the perspective of sidecars and defines security requirements for solution introduced in following chapters. First, threat modeling is used to identify possible attack vectors and readily available mitigations. Then, the model is used to identify all issues that should be solved with the solution. Finally, an example development envrionment is introduced for testing out the solution.
+This chapter analyzes threats in K8s cluster from the perspective of sidecars and defines security requirements for solution introduced in following chapters. First, threat modeling is used to identify possible attack vectors and readily available mitigations. Then, the model is used to identify all issues that should be solved with the solution. Finally, an example development environment is introduced for testing out the solution.
 
 \subsection{Threat modeling}
 
@@ -783,9 +783,9 @@ For generic K8s clusters there exists a number of extensive threat models, for e
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation}\\ \hline
-    Permissive container configurations & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. Isolate privileged containers into own namespaces. \\ \hline
+    Privileged containers & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into own namespaces to follow principle of least privilege. \\ \hline
     Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when neeeded. Adhere to the principle of least privilege. \\ \hline
-    No resource limits for containers & If not set, single container can hog all available resources and affect the service availability. & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
+    No resource limits for containers & If not set, single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
     Pod has network access to control plane & By default, all traffic inside cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default, and explicitly allow traffic only if needed. \\ \hline
     Sidecar can use main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the Pod network NIC, which is shared by the sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to cloud resources & Cloud providers may attach cloud identities to cluster Nodes, so that Pods can access resources outside the cluster. & \textbf{Same issue as above!} Block mounting volumes with access to cloud credentials. \\ \hline
@@ -796,17 +796,33 @@ For generic K8s clusters there exists a number of extensive threat models, for e
 \end{minipage}
 \end{table}
 
-\subsection{Requirements}
+
+\subsection{Security requirements}
+
+The threat modeling identified two main categories of issues: permissive workload configuration and networking.
+
+
+However, mitigation
+While a mitigation was found for all configuration related issues,
 
 \begin{itemize}
   \item Set PSA to restricted
   \item Add resource limits
   \item Prevent SA auto mount
+  \item Encrypt all secrets at rest?
   \item Create zero trust Network Policy outside the cluster
   \item Create zero trust network for sidecar egress (inter-Pod)
   \item Create zero trust network on loopback device (intra-Pod)
-  \item Encrypt all secrets at rest?
+  \item Networking setup must not conflict with configuration
 \end{itemize}
+
+\subsection{Environment}
+
+The solution is tested using \texttt{Minikube} (TODO: with Calico CNI?).
+
+A simple Node.js webserver with StatsD sidecar is used as the application workload. The source code can be found in appendix \ref{app:node-webapp}. The webserver serves "Hello world" on port \texttt{8888} and writes response times to the StatsD sidecar via loopback device on port \texttt{8125}, which is the default for StatsD.
+
+For testing
 
 \clearpage
 
