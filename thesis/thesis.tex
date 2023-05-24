@@ -753,29 +753,47 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
 
 \clearpage
 
-\section{Research material and methods} \label{sec:methods}
+\section{Solution requirements} \label{sec:methods}
 
-This chapter analyzes threats in K8s cluster from the perspective of sidecars and defines security requirements for solution introduced in following chapters. First, threat modelling is used to identify possible attack vectors and readily available mitigations. Then, the model is used to identify all issues that should be solved with the solution. Finally, an example development envrionment is introduced for testing out the solution.
+This chapter analyzes threats in K8s cluster from the perspective of sidecars and defines security requirements for solution introduced in following chapters. First, threat modeling is used to identify possible attack vectors and readily available mitigations. Then, the model is used to identify all issues that should be solved with the solution. Finally, an example development envrionment is introduced for testing out the solution.
 
 \subsection{Threat modeling}
 
+% Threat modeling is a structured approach of identifying and prioritizing potential threats to a system, and determining the value that potential mitigations would have in reducing or neutralizing those threats
+
+% Threat modeling methods are used to create an abstraction of the system; profiles of potential attackers, including their goals and methods; and a catalog of potential threats that may arise. There are many threat modeling methods that have been developed. Not all of them are comprehensive; some focus on the abstraction and encourage granularity while others are more people-centric. Some methods focus specifically on risk or privacy concerns. Threat modeling methods can be combined to create a more robust and well-rounded view of potential threats.
+
+% A threat is defined as a potential loss of confidentiality and integrity of an asset caused by an attacker acting to compromise that asset via some attack surface.
+
+A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system. Threat modeling is a structured approach to identify and prioritize the potential threats to a system. This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}. The idea is to build a catalog of all the potential threats, prioritize the issues and try to find mitigations so that no attackers cannot use the vulnerabilities against the system.
+
+For generic K8s clusters there exists a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}. The scope of this thesis is in sidecar security, so we will only focus on the possible threats that can be leveraged after attacker has gained access to a sidecar container inside the cluster. The \textit{Threat Matrix for Kubernetes} is used to identify the threats in this attack scenario, while the results are listed in the table \ref{table:threat-model}.
+
 \begin{table}[H]
   \centering
-  \caption{Threat model}
+  \caption{K8s sidecar threat model}
   \label{table:threat-model}
   \sffamily% change the font in the table to sans serif
+
+  % minipage so that footnotes are printed
+  \noindent
+  \begin{minipage}{\textwidth}
+  % footnotes in minipage are letters instead of numbers, fix that
+  \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation}\\ \hline
     Permissive container configurations & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. Isolate privileged containers into own namespaces. \\ \hline
-    Permissive RBAC on service accounts & Containers in a Pod share SAs used via \texttt{spec.serviceAccountName}. By default, Pods automatically mount the service account to all containers. & Adhere to principle of least privilege. Set \texttt{automountServiceAccountToken: false} and explicitly mount SAs to containers. \\ \hline
-    No resource limits for containers & If no limits are set, single container can hog all available resources and affect availability of the service & Set resource limits to containers with \texttt{spec.containers[*].resources}. \\ \hline
+    Permissive RBAC on service accounts & Containers in a Pod share serviceaccounts\footnote{\texttt{spec.serviceAccountName}}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}.} and explicitly mount them to containers when neeeded. Service accounts should adhere to the principle of least privilege. \\ \hline
+    No resource limits for containers & If not set, single container can hog all available resources and affect the service availability. & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
     Pod has network access to control plane components & By default, all traffic inside cluster is allowed. & Firewall Pods from \texttt{kube-system} namespace with NetworkPolicies. Explicitly add allow policy when needed. \\ \hline
-    Sidecar can use main container's NetworkPolicy to access \texttt{kube-system} & NetworkPolicies affect Pod network devices. Sidecars share the device with the main container. & No built-in solution available! \\ \hline
-    Sidecar has network access to the main container & Containers in a Pod share NICs. Main container is accessible via loopback device. & No built-in solution available! \\ \hline
+    Sidecar can use main container's NetworkPolicy to access \texttt{kube-system} & NetworkPolicies affect Pod network devices. Sidecars share the device with the main container. & \textbf{No built-in solution available!} \\ \hline
+    Sidecar has network access to cloud resources & Some cloud providers attach cloud identities to cluster Nodes, so that cluster Pods can access cloud resources outside the cluster. & Same issue with egress policy as above! Block mounting volumes with access to cloud credentials. \\ \hline
+    Sidecar has network access to the main container & Containers in a Pod share NICs. Main container is accessible via loopback device. & \textbf{No built-in solution available!} \\ \hline
     Sidecar is used to sniff main application's traffic & TODO & mTLS? Requires service mesh. \\ \hline
     Unencrypted secrets & TODO & Encrypt at rest \\ \hline
   \end{tabularx}
+\end{minipage}
 \end{table}
 
 \clearpage
