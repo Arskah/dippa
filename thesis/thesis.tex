@@ -799,11 +799,11 @@ For generic K8s clusters there exists a number of extensive threat models, for e
 
 \subsection{Security requirements}
 
-The threat modeling identified two main categories of issues: permissive workload configuration and networking.
+The threat modeling identified two main categories of issues: permissive workload configurations and networking related issues. (TODO: Add more text about misconfigurations). A solution for cluster setup that prevents the threats from misconfiugrations is given in chapter \ref{sec:pod-hardening}.
 
+However, mitigating all the networking threats proved impossible with K8s built-ins. The root cause for the issues is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container, even though it is trivial for ingress traffic. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering.
 
-However, mitigation
-While a mitigation was found for all configuration related issues,
+%TODO: check loopback CNI plugin in cni.dev example plugins
 
 \begin{itemize}
   \item Set PSA to restricted
@@ -816,6 +816,8 @@ While a mitigation was found for all configuration related issues,
   \item Networking setup must not conflict with configuration
 \end{itemize}
 
+For building a zero trust network model inside the namespace, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC, and intra-Pod communications on the loopback NIC. Few possible solutions for building a Zero Trust network inside the Pod is given in chapter \ref{sec:network-solution}.
+
 \subsection{Environment}
 
 The solution is tested using \texttt{Minikube} (TODO: with Calico CNI?).
@@ -824,7 +826,7 @@ A simple Node.js webserver with StatsD sidecar is used as the application worklo
 
 \clearpage
 
-\section{Pod Privilege Escalation}
+\section{Pod Privilege Escalation} \label{sec:pod-hardening}
 
 This chapter discusses securing K8s Pods from privilege escalation. First, possible attack scenarios are introduced and a solution for mitigating these issues is proposed. The solution itself sets some constraints on the network solution, which is discussed more in depth in the next chapter. As a baseline requirement, the networking solution should not enable sidecar container breakouts. Finally, some of the noted limitations of the solution are discussed.
 
@@ -921,13 +923,11 @@ For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod 
 
 \clearpage
 
-\section{Network Isolation}
+\section{Network Isolation} \label{sec:network-solution}
 
-\subsection{Requirements}
+\subsection{Reserved source ports}
 
-By Pod definition, all containers in a Pod share network namespace. The containers have common network interfaces, including loopback device, and thus a common IP address. For building a zero trust network model inside the namespace, the Pod must be firewalled for both inter-Pod communications from the Pod network interface and intra-Pod communications on the loopback device.
-
-For inter-pod communications, the built-in NetworkPolicy is not sufficient since the source IP address in shared among all the containers. Furthermore, the intra-Pod communication on the loopback device also has the same source IP address of \texttt{127.0.0.1}, which is also the destination address. The pair of source IP address and source ephemeral port would be an unique identifier for the communication; however, this would require application layer implementation to reserve ports per container.
+The pair of source IP address and source ephemeral port would be an unique identifier for the communication; however, this would require application layer implementation to reserve ports per container.
 
 \subsection{IPTables}
 
