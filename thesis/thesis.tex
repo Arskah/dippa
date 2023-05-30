@@ -751,6 +751,29 @@ XDP programs can read and modify contents of the packets \cite{vieira2020fast}. 
 
 TC programs are executed when both incoming and outgoing packets reach kernel traffic control function within the Linux network stack \cite{vieira2020fast}. The ingress hook executes after the packet is parsed to \textit{skbuff} but before most of the network stack. On egress the stack is traversed in reverse, thus the hook executes after most of the network stack. TC programs can read and write directly to packet in memory. Similarly to XDP programs, the return value of the program determines further processing of the packet. The packet can be passed furhter in the stack with \texttt{TC\_ACT\_OK}, dropped with \texttt{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \texttt{TC\_ACT\_RECLASSIFY}, among others.
 
+% TODO: delete or find a good place for these scenarios
+\clearpage
+\subsection{Example attack scenarios}
+
+\begin{itemize}
+  \item Privileged container
+  \item CAP\_SYS\_ADMIN, mounting /proc and chroot
+  \item CAP\_SYS\_PTRACE, shellcode injection to running program, nc 172.17.0.1 on port running shell
+  \item Mounted docker socket, creating privileged containers
+\end{itemize}
+
+All of the example attack scenarios start by attacker getting shell access to a container running in a Pod, usually through a remote code exectuion (RCE) flaw on the container application and then executing reverse shell inside the Pod. The scope of the examples is not in the initial attack, but in the Pod template misconfiugrations that then provide some path for the attacker to escalate the attack and even take over the whole cluster in the end.
+
+TODO: add file \label{yaml:priv-container}
+
+The first attack scenario includes a privileged container, as described in file \ref{yaml:priv-container}. Privileged containers have all the capabilities of the host machine, so practically they can be perform almost any action available on the host. This includes but is not restricted to for example "pipeing" (TODO: better word for undock.sh and other scripts) commands as root to the Node's shell and mounting the host's disks. If combined with \texttt{hostPID:\ true}, the attacker can see all the processes on the host, and use \texttt{nsenter} to execute commands in the other processes' namespaces.
+
+TODO: add file \label{yaml:host-path}
+
+The second example file \ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access for mounting the whole host's filesystem, with both read and write access. Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack. Important credentials include \texttt{kubeconfig} files which store access token to K8s API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
+
+TODO: some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
+
 \clearpage
 
 \section{Solution requirements} \label{sec:methods}
@@ -765,7 +788,9 @@ This chapter analyzes threats in K8s cluster from the perspective of sidecars an
 
 % A threat is defined as a potential loss of confidentiality and integrity of an asset caused by an attacker acting to compromise that asset via some attack surface.
 
-A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system. Threat modeling is a structured approach to identify and prioritize the potential threats to a system. This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}. The idea is to build a catalog of all the potential threats, prioritize the issues and try to find mitigations so that no attackers cannot use the vulnerabilities against the system.
+A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system. Threat modeling is a structured approach to identify and prioritize the potential threats to a system. This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}. The idea is to build a catalog of all the potential threats, prioritize the issues and try to find mitigations so that the attackers cannot use the vulnerabilities against the system.
+
+% TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
 
 For generic K8s clusters there exists a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}. The scope of this thesis is in sidecar security, so we will only focus on the possible threats that can be leveraged after attacker has gained access to a sidecar container inside the cluster. The \textit{Threat Matrix for Kubernetes} is used to identify the threats in this scenario, while the results are listed in the table \ref{table:threat-model}.
 
@@ -784,6 +809,7 @@ For generic K8s clusters there exists a number of extensive threat models, for e
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation}\\ \hline
     Privileged containers & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into own namespaces to follow principle of least privilege. \\ \hline
+    Writing to host file system & TODO. & Disallow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
     Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when neeeded. Adhere to the principle of least privilege. \\ \hline
     No resource limits for containers & If not set, single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
     Pod has network access to control plane & By default, all traffic inside cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default, and explicitly allow traffic only if needed. \\ \hline
@@ -817,7 +843,6 @@ The threat modeling identified two main categories of issues: permissive workloa
   \item How to enforce Zero Trust network, that allows traffic filtering on container-level and limits communication on both loopback and Pod network interface device?
 \end{enumerate}
 
-
 As for the first question, existing mitigations were already found while threat modeling. A solution where all the mitigations are applied is introduced in chapter \ref{sec:pod-hardening}. For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC, and intra-Pod communications on the loopback NIC. However, K8s does not provide any built-in solution for creating these firewalls.
 
 The root cause for the issues is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. Even though ingress traffic can be identified trivially with destination port number, the source port for egress traffic depends on the TCP implementation. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering. Few possible solutions for building the Zero Trust network inside the Pod is given in chapter \ref{sec:network-solution}.
@@ -834,31 +859,19 @@ For penetration testing purposes, another sidecar with common networking and K8s
 
 \clearpage
 
-\section{Pod Privilege Escalation} \label{sec:pod-hardening}
+\section{Hardening Pod security} \label{sec:pod-hardening}
 
-This chapter discusses securing K8s Pods from privilege escalation. First, possible attack scenarios are introduced and a solution for mitigating these issues is proposed. The solution itself sets some constraints on the network solution, which is discussed more in depth in the next chapter. As a baseline requirement, the networking solution should not enable sidecar container breakouts. Finally, some of the noted limitations of the solution are discussed.
+This chapter provides a solution for hardening Pods against privilege escalation attacks. The solution enforces that deployed resources follow K8s best security practices. Most of the practices are enforced by the built-in Pod Security Admission controller. However, this chapter also introduces extra security measures that fix few oversights regarding sidecar containers in the controller.
 
-\subsection{Example attack scenarios}
+% This chapter discusses securing K8s Pods from privilege escalation. First, possible attack scenarios are introduced and a solution for mitigating these issues is proposed. The solution itself sets some constraints on the network solution, which is discussed more in depth in the next chapter. As a baseline requirement, the networking solution should not enable sidecar container breakouts. Finally, some of the noted limitations of the solution are discussed.
 
-All of the example attack scenarios start by attacker getting shell access to a container running in a Pod, usually through a remote code exectuion (RCE) flaw on the container application and then executing reverse shell inside the Pod. The scope of the examples is not in the initial attack, but in the Pod template misconfiugrations that then provide some path for the attacker to escalate the attack and even take over the whole cluster in the end.
+\subsection{Restricted Pod Security Standard}
 
-TODO: add file \label{yaml:priv-container}
-
-The first attack scenario includes a privileged container, as described in file \ref{yaml:priv-container}. Privileged containers have all the capabilities of the host machine, so practically they can be perform almost any action available on the host. This includes but is not restricted to for example "pipeing" (TODO: better word for undock.sh and other scripts) commands as root to the Node's shell and mounting the host's disks. If combined with \texttt{hostPID:\ true}, the attacker can see all the processes on the host, and use \texttt{nsenter} to execute commands in the other processes' namespaces.
-
-TODO: add file \label{yaml:host-path}
-
-The second example file \ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access for mounting the whole host's filesystem, with both read and write access. Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack. Important credentials include \texttt{kubeconfig} files which store access token to K8s API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
-
-TODO: some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
-
-\subsection{Hardening containers}
-
-For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod configurations is to use Pod Security Admission controller, which was discussed in chapter \ref{admission-controllers}. The \texttt{restricted} Pod Security Standard aims on Pod hardening best practices \cite{k8s-docs-pss}, so it will be used in the solution. The table \ref{table:pod-hardening} describes all the fields affected by the standard.
+Since version 1.25, K8s has shipped with Pod Security Admission controller as a stable feature. The controller, as discussed in chapther \ref{admission-controllers}, provides three different Pod Security Standards that can be used to warn and enforce against insecure Pod configurations. The \texttt{restricted} Pod Security Standard is the strictest of the standards and aims on the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution. The table \ref{table:pod-hardening} lists all fields affected by the standard.
 
 \begin{table}[H]
   \centering
-  \caption{Restricted security standard enforcement}
+  \caption{Pod fields enforced by \texttt{restricted} Security Standard}
   \label{table:pod-hardening}
   \sffamily% change the font in the table to sans serif
   \begin{tabularx}{\textwidth}{CCC}
@@ -882,6 +895,24 @@ For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod 
     windowsOptions.hostProcess & Runs Windows containers as privileged HostProcess. & false \\ \hline
   \end{tabularx}
 \end{table}
+
+
+\begin{lstlisting}[caption={Namespace resource with \texttt{restricted} Security Standard},label={lst:pss}]
+  apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: foo
+    labels:
+      name: foo
+      pod-security.kubernetes.io/enforce: restricted
+      pod-security.kubernetes.io/audit: restricted
+      pod-security.kubernetes.io/warn: restricted
+      pod-security.kubernetes.io/enforce-version: latest
+      pod-security.kubernetes.io/audit-version: latest
+      pod-security.kubernetes.io/warn-version: latest
+\end{lstlisting}
+
+The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as label on a K8s namespace resource, as shown in example \ref{lst:pss}.
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
 % readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
@@ -913,19 +944,90 @@ For Kubernetes versions bigger than 1.25, the easiest way to enforce secure Pod 
 %   \end{tabularx}
 % \end{table}
 
-\cite{nsa-cisa-hardening}
+% \cite{nsa-cisa-hardening}
 
+\subsection{Enforcing other best practices}
 
+The \texttt{restricted} Security Standard hardens the Pod against most of the identified security threats. However, it still does not enforce specific resource limits and allows automatic mounting of Service Accounts for the Pod containers.
 
+\subsubsection{Manual service account mounting}
 
-\begin{itemize}
-  \item Privileged container
-  \item CAP\_SYS\_ADMIN, mounting /proc and chroot
-  \item CAP\_SYS\_PTRACE, shellcode injection to running program, nc 172.17.0.1 on port running shell
-  \item Mounted docker socket, creating privileged containers
-\end{itemize}
+By default, the Service Account tokens are mounted into \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container. This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token some other way. Since volume mounts are defined per container, and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
 
-\subsection{Pod Security Admission}
+\begin{lstlisting}[caption={Service account with permissions for fetching Pod resources},label={lst:service-account}]
+  apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    namespace: foo
+    name: foo-service-account-role
+  rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""] # "" indicates the core API group
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+  ---
+  apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: foo-service-account
+    namespace: foo
+  ---
+  kind: RoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: foo-service-account-rolebinding
+    namespace: secure-ns
+  subjects:
+  - kind: ServiceAccount
+    name: foo-service-account
+    apiGroup: ""
+  roleRef:
+    kind: Role
+    name: foo-service-account-role
+    apiGroup: ""
+  ---
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: foo-service-account-token
+    namespace: foo
+    annotations:
+      kubernetes.io/service-account.name: foo-service-account
+  type: kubernetes.io/service-account-token
+\end{lstlisting}
+
+% TODO: serviceAccountName: foo-service-account and automatic creation of tokens
+
+The example \ref{lst:service-account} shows how to create a Service Account token with permission to read the status of Pods in the cluster. While Role, RoleBinding and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with automounting of service account tokens would create and mount on the containers. When the token
+
+created by the Secret resource is mounted to the same path as the automatic mounting, as in example \ref{lst:service-account-mount}, the token is only mounted to the container that needs it. With this approach, the account tokens are only mounted into containers that actually need the them and the tokens cannot be used for privilege escalation from other containers of the Pod.
+
+\begin{lstlisting}[caption={Service Account is only mounted into main container},label={lst:service-account-mount}]
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: main
+          image: main-image
+          volumeMounts:
+            - name: service-account
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: sidecar-container
+          image: sidecar-image
+      volumes:
+        - name: service-account
+          secret:
+            secretName: foo-service-account-token
+\end{lstlisting}
+
+\subsubsection{Enforcing the fields}
+
+TODO: Create ValidatingAdmissionWebhook that prevents deployment without resource limits and enforcers manual service account mounting
 
 \subsection{Solution}
 
