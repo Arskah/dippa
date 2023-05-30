@@ -206,7 +206,8 @@
 \usepackage{float}
 
 % Code snippets
-\usepackage{listings}
+% \usepackage{listings}
+\usepackage[outputdir=/Users/arska/uni/dippa/thesis/output]{minted}
 
 % \usepackage{amsfonts,amssymb,amsbsy,csquotes}
 \usepackage{csquotes}
@@ -897,7 +898,11 @@ Since version 1.25, K8s has shipped with Pod Security Admission controller as a 
 \end{table}
 
 
-\begin{lstlisting}[caption={Namespace resource with \texttt{restricted} Security Standard},label={lst:pss}]
+\begin{listing}
+  \caption{Namespace resource with \texttt{restricted} Security Standard}
+  \label{lst:pss}
+
+\begin{minted}{yaml}
   apiVersion: v1
   kind: Namespace
   metadata:
@@ -910,7 +915,8 @@ Since version 1.25, K8s has shipped with Pod Security Admission controller as a 
       pod-security.kubernetes.io/enforce-version: latest
       pod-security.kubernetes.io/audit-version: latest
       pod-security.kubernetes.io/warn-version: latest
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as label on a K8s namespace resource, as shown in example \ref{lst:pss}.
 
@@ -953,50 +959,54 @@ The \texttt{restricted} Security Standard hardens the Pod against most of the id
 \subsubsection{Manual service account mounting}
 
 By default, the Service Account tokens are mounted into \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container. This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token some other way. Since volume mounts are defined per container, and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
+\begin{listing}
+  \caption{Service account with permissions for fetching Pod resources}
+  \label{lst:service-account}
 
-\begin{lstlisting}[caption={Service account with permissions for fetching Pod resources},label={lst:service-account}]
-  apiVersion: rbac.authorization.k8s.io/v1
+\begin{minted}{yaml}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: foo
+  name: foo-service-account-role
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: foo-service-account
+  namespace: foo
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: foo-service-account-rolebinding
+  namespace: secure-ns
+subjects:
+- kind: ServiceAccount
+  name: foo-service-account
+  apiGroup: ""
+roleRef:
   kind: Role
-  metadata:
-    namespace: foo
-    name: foo-service-account-role
-  rules:
-  - apiGroups: [""] # "" indicates the core API group
-    resources: ["pods"]
-    verbs: ["get", "watch", "list"]
-  - apiGroups: [""] # "" indicates the core API group
-    resources: ["pods"]
-    verbs: ["get", "watch", "list"]
-  ---
-  apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: foo-service-account
-    namespace: foo
-  ---
-  kind: RoleBinding
-  apiVersion: rbac.authorization.k8s.io/v1
-  metadata:
-    name: foo-service-account-rolebinding
-    namespace: secure-ns
-  subjects:
-  - kind: ServiceAccount
-    name: foo-service-account
-    apiGroup: ""
-  roleRef:
-    kind: Role
-    name: foo-service-account-role
-    apiGroup: ""
-  ---
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: foo-service-account-token
-    namespace: foo
-    annotations:
-      kubernetes.io/service-account.name: foo-service-account
-  type: kubernetes.io/service-account-token
-\end{lstlisting}
+  name: foo-service-account-role
+  apiGroup: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: foo-service-account-token
+  namespace: foo
+  annotations:
+    kubernetes.io/service-account.name: foo-service-account
+type: kubernetes.io/service-account-token
+\end{minted}
+\end{listing}
 
 % TODO: serviceAccountName: foo-service-account and automatic creation of tokens
 
@@ -1004,7 +1014,11 @@ The example \ref{lst:service-account} shows how to create a Service Account toke
 
 created by the Secret resource is mounted to the same path as the automatic mounting, as in example \ref{lst:service-account-mount}, the token is only mounted to the container that needs it. With this approach, the account tokens are only mounted into containers that actually need the them and the tokens cannot be used for privilege escalation from other containers of the Pod.
 
-\begin{lstlisting}[caption={Service Account is only mounted into main container},label={lst:service-account-mount}]
+\begin{listing}
+  \caption{Service Account is only mounted into main container}
+  \label{lst:service-account-mount}
+
+\begin{minted}{yaml}
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1023,7 +1037,8 @@ spec:
         - name: service-account
           secret:
             secretName: foo-service-account-token
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \subsubsection{Enforcing the fields}
 
@@ -1106,8 +1121,10 @@ The execution context of
 
 \section{Dockerfile for penetration testing} \label{app:malicious-sidecar}
 
-\begin{lstlisting}[caption=Dockerfile for penetration testing]
+\begin{listing}
+\caption{Dockerfile for penetration testing}
 
+\begin{minted}{Docker}
 FROM --platform=linux/amd64 ubuntu:22.04
 
 RUN apt update
@@ -1136,14 +1153,17 @@ RUN echo 'export NAMESPACE="$(cat ${SERVICEACCOUNT}/namespace)"' >> root/.bashrc
 RUN echo 'export TOKEN="$(cat ${SERVICEACCOUNT}/token)"' >> root/.bashrc
 # Reference the internal certificate authority (CA)
 RUN echo 'export CACERT="${SERVICEACCOUNT}/ca.crt"' >> root/.bashrc
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
 \section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
-\begin{lstlisting}[caption=Node.js server (\texttt{index.js})]
+\begin{listing}
+\caption{Node.js server (\texttt{index.js})}
+
+\begin{minted}{javascript}
 const Koa = require('koa');
 const app = new Koa();
 
@@ -1172,12 +1192,15 @@ app.use(async ctx => {
 });
 
 app.listen(8888);
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption=\texttt{package.json}]
+\begin{listing}
+\caption{\texttt{package.json}}
 
+\begin{minted}{json}
   {
   "name": "node-app",
   "version": "1.0.0",
@@ -1193,11 +1216,13 @@ app.listen(8888);
     "node-statsd": "^0.1.1"
   }
 }
+\end{minted}
+\end{listing}
 
-\end{lstlisting}
+\begin{listing}
+\caption{Dockerfile for the server}
 
-\begin{lstlisting}[caption=Dockerfile for the server]
-
+\begin{minted}{Docker}
 FROM node:18-alpine
 
 WORKDIR /app
@@ -1206,15 +1231,17 @@ COPY index.js package.json package-lock.json ./
 RUN npm install --omit=dev
 
 ENTRYPOINT [ "npm", "start" ]
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
 \section{Webserver and StatsD deployed with Multus networking} \label{app:multus-sidecar}
 
-\begin{lstlisting}[caption={Server's K8s deployment resource}]
+\begin{listing}
+\caption{Server's K8s deployment resource}
 
+\begin{minted}{yaml}
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1283,11 +1310,15 @@ ENTRYPOINT [ "npm", "start" ]
     selector:
       app: node-app
     type: NodePort
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption={StatsD container's K8s Deployment}]
+\begin{listing}
+\caption{StatsD container's K8s Deployment}
+
+\begin{minted}{yaml}
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1340,13 +1371,15 @@ ENTRYPOINT [ "npm", "start" ]
               limits:
                 cpu: "1"
                 memory: 256Mi
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
-\begin{lstlisting}[caption={Network interfaces and policies}]
+\begin{listing}
+\caption{Network interfaces and policies}
 
+\begin{minted}{yaml}
   apiVersion: "k8s.cni.cncf.io/v1"
   kind: NetworkAttachmentDefinition
   metadata:
@@ -1408,16 +1441,19 @@ spec:
       ports:
         - protocol: TCP
           port: 8125
+\end{minted}
+\end{listing}
 
-\end{lstlisting}
+\begin{listing}
+\caption{Script for mapping localhost to br0 interface}
 
-\begin{lstlisting}[language=bash, caption={Script for mapping localhost to br0 interface}]
-
+\begin{minted}{bash}
+  #!/bin/bash
   sysctl -w net.ipv4.conf.all.route_localnet=1
   iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
   iptables -t nat -A POSTROUTING -j MASQUERADE
-
-\end{lstlisting}
+\end{minted}
+\end{listing}
 
 \clearpage
 
