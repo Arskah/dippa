@@ -956,11 +956,13 @@ The Security Standard can be enforced trivially by adding \texttt{pod-security.k
 
 The \texttt{restricted} Security Standard hardens the Pod against most of the identified security threats. However, it still does not enforce specific resource limits and allows automatic mounting of Service Accounts for the Pod containers.
 
+Adding resource limits to containers is straight-forward: just add values to both \texttt{resources.limits.cpu} and \texttt{resources.limits.memory} fields for all of the containers, similarly to example \ref{lst:service-account-mount}. The CPU usage is measured in CPU units and can also be expressed in millicpus, ie. both "1000m" and integer value of 1 are equivalent to 1 physical or virtual core \cite{k8s-docs-resources}. For memory, the base unit is bytes, but it also supports quantity suffixes like "M", "Mi" and "Gi" for megabytes, mebibytes and gigibytes, respectively. The resource limits are registered to container's cgroup by the Kubelet. The limits are hard, which means that if a container exceeds its CPU limit, the execution is blocked until more CPU capacity is available. Exceeding the memory limit causes termination with a out-of-memory (OOM) error.
+
 \subsubsection{Manual service account mounting}
 
 By default, the Service Account tokens are mounted into \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container. This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token some other way. Since volume mounts are defined per container, and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
 \begin{listing}
-  \caption{Service account with permissions for fetching Pod resources}
+  \caption{ServiceAccount with permissions for fetching Pod resources}
   \label{lst:service-account}
 
 \begin{minted}{yaml}
@@ -1010,12 +1012,10 @@ type: kubernetes.io/service-account-token
 
 % TODO: serviceAccountName: foo-service-account and automatic creation of tokens
 
-The example \ref{lst:service-account} shows how to create a Service Account token with permission to read the status of Pods in the cluster. While Role, RoleBinding and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with automounting of service account tokens would create and mount on the containers. When the token
+The example \ref{lst:service-account} shows how to create a Service Account token with permission to read the status of Pods in the cluster. While Role, RoleBinding and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with automounting of service account tokens would create and mount on the containers. When the token created by the Secret resource is mounted to the same path as the automatic mounting, as in example \ref{lst:service-account-mount}, the token is only mounted to the container that needs it. With this approach, the account tokens are only mounted into containers that actually need the them and the tokens cannot be used for privilege escalation from other containers of the Pod.
 
-created by the Secret resource is mounted to the same path as the automatic mounting, as in example \ref{lst:service-account-mount}, the token is only mounted to the container that needs it. With this approach, the account tokens are only mounted into containers that actually need the them and the tokens cannot be used for privilege escalation from other containers of the Pod.
-
-\begin{listing}
-  \caption{Service Account is only mounted into main container}
+\begin{listing}[h!]
+  \caption{Two container Pod with resource limits and manually mounted ServiceAccount}
   \label{lst:service-account-mount}
 
 \begin{minted}{yaml}
@@ -1028,11 +1028,19 @@ spec:
       containers:
         - name: main
           image: main-image
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1024Mi
           volumeMounts:
             - name: service-account
               mountPath: /var/run/secrets/kubernetes.io/serviceaccount
         - name: sidecar-container
           image: sidecar-image
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
       volumes:
         - name: service-account
           secret:
@@ -1042,7 +1050,9 @@ spec:
 
 \subsubsection{Enforcing the fields}
 
-TODO: Create ValidatingAdmissionWebhook that prevents deployment without resource limits and enforcers manual service account mounting
+There is no built-in enforcement tool for the fields in Kubernetes. However, Admission Controller can be used for enforcement by creating a custom ValidatingAdmissionWebhook that fails Pod creation if the fields are not correctly set. This is actually how Pod Security Admission works under the hood: it is just built-in to the Kubernetes system as a original hook.
+
+% TODO: Create ValidatingAdmissionWebhook that prevents deployment without resource limits and enforcers manual service account mounting
 
 \subsection{Solution}
 
@@ -1083,17 +1093,28 @@ The execution context of
   \item Guaranteed to work, since own network namespaces. What type of issues arise from this?
   \item Need to force pods to same node, for common volumes (if using host as storage)
   \item Implementation by hand, or Admission controller that catches sidecars?
-  \item Loopback is not the same anymore. DNAT that changes localhost to external? => impossible with IPTables!
+  \item Loopback is not the same anymore. DNAT that changes localhost to external?
 \end{itemize}
 
 \subsection{Multus}
 
 \begin{itemize}
   \item Requires breaking sidecar pattern with multiple Pods
-  \item Allows use of custom IP addresses
+  \item Same as own Pod for sidecars, but allows use of custom IP addresses
   \item Hard to implement between nodes, affinity rules
-  \item Loopback not easy to hijack for forwarding to new IPs
+  \item Loopback DNAT
 \end{itemize}
+
+\begin{listing}
+  \caption{Script for mapping localhost to br0 interface}
+
+  \begin{minted}{bash}
+    #!/bin/bash
+    sysctl -w net.ipv4.conf.all.route_localnet=1
+    iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
+    iptables -t nat -A POSTROUTING -j MASQUERADE
+  \end{minted}
+  \end{listing}
 
 \clearpage
 
@@ -1121,7 +1142,7 @@ The execution context of
 
 \section{Dockerfile for penetration testing} \label{app:malicious-sidecar}
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{Dockerfile for penetration testing}
 
 \begin{minted}{Docker}
@@ -1160,7 +1181,7 @@ RUN echo 'export CACERT="${SERVICEACCOUNT}/ca.crt"' >> root/.bashrc
 
 \section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{Node.js server (\texttt{index.js})}
 
 \begin{minted}{javascript}
@@ -1197,7 +1218,7 @@ app.listen(8888);
 
 \clearpage
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{\texttt{package.json}}
 
 \begin{minted}{json}
@@ -1219,7 +1240,7 @@ app.listen(8888);
 \end{minted}
 \end{listing}
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{Dockerfile for the server}
 
 \begin{minted}{Docker}
@@ -1238,7 +1259,7 @@ ENTRYPOINT [ "npm", "start" ]
 
 \section{Webserver and StatsD deployed with Multus networking} \label{app:multus-sidecar}
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{Server's K8s deployment resource}
 
 \begin{minted}{yaml}
@@ -1315,7 +1336,7 @@ ENTRYPOINT [ "npm", "start" ]
 
 \clearpage
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{StatsD container's K8s Deployment}
 
 \begin{minted}{yaml}
@@ -1376,7 +1397,7 @@ ENTRYPOINT [ "npm", "start" ]
 
 \clearpage
 
-\begin{listing}
+\begin{listing}[h!]
 \caption{Network interfaces and policies}
 
 \begin{minted}{yaml}
@@ -1443,77 +1464,5 @@ spec:
           port: 8125
 \end{minted}
 \end{listing}
-
-\begin{listing}
-\caption{Script for mapping localhost to br0 interface}
-
-\begin{minted}{bash}
-  #!/bin/bash
-  sysctl -w net.ipv4.conf.all.route_localnet=1
-  iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
-  iptables -t nat -A POSTROUTING -j MASQUERADE
-\end{minted}
-\end{listing}
-
-\clearpage
-
-\section{Contents of an appendix}
-\label{app:contents}
-
-Appendices are not essential in a thesis, and so you must plan the content of
-your thesis as if it does not contain an appendix. The appendix cannot be used
-as a dumping ground for text and ideas from an overgrown thesis.
-
-An appendix is an independent entity, even though it complements the thesis.
-So, the appendix is not, say, just a list or image or table, but contains
-explanatory text as well that indicates the purpose of its content. It can
-contain code listings, like the one below for a simplified list of commands to
-create an appendix.
-\begin{verbatim}
-  \clearpage
-  \appendix
-  \addcontentsline{toc}{section}Contents of an appendix
-  \thispagestyle{empty}
-  \section*{Contents of an appendix}
-  ...
-  text
-\end{verbatim}
-
-Equation numbering in the appendix forms a separate, complete entity. Here are a couple of examples how equations in an appendix are numbered:
-% \begin{align}
-%   (x+a)^n &= \sum_{k=0}^n \binom{a}{b} x^n a^{n-k}, \label{appeq:1}\\
-%   \sin\alpha \pm \sin\beta &= 2\sin\left(\frac{\alpha\pm\beta}{2}\right)
-%   \sin\left(\frac{\alpha\mp\beta}{2}\right). \label{liitekaava2}
-% \end{align}
-
-% The appendix can contain figures that do not fit in to complement the text in
-% the thesis. The numbering of figures is like that of equations: see figure~\ref{appfig:refraction}.
-
-%% Example of a figure in the appendix. Note how b places the figure at the bottom of the page.
-% \begin{figure}[b]
-%   \centering
-%     \includegraphics[height=31mm]{./linediagram.pdf}
-%   \caption{Figure and caption to show the numbering in the appendix.}
-%   \label{appfig:refraction}
-% \end{figure}
-
-% The numbering of tables is like that for equations and figures, as is evident
-% from the caption of table~\ref{apptab:schedule}.
-
-%% Example of a table in the appendix. Note how h places the table in the current position.
-% \begin{table}[htb]
-%   \centering
-%   \caption{Caption for the table.}
-%   \label{apptab:schedule}
-%   \sffamily% change the font in the table to sans serif
-%   \fbox{
-%     \begin{tabular}{lp{0.5\linewidth}}
-%       9.00--9.55  & Safety instructions on the use of laboratories\\
-%       9.55--10.00 & Transfer to the laboratory
-%     \end{tabular}}
-% \end{table}
-
-
-\clearpage
 
 \end{document}
