@@ -1,0 +1,99 @@
+%% ssgposter.sty
+%% Package for creating SSG-style posters
+%% ---
+%% Last updated on 2023/02/15
+
+\RequirePackage{titlesec}
+\RequirePackage{tabularx}
+\RequirePackage{enumitem}
+\RequirePackage{amssymb}
+\RequirePackage{xcolor}
+\RequirePackage{xifthen}
+
+% Basic colors
+\definecolor{ssgBlue}{HTML}{002F6C}
+\definecolor{ssgGray}{HTML}{808080}
+\definecolor{ssgEmphasis}{HTML}{226CB4}
+\definecolor{ssgNegative}{HTML}{DD5354}
+\definecolor{ssgPositive}{HTML}{009E69}
+
+% Title format
+\newcommand{\sectiontitle}[1]{\textcolor{ssgBlue}{\Large{\bfseries{#1}}}}
+
+% Blue for emphasis
+\newcommand{\emphasis}[1]{\textcolor{ssgEmphasis}{#1}}
+% Red for negative points
+\newcommand{\positive}[1]{\textcolor{ssgPositive}{#1}}
+% Green for positive points
+\newcommand{\negative}[1]{\textcolor{ssgNegative}{#1}}
+
+% Poster width
+\newcommand{\posterwidth}{.96\linewidth}
+% Double column width
+\newcommand{\doublecolumnwidth}{.47\linewidth}
+% Single column width
+\newcommand{\singlecolumnwidth}{1.0\linewidth}
+
+% Empty (horizontal) space between columns
+\newcommand{\columnspace}{25mm}
+% Empty (vertical) space in the header
+\newcommand{\headingspace}{15mm}
+% Empty (vertical) space between sections
+\newcommand{\sectionspace}{10mm}
+% Empty (vertical) space in the footer
+\newcommand{\footerspace}{1mm}
+
+% Gray vertical line for the header and footer
+\renewcommand{\vline}{\textcolor{ssgGray}{\noindent\rule{\textwidth}{2pt}}\par}
+% Itemize bullet style
+\renewcommand{\labelitemi}{\tiny\color{black}\raisebox{.5\height}{$\blacksquare$\hspace{.5em}}}
+
+% Remove line numbers
+\thispagestyle{empty}
+
+% Header style
+\makeatletter         
+\newcommand\makeheader{
+\large
+\begin{minipage}[t]{\linewidth}
+	\vspace{\headingspace}
+	\begin{minipage}[t]{\posterwidth}
+        \textcolor{ssgGray}{\bfseries{\textsf{Secure Systems Group, Aalto University}}}\par
+		\vline
+		\textcolor{black}{\textsf{\@author}}\par
+		\vspace{\headingspace}
+		\textcolor{ssgBlue}{\Huge{\bfseries{\textsf{\@title}}}}\par
+        \vspace{\sectionspace}
+		\vline
+	\end{minipage}
+\end{minipage}\par
+\vspace{\headingspace}
+}
+\makeatother
+
+% Footer style
+\makeatletter         
+\newcommand\makefooter[2][]{
+\vfill
+\begin{minipage}{\posterwidth}
+	\vline
+	\begin{minipage}[t]{.15\linewidth}
+		\vspace{\footerspace}
+		\AaltoLogoLarge{1.55}{?}{aaltoBlue}
+	\end{minipage}
+	\ifthenelse{\isempty{#2}}{}{
+		\begin{minipage}[t]{.6\linewidth}
+			\vspace{\footerspace}
+			\textcolor{black}{\textbf{Contact}: #2}\par
+		\end{minipage}
+	}
+	\hfill
+    \ifthenelse{\isempty{#1}}{}{
+	    \begin{minipage}[t]{0.075\linewidth}
+		    \vspace{\footerspace}
+		    \includegraphics[width=4em]{#1}
+	    \end{minipage}
+    }
+\end{minipage}
+}
+\makeatother

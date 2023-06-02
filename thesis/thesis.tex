@@ -961,6 +961,7 @@ Adding resource limits to containers is straight-forward: just add values to bot
 \subsubsection{Manual service account mounting}
 
 By default, the Service Account tokens are mounted into \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container. This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token some other way. Since volume mounts are defined per container, and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
+
 \begin{listing}
   \caption{ServiceAccount with permissions for fetching Pod resources}
   \label{lst:service-account}
@@ -1055,6 +1056,8 @@ There is no built-in enforcement tool for the fields in Kubernetes. However, Adm
 % TODO: Create ValidatingAdmissionWebhook that prevents deployment without resource limits and enforcers manual service account mounting
 
 \subsection{Solution}
+
+TODO: Summarize all the solutions into a one
 
 \clearpage
 
