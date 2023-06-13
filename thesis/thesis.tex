@@ -1051,7 +1051,7 @@ spec:
 
 \subsubsection{Enforcing the fields}
 
-There is no built-in enforcement tool for the fields in Kubernetes. However, Admission Controller can be used for enforcement by creating a custom ValidatingAdmissionWebhook that fails Pod creation if the fields are not correctly set. This is actually how Pod Security Admission works under the hood: it is just built-in to the Kubernetes system as a original hook.
+There is no built-in enforcement tool for the fields in Kubernetes. However, Admission Controller can be used for enforcement by creating a custom ValidatingAdmissionWebhook that fails Pod creation if the fields are not correctly set. This is actually how Pod Security Admission works under the hood: it is just built-in to the Kubernetes system as an original hook.
 
 % TODO: Create ValidatingAdmissionWebhook that prevents deployment without resource limits and enforcers manual service account mounting
 
@@ -1063,11 +1063,15 @@ TODO: Summarize all the solutions into a one
 
 \section{Network Isolation} \label{sec:network-solution}
 
-\subsection{Reserved source ports}
+This chapter introduces solutions for implementing zero trust network architecture in K8s cluster. As disucssed in earlier chapters, the common network namespace and IP address prevents isolation of containers of the Pod. Thus, the isolation should either enforced with firewall rules inside the namespace, or the sidecar containers should be deployed in different network namespaces. The chapter provides solutions that implement both of these approaches.
+
+\subsection{Applying firewall rules inside Pod network namespace}
+
+\subsubsection{Reserved source ports}
 
 The pair of source IP address and source ephemeral port would be an unique identifier for the communication; however, this would require application layer implementation to reserve ports per container.
 
-\subsection{IPTables}
+\subsubsection{IPTables}
 
 One possible solution for firewalling sidecar from the application is using IPTables.
 
@@ -1083,14 +1087,14 @@ The execution context of
   \item Use owner module for catching egress packets (userId, groupId, processId)
 \end{itemize}
 
-\subsection{eBPF program firewall}
+\subsubsection{eBPF program firewall}
 
 \begin{itemize}
   \item XDP works only for ingress
   \item TC needs some way to catch egress from sidecar
 \end{itemize}
 
-\subsection{Own pod for sidecar}
+\subsection{Own network namespace for sidecar}
 
 \begin{itemize}
   \item Guaranteed to work, since own network namespaces. What type of issues arise from this?
@@ -1099,7 +1103,7 @@ The execution context of
   \item Loopback is not the same anymore. DNAT that changes localhost to external?
 \end{itemize}
 
-\subsection{Multus}
+\subsubsection{Multus}
 
 \begin{itemize}
   \item Requires breaking sidecar pattern with multiple Pods
