@@ -844,9 +844,7 @@ The threat modeling identified two main categories of issues: permissive workloa
   \item How to enforce Zero Trust network, that allows traffic filtering on container-level and limits communication on both loopback and Pod network interface device?
 \end{enumerate}
 
-As for the first question, existing mitigations were already found while threat modeling. A solution where all the mitigations are applied is introduced in chapter \ref{sec:pod-hardening}. For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC, and intra-Pod communications on the loopback NIC. However, K8s does not provide any built-in solution for creating these firewalls.
-
-The root cause for the issues is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. Even though ingress traffic can be identified trivially with destination port number, the source port for egress traffic depends on the TCP implementation. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering. Few possible solutions for building the Zero Trust network inside the Pod is given in chapter \ref{sec:network-solution}.
+As for the first question, existing mitigations were already found while threat modeling. A solution where all the mitigations are applied is introduced in chapter \ref{sec:pod-hardening}. For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC, and intra-Pod communications on the loopback NIC. However, K8s does not provide any built-in solution for creating these firewalls. Few possible solutions for building the Zero Trust network inside the Pod is given in chapter \ref{sec:network-solution}.
 
 %TODO: check loopback CNI plugin in cni.dev example plugins
 
@@ -1063,29 +1061,65 @@ TODO: Summarize all the solutions into a one
 
 \section{Network Isolation} \label{sec:network-solution}
 
-This chapter introduces solutions for implementing zero trust network architecture in K8s cluster. As disucssed in earlier chapters, the common network namespace and IP address prevents isolation of containers of the Pod. Thus, the isolation should either enforced with firewall rules inside the namespace, or the sidecar containers should be deployed in different network namespaces. The chapter provides solutions that implement both of these approaches.
+Implementing a zero trust network architecture in K8s cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies. The root cause for this is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. Even though ingress traffic can be identified trivially with destination port number, the source port for egress traffic depends on the TCP implementation. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering.
+
+This chapter introduces two general approaches as solution for the issue. The first solution enforces firewall rules inside the network namespace, while the second creates network namespace for each container by deploying it to its own Pod. While deploying containers in own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container. Most notably, the sidecars will have own their own independent lifecycle and schedulation, and the communication via the loopback device will be broken.
+
+In the scope of this thesis we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}. Thus, re-introducing these characteristics to the containers are also part of the solution.
 
 \subsection{Applying firewall rules inside Pod network namespace}
 
-\subsubsection{Reserved source ports}
+% graph TB
+%     subgraph "cluster"
+%         subgraph "app-pod"
+%             n3(App container)
+%             n4(Sidecar)
+%             lo(lo)
+%             eth0(eth0)
+%         end
+%         subgraph "kube-system"
+%             n1(API)
+%         end
+%     end
 
-The pair of source IP address and source ephemeral port would be an unique identifier for the communication; however, this would require application layer implementation to reserve ports per container.
+%     subgraph "cluster-external"
+%     end
+
+%     n3---eth0
+%     n3<--A-->lo
+%     n4<--B-->lo
+%     n4<--C-->eth0
+
+%     eth0<--NetworkPolicy-->cluster-external
+%     eth0<--NetworkPolicy-->kube-system
+
+% classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
+% classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
+% classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+% class n1,n2,n3,n4 k8s;
+% class kube-system,app-ns,cluster-external cluster;
+
+% TODO: Create image with clear firewall locations and rules, not relying on IPtables
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/iptables.png}
+  \caption{Single network namespace architecture}
+  \label{fig:single-net-solution}
+\end{figure}
+
+
+The figure \ref{fig:single-net-solution} illustrates the network architecture with all of the required network rule enforcement points.
+
+% With the testing environment, the rules must make sure that the sidecar cannot access any other
 
 \subsubsection{IPTables}
 
-One possible solution for firewalling sidecar from the application is using IPTables.
+% TODO: Check process id
+Usually, IPTables rules are applied to packets by their IP addresses and ports. However, modern versions of IPTables ship with an owner module, which support rules based on application's user, group and session identifiers. For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user id. While the session identifier is assigned at runtime by the kernel, containers' user and group ids can be overridden with \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively. Thus, any ingress or egress traffic of a container with unique user identifier can be filtered with IPTables.
 
-Usually IPTables rules only refer to IP addresses and ports. However, IPTables ships with an owner module, which support rules based on application's user, group, process (TODO: check this) and session identifier.
+This apporach is similar to how Istio redirects all Pod traffic through the Envoy sidecar and the service mesh. Istio adds IPTables rules that re-route all traffic, except that which originates from user id 1337, to the Envoy proxy \cite{istio-iptables}. The user id itself is reserved for the proxy, and it is used to avoid re-routing the proxy traffic, which would cause an infinite loop.
 
-Running IPTables in Pod context requires root user permissions with NET\_ADMIN and NET\_RAW capabilities.
-
-The execution context of
-
-\begin{itemize}
-  \item If executed from containers in Pod (init, lifecycle, wrapper container), it breaks Security admission rules (root user and NET\_ADMIN)
-  \item Can be executed from Node itself, using DaemonSet (sort of a CNI plugin), but a bit hacky.
-  \item Use owner module for catching egress packets (userId, groupId, processId)
-\end{itemize}
+The commands for creating the IPTables rules could be applied to Pod with initContainer or postStart lifecycle handler. However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities. Using these methods would require changing Pod's security admission level to privileged. Thus, it is more optimal to apply the rules outside the Pod's context; for example by using a DaemonSet, similarly to how many CNI plugins configure the Pod network.
 
 \subsubsection{eBPF program firewall}
 
@@ -1094,23 +1128,50 @@ The execution context of
   \item TC needs some way to catch egress from sidecar
 \end{itemize}
 
+\subsubsection{Deployment}
+
 \subsection{Own network namespace for sidecar}
 
-\begin{itemize}
-  \item Guaranteed to work, since own network namespaces. What type of issues arise from this?
-  \item Need to force pods to same node, for common volumes (if using host as storage)
-  \item Implementation by hand, or Admission controller that catches sidecars?
-  \item Loopback is not the same anymore. DNAT that changes localhost to external?
-\end{itemize}
+% graph TB
+%     subgraph "cluster"
+%         subgraph "app-pod"
+%             eth01(eth0)
+%         end
+%         subgraph "side-pod"
+%             eth02(eth0)
+%         end
+%         subgraph "kube-system"
+%             n1(API)
+%         end
+%     end
 
-\subsubsection{Multus}
+%     subgraph "cluster-external"
+%     end
 
-\begin{itemize}
-  \item Requires breaking sidecar pattern with multiple Pods
-  \item Same as own Pod for sidecars, but allows use of custom IP addresses
-  \item Hard to implement between nodes, affinity rules
-  \item Loopback DNAT
-\end{itemize}
+%     eth01<--NetworkPolicy-->cluster-external
+%     eth01<--NetworkPolicy-->kube-system
+%     eth01<--NetworkPolicy-->eth02
+%     eth02<--NetworkPolicy-->cluster-external
+%     eth02<--NetworkPolicy-->kube-system
+
+% classDef plain fill:#ddd,stroke:#fff,stroke-width:4px,color:#000;
+% classDef k8s fill:#326ce5,stroke:#fff,stroke-width:4px,color:#fff;
+% classDef cluster fill:#fff,stroke:#bbb,stroke-width:2px,color:#326ce5;
+% class n1,n2,n3,n4 k8s;
+% class kube-system,app-ns,cluster-external cluster;
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/multus.png}
+  \caption{Multiple network namespaces architecture}
+  \label{fig:multi-pod-net-solution}
+\end{figure}
+
+The figure \ref{fig:multi-pod-net-solution} illustrates network architecture where containers are deployed in different Pods.
+
+\subsubsection{Routing localhost to other network namespace}
+
+DNAT rule
 
 \begin{listing}
   \caption{Script for mapping localhost to br0 interface}
@@ -1121,7 +1182,22 @@ The execution context of
     iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
     iptables -t nat -A POSTROUTING -j MASQUERADE
   \end{minted}
-  \end{listing}
+\end{listing}
+
+\subsubsection{Handling network rules}
+
+\begin{itemize}
+  \item Use NetworkPolicy
+  \item Use Multus
+\end{itemize}
+
+\subsubsection{Scheduling containers on same Nodes}
+
+Using affinity rules
+
+\subsubsection{Mutating sidecars to multiple Pods?}
+
+MutatingAdmissionWebhook?
 
 \clearpage
 
