@@ -206,8 +206,118 @@
 \usepackage{float}
 
 % Code snippets
-% \usepackage{listings}
-\usepackage[outputdir=/Users/arska/uni/dippa/thesis/output]{minted}
+% \usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{listings}
+
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{codepurple}{rgb}{0.69,0,0.86}
+\definecolor{codered}{rgb}{0.64,0.08,0.08}
+\definecolor{codeteal}{rgb}{0,0.44,0.76}
+\definecolor{codeyellow}{rgb}{0.48,0.37,0.15}
+\definecolor{codedarklime}{rgb}{0.04,0.53,0.35}
+
+\definecolor{darkred}{rgb}{0.5,0,0}
+\definecolor{bgcolor}{rgb}{0.95,0.95,0.92}
+
+\newcommand\YAMLcolonstyle{\color{black}\mdseries}
+\newcommand\YAMLkeystyle{\color{darkred}\mdseries}
+\newcommand\YAMLvaluestyle{\color{blue}\mdseries}
+
+\makeatletter
+
+% here is a macro expanding to the name of the language
+% (handy if you decide to change it further down the road)
+\newcommand\language@yaml{yaml}
+
+\expandafter\expandafter\expandafter\lstdefinelanguage
+\expandafter{\language@yaml}
+{
+  % assuming a key comes first
+  basicstyle=\YAMLkeystyle,
+  sensitive=false,
+  comment=[l]{\#},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{codegreen}\ttfamily,
+  stringstyle=\YAMLvaluestyle\ttfamily,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{orange}]{*},
+  % switch to value style at :
+  moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:},
+  literate =    {---}{{\ProcessThreeDashes}}3
+                {>}{{\textcolor{codered}\textgreater}}1
+                {|}{{\textcolor{codered}\textbar}}1
+                {\ -\ }{{\mdseries\ -\ }}3,
+}
+
+% switch to key style at EOL
+\lst@AddToHook{EveryLine}{\ifx\lst@language\language@yaml\YAMLkeystyle\fi}
+\makeatother
+
+\newcommand\ProcessThreeDashes{\llap{\color{black}\mdseries-{-}-}}
+
+\lstdefinelanguage{javascript}{
+  keywords={import, export, try, catch, return, throw, switch, case, if, while, do, else, break, await},
+  ndkeywords={class, implements, typeof, function, this, new, true, false, null, boolean, const, var, in, async, =>},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  morestring=[b]`
+}
+
+\lstdefinelanguage{json}{
+  basicstyle=\YAMLkeystyle, % assuming a key comes first
+  sensitive=false,
+  moredelim=[l][\color{orange}]{\&},
+  moredelim=[l][\color{orange}]{*},
+  moredelim=**[il][\YAMLcolonstyle{:}\YAMLvaluestyle]{:}, % switch to value style at :
+  morestring=[b]',
+  morestring=[b]",
+  literate =    {---}{{\ProcessThreeDashes}}3
+                {>}{{\textcolor{codered}\textgreater}}1
+                {|}{{\textcolor{codered}\textbar}}1
+                {\ -\ }{{\mdseries\ -\ }}3,
+}
+
+\lstdefinelanguage{Docker}{
+  keywords={FROM, USER, ADD, RUN, COPY, WORKDIR, ENTRYPOINT, CMD},
+  sensitive=false,
+  comment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstdefinelanguage{bash}{
+  keywords={if, while, do, else, done},
+  ndkeywords={set, echo, cut, nsenter, docker, iptables},
+  sensitive=false,
+  comment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{bgcolor},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    ndkeywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{codered},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 % \usepackage{amsfonts,amssymb,amsbsy,csquotes}
 \usepackage{csquotes}
@@ -895,26 +1005,24 @@ Since version 1.25, K8s has shipped with Pod Security Admission controller as a 
   \end{tabularx}
 \end{table}
 
-
-\begin{listing}
-  \caption{Namespace resource with \texttt{restricted} Security Standard}
-  \label{lst:pss}
-
-\begin{minted}{yaml}
-  apiVersion: v1
-  kind: Namespace
-  metadata:
+\begin{lstlisting}[
+  caption={Namespace resource with \texttt{restricted} Security Standard},
+  label={lst:pdss},
+  language=yaml
+]
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: foo
+  labels:
     name: foo
-    labels:
-      name: foo
-      pod-security.kubernetes.io/enforce: restricted
-      pod-security.kubernetes.io/audit: restricted
-      pod-security.kubernetes.io/warn: restricted
-      pod-security.kubernetes.io/enforce-version: latest
-      pod-security.kubernetes.io/audit-version: latest
-      pod-security.kubernetes.io/warn-version: latest
-\end{minted}
-\end{listing}
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn-version: latest
+\end{lstlisting}
 
 The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as label on a K8s namespace resource, as shown in example \ref{lst:pss}.
 
@@ -960,11 +1068,11 @@ Adding resource limits to containers is straight-forward: just add values to bot
 
 By default, the Service Account tokens are mounted into \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container. This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token some other way. Since volume mounts are defined per container, and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
 
-\begin{listing}
-  \caption{ServiceAccount with permissions for fetching Pod resources}
-  \label{lst:service-account}
-
-\begin{minted}{yaml}
+\begin{lstlisting}[
+  caption={ServiceAccount with permissions for fetching Pod resources},
+  label={lst:service-account},
+  language={yaml}
+]
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -1006,18 +1114,17 @@ metadata:
   annotations:
     kubernetes.io/service-account.name: foo-service-account
 type: kubernetes.io/service-account-token
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 % TODO: serviceAccountName: foo-service-account and automatic creation of tokens
 
 The example \ref{lst:service-account} shows how to create a Service Account token with permission to read the status of Pods in the cluster. While Role, RoleBinding and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with automounting of service account tokens would create and mount on the containers. When the token created by the Secret resource is mounted to the same path as the automatic mounting, as in example \ref{lst:service-account-mount}, the token is only mounted to the container that needs it. With this approach, the account tokens are only mounted into containers that actually need the them and the tokens cannot be used for privilege escalation from other containers of the Pod.
 
-\begin{listing}[h!]
-  \caption{Two container Pod with resource limits and manually mounted ServiceAccount}
-  \label{lst:service-account-mount}
-
-\begin{minted}{yaml}
+\begin{lstlisting}[
+  caption={Two container Pod with resource limits and manually mounted ServiceAccount},
+  label={lst:service-account-mount},
+  language={yaml}
+]
 apiVersion: apps/v1
 kind: Deployment
 spec:
@@ -1044,8 +1151,7 @@ spec:
         - name: service-account
           secret:
             secretName: foo-service-account-token
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \subsubsection{Enforcing the fields}
 
@@ -1173,16 +1279,15 @@ The figure \ref{fig:multi-pod-net-solution} illustrates network architecture whe
 
 DNAT rule
 
-\begin{listing}
-  \caption{Script for mapping localhost to br0 interface}
-
-  \begin{minted}{bash}
+\begin{lstlisting}[
+  caption={Script for mapping localhost to br0 interface},
+  language={bash}
+]
     #!/bin/bash
     sysctl -w net.ipv4.conf.all.route_localnet=1
     iptables -t nat -A OUTPUT -p ALL --dport 8125 -j DNAT --to-destination 192.168.1.202:8125
     iptables -t nat -A POSTROUTING -j MASQUERADE
-  \end{minted}
-\end{listing}
+\end{lstlisting}
 
 \subsubsection{Handling network rules}
 
@@ -1225,10 +1330,10 @@ MutatingAdmissionWebhook?
 
 \section{Dockerfile for penetration testing} \label{app:malicious-sidecar}
 
-\begin{listing}[h!]
-\caption{Dockerfile for penetration testing}
-
-\begin{minted}{Docker}
+\begin{lstlisting}[
+  caption={Dockerfile for penetration testing},
+  language={Docker}
+]
 FROM --platform=linux/amd64 ubuntu:22.04
 
 RUN apt update
@@ -1257,17 +1362,16 @@ RUN echo 'export NAMESPACE="$(cat ${SERVICEACCOUNT}/namespace)"' >> root/.bashrc
 RUN echo 'export TOKEN="$(cat ${SERVICEACCOUNT}/token)"' >> root/.bashrc
 # Reference the internal certificate authority (CA)
 RUN echo 'export CACERT="${SERVICEACCOUNT}/ca.crt"' >> root/.bashrc
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \clearpage
 
 \section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
-\begin{listing}[h!]
-\caption{Node.js server (\texttt{index.js})}
-
-\begin{minted}{javascript}
+\begin{lstlisting}[
+  caption={Node.js server (\texttt{index.js})},
+  language={javascript}
+]
 const Koa = require('koa');
 const app = new Koa();
 
@@ -1296,15 +1400,14 @@ app.use(async ctx => {
 });
 
 app.listen(8888);
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \clearpage
 
-\begin{listing}[h!]
-\caption{\texttt{package.json}}
-
-\begin{minted}{json}
+\begin{lstlisting}[
+  caption={\texttt{package.json}},
+  language={json}
+]
   {
   "name": "node-app",
   "version": "1.0.0",
@@ -1320,13 +1423,12 @@ app.listen(8888);
     "node-statsd": "^0.1.1"
   }
 }
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
-\begin{listing}[h!]
-\caption{Dockerfile for the server}
-
-\begin{minted}{Docker}
+\begin{lstlisting}[
+  caption={Dockerfile for the server},
+  language={Docker}
+]
 FROM node:18-alpine
 
 WORKDIR /app
@@ -1335,17 +1437,16 @@ COPY index.js package.json package-lock.json ./
 RUN npm install --omit=dev
 
 ENTRYPOINT [ "npm", "start" ]
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \clearpage
 
 \section{Webserver and StatsD deployed with Multus networking} \label{app:multus-sidecar}
 
-\begin{listing}[h!]
-\caption{Server's K8s deployment resource}
-
-\begin{minted}{yaml}
+\begin{lstlisting}[
+  caption={Server's K8s deployment resource},
+  language={yaml}
+]
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1414,15 +1515,14 @@ ENTRYPOINT [ "npm", "start" ]
     selector:
       app: node-app
     type: NodePort
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \clearpage
 
-\begin{listing}[h!]
-\caption{StatsD container's K8s Deployment}
-
-\begin{minted}{yaml}
+\begin{lstlisting}[
+caption={StatsD container's K8s Deployment},
+language={yaml}
+]
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -1475,15 +1575,14 @@ ENTRYPOINT [ "npm", "start" ]
               limits:
                 cpu: "1"
                 memory: 256Mi
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \clearpage
 
-\begin{listing}[h!]
-\caption{Network interfaces and policies}
-
-\begin{minted}{yaml}
+\begin{lstlisting}[
+caption{Network interfaces and policies},
+language={yaml}
+]
   apiVersion: "k8s.cni.cncf.io/v1"
   kind: NetworkAttachmentDefinition
   metadata:
@@ -1545,7 +1644,6 @@ spec:
       ports:
         - protocol: TCP
           port: 8125
-\end{minted}
-\end{listing}
+\end{lstlisting}
 
 \end{document}

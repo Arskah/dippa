@@ -12,12 +12,6 @@ Install TeXLive or MacTex. I used MacTex, installed with
 brew install mactex
 ```
 
-Install source code highlighting (appendices) with
-
-```sh
-brew install pygments
-```
-
 ### `tlmgr` packages
 
 ```sh
