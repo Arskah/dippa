@@ -1321,14 +1321,26 @@ The commands for creating the IPTables rules could be applied to Pod with initCo
   \label{fig:multi-pod-net-solution}
 \end{figure}
 
-The figure \ref{fig:multi-pod-net-solution} illustrates network architecture where containers are deployed in different Pods.
+The figure \ref{fig:multi-pod-net-solution} illustrates network architecture where containers are deployed in different Pods. The idea behind this approach is to use Network Policies for filtering the traffic between the containers. Since the containers are not anymore sidecars, the solution needs to re-create communication via \texttt{localhost} address.
+
+\subsubsection{Creating network for sidecar traffic}
+
+It is completely possible to use the default Pod network created by the CNI plugin for the traffic between sidecars. With this setup, the network rules are simply Network Policies on top of the policy that implicitly denies all other traffic.
+
+It is also possilbe to build a new network interfaces for sidecar traffic with Multus. The setup requires creating \texttt{NetworkAttachmentDefinition} CRD for the network. Each Pod that should be part of the network needs a \texttt{k8s.v1.cni.cncf.io/networks} annotation.
+
+Network policies are not applied to the Multus network. However, the Multus developers have introduced another CRD, \texttt{MultiNetworkPolicy}, which works similarly to NetworkPolicies. The Multus CNI does not enforce these rules, so the setup requires another dependency that would read and enforce the \texttt{MultiNetworkPolicy} rules. The team behind Multus also provides \texttt{multi-networkpolicy-iptables} DaemonSet, which implements the policies as IPTables rules on the Pod's network namespace.
 
 \subsubsection{Routing localhost to other network namespace}
 
-DNAT rule
+% TODO: Check security of this https://github.com/kubernetes/kubernetes/issues/90259
+% https://security.stackexchange.com/questions/137602/what-are-the-security-implications-of-net-ipv4-conf-eth0-route-localnet-1-rout
+
+The script in listing \ref{lst:dnat} shows how to re-route egressing traffic from \texttt{localhost} to external address. By default the kernel refuses to re-route local traffic. The \lstinline{net.ipv4.conf.all.route_localnet=1} allows routing of local traffic, while the IPTables rules handle the routing. The example routes all egressing traffic with source \texttt{127.0.0.1:8125} to \texttt{192.168.1.202:8125}.
 
 \begin{lstlisting}[
   caption={Script for mapping localhost to br0 interface},
+  label={lst:dnat}
   language={bash}
 ]
     #!/bin/bash
@@ -1337,12 +1349,7 @@ DNAT rule
     iptables -t nat -A POSTROUTING -j MASQUERADE
 \end{lstlisting}
 
-\subsubsection{Handling network rules}
 
-\begin{itemize}
-  \item Use NetworkPolicy
-  \item Use Multus
-\end{itemize}
 
 \subsubsection{Scheduling containers on same Nodes}
 
