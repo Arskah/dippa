@@ -1167,11 +1167,9 @@ TODO: Summarize all the solutions into a one
 
 \section{Network Isolation} \label{sec:network-solution}
 
-Implementing a zero trust network architecture in K8s cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies. The root cause for this is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. Even though ingress traffic can be identified trivially with destination port number, the source port for egress traffic depends on the TCP implementation. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering.
+Implementing a zero trust network architecture in K8s cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies. The root cause for this is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace. Thus, all traffic outside the Pod, from any of the containers, goes through the same \texttt{eth0} NIC and shares common source IP address. Since NetworkPolicies function on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container. Even though ingress traffic can be identified trivially with destination port number, the source port for egress traffic depends on the TCP implementation. As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container. For the intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins. This means that NetworkPolicies have no effect on the loopback device. Furthermore, as all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be of used for traffic filtering. This chapter introduces two general approaches as solution for the issue.
 
-This chapter introduces two general approaches as solution for the issue. The first solution enforces firewall rules inside the network namespace, while the second creates network namespace for each container by deploying it to its own Pod. While deploying containers in own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container. Most notably, the sidecars will have own their own independent lifecycle and schedulation, and the communication via the loopback device will be broken.
-
-In the scope of this thesis we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}. Thus, re-introducing these characteristics to the containers are also part of the solution.
+The first solution enforces firewall rules inside the appication Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods. While deploying containers in own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container. Most notably, the sidecars will have own their own independent lifecycle and schedulation, and the communication via the loopback device will be broken. In the scope of this thesis we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}. Thus, re-introducing these characteristics to the containers are also part of the solution.
 
 \subsection{Applying firewall rules inside Pod network namespace}
 
@@ -1221,20 +1219,70 @@ The figure \ref{fig:single-net-solution} illustrates the network architecture wi
 \subsubsection{IPTables}
 
 % TODO: Check process id
-Usually, IPTables rules are applied to packets by their IP addresses and ports. However, modern versions of IPTables ship with an owner module, which support rules based on application's user, group and session identifiers. For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user id. While the session identifier is assigned at runtime by the kernel, containers' user and group ids can be overridden with \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively. Thus, any ingress or egress traffic of a container with unique user identifier can be filtered with IPTables.
+Usually, IPTables rules are applied to packets by their IP addresses and ports. However, modern versions of IPTables ship with an owner module, which support rules based on application's user, group and session identifiers. For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user id. While the session identifier is assigned at runtime by the kernel, containers' user and group ids can be overridden with Pod definition's \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively. Thus, any ingress or egress traffic of a container with unique user identifier can be filtered with IPTables.
 
 This apporach is similar to how Istio redirects all Pod traffic through the Envoy sidecar and the service mesh. Istio adds IPTables rules that re-route all traffic, except that which originates from user id 1337, to the Envoy proxy \cite{istio-iptables}. The user id itself is reserved for the proxy, and it is used to avoid re-routing the proxy traffic, which would cause an infinite loop.
 
-The commands for creating the IPTables rules could be applied to Pod with initContainer or postStart lifecycle handler. However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities. Using these methods would require changing Pod's security admission level to privileged. Thus, it is more optimal to apply the rules outside the Pod's context; for example by using a DaemonSet, similarly to how many CNI plugins configure the Pod network.
+eBPF programs were also considered as an option for IPTables. Since XDP programs support only ingress rules, a TC program that could distinguish sidecar container traffic from others could be a possible option. TC programs can mangle packets by modifying \texttt{struct \_\_sk\_buff} in user space. The complete C structure is listed as Example \ref{lst:sk-buff}. As can be seen from the example, the structure has no identifiers that are unique for each container.
 
-\subsubsection{eBPF program firewall}
+\begin{lstlisting}[
+  caption={\texttt{skbuff} struct in Linux v6.3 \cite{linux-kernel-skbuff}},
+  label={lst:sk-buff},
+  language={C}
+]
 
-\begin{itemize}
-  \item XDP works only for ingress
-  \item TC needs some way to catch egress from sidecar
-\end{itemize}
+/* user accessible mirror of in-kernel sk_buff.
+ * new fields can only be added to the end of this structure
+ */
+struct __sk_buff {
+  __u32 len;
+  __u32 pkt_type;
+  __u32 mark;
+  __u32 queue_mapping;
+  __u32 protocol;
+  __u32 vlan_present;
+  __u32 vlan_tci;
+  __u32 vlan_proto;
+  __u32 priority;
+  __u32 ingress_ifindex;
+  __u32 ifindex;
+  __u32 tc_index;
+  __u32 cb[5];
+  __u32 hash;
+  __u32 tc_classid;
+  __u32 data;
+  __u32 data_end;
+  __u32 napi_id;
+
+  /* Accessed by BPF_PROG_TYPE_sk_skb types from here to ... */
+  __u32 family;
+  __u32 remote_ip4;    /* Stored in network byte order */
+  __u32 local_ip4;     /* Stored in network byte order */
+  __u32 remote_ip6[4]; /* Stored in network byte order */
+  __u32 local_ip6[4];  /* Stored in network byte order */
+  __u32 remote_port;   /* Stored in network byte order */
+  __u32 local_port;    /* stored in host byte order */
+  /* ... here. */
+
+  __u32 data_meta;
+  __bpf_md_ptr(struct bpf_flow_keys *, flow_keys);
+  __u64 tstamp;
+  __u32 wire_len;
+  __u32 gso_segs;
+  __bpf_md_ptr(struct bpf_sock *, sk);
+  __u32 gso_size;
+  __u8  tstamp_type;
+  __u32 :24;    /* Padding, future use. */
+  __u64 hwtstamp;
+};
+
+\end{lstlisting}
+
+One notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel. It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack. If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering the traffic. However, using eBPF brings a extra layer of complexity than simply using IPtables for the traffic filtering. Furthermore, eBPF programs do not provide any performance gains for egressing traffic since the TC hooks execute after the packet has been processed by IPTables.
 
 \subsubsection{Deployment}
+
+The commands for creating the IPTables rules could be applied to Pod with initContainer or postStart lifecycle handler. However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities. Using these methods would require changing Pod's security admission level to privileged. Thus, it is more optimal to apply the rules outside the Pod's context; for example by using a DaemonSet, similarly to how many CNI plugins configure the Pod network.
 
 \subsection{Own network namespace for sidecar}
 
