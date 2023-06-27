@@ -1225,58 +1225,11 @@ This apporach is similar to how Istio redirects all Pod traffic through the Envo
 
 eBPF programs were also considered as an option for IPTables. Since XDP programs support only ingress rules, a TC program that could distinguish sidecar container traffic from others could be a possible option. TC programs can mangle packets by modifying \texttt{struct \_\_sk\_buff} in user space. The complete C structure is listed as Example \ref{lst:sk-buff}. As can be seen from the example, the structure has no identifiers that are unique for each container.
 
-\begin{lstlisting}[
+\lstinputlisting[
   caption={\texttt{skbuff} struct in Linux v6.3 \cite{linux-kernel-skbuff}},
   label={lst:sk-buff},
   language={C}
-]
-
-/* user accessible mirror of in-kernel sk_buff.
- * new fields can only be added to the end of this structure
- */
-struct __sk_buff {
-  __u32 len;
-  __u32 pkt_type;
-  __u32 mark;
-  __u32 queue_mapping;
-  __u32 protocol;
-  __u32 vlan_present;
-  __u32 vlan_tci;
-  __u32 vlan_proto;
-  __u32 priority;
-  __u32 ingress_ifindex;
-  __u32 ifindex;
-  __u32 tc_index;
-  __u32 cb[5];
-  __u32 hash;
-  __u32 tc_classid;
-  __u32 data;
-  __u32 data_end;
-  __u32 napi_id;
-
-  /* Accessed by BPF_PROG_TYPE_sk_skb types from here to ... */
-  __u32 family;
-  __u32 remote_ip4;    /* Stored in network byte order */
-  __u32 local_ip4;     /* Stored in network byte order */
-  __u32 remote_ip6[4]; /* Stored in network byte order */
-  __u32 local_ip6[4];  /* Stored in network byte order */
-  __u32 remote_port;   /* Stored in network byte order */
-  __u32 local_port;    /* stored in host byte order */
-  /* ... here. */
-
-  __u32 data_meta;
-  __bpf_md_ptr(struct bpf_flow_keys *, flow_keys);
-  __u64 tstamp;
-  __u32 wire_len;
-  __u32 gso_segs;
-  __bpf_md_ptr(struct bpf_sock *, sk);
-  __u32 gso_size;
-  __u8  tstamp_type;
-  __u32 :24;    /* Padding, future use. */
-  __u64 hwtstamp;
-};
-
-\end{lstlisting}
+]{code/skbuff.c}
 
 One notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel. It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack. If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering the traffic. However, using eBPF brings a extra layer of complexity than simply using IPtables for the traffic filtering. Furthermore, eBPF programs do not provide any performance gains for egressing traffic since the TC hooks execute after the packet has been processed by IPTables.
 
