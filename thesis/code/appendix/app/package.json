@@ -1,0 +1,15 @@
+{
+  "name": "node-app",
+  "version": "1.0.0",
+  "description": "Webserver w/ StatsD",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Aarni Halinen",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.14.2",
+    "node-statsd": "^0.1.1"
+  }
+}

@@ -1,0 +1,41 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: foo
+  name: foo-service-account-role
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: foo-service-account
+  namespace: foo
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: foo-service-account-rolebinding
+  namespace: secure-ns
+subjects:
+- kind: ServiceAccount
+  name: foo-service-account
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: foo-service-account-role
+  apiGroup: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: foo-service-account-token
+  namespace: foo
+  annotations:
+    kubernetes.io/service-account.name: foo-service-account
+type: kubernetes.io/service-account-token

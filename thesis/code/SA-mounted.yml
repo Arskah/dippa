@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: main
+          image: main-image
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1024Mi
+          volumeMounts:
+            - name: service-account
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        - name: sidecar-container
+          image: sidecar-image
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: service-account
+          secret:
+            secretName: foo-service-account-token
