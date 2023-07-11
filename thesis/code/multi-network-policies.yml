@@ -1,0 +1,32 @@
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: deny-all-br0
+  namespace: app
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: localhost-replacement
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: allow-statsd
+  namespace: app
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: localhost-replacement
+spec:
+  podSelector:
+    matchLabels:
+      app: node-app-statsd
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: node-app
+      ports:
+        - protocol: TCP
+          port: 8125

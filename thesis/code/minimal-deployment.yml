@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-app
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[{
+            "name": "localhost-replacement",
+            "interface": "br0",
+            "ips": [ "192.168.1.201/24" ]
+          }]'
+    spec:
+      containers:
+        - name: node-app
+          image: node-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-app-statsd
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-app-statsd
+  template:
+    metadata:
+      labels:
+        app: node-app-statsd
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[{
+            "name": "localhost-replacement",
+            "interface": "br0",
+            "ips": [ "192.168.1.202/24" ]
+          }]'
+    spec:
+      containers:
+        - name: statsd
+          image: hypnza/statsd_dumpmessages
