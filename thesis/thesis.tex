@@ -593,8 +593,36 @@ Otaniemi, 9 February 2023\\
 \subsection*{Abbreviations}
 
 \begin{tabular}{ll}
-  K8s         & Kubernetes \\
-  STRIDE      & an object-oriented analog circuit simulator and design tool \\
+  API         & Application Programming Interface   \\
+  BGP         & Border Gateway Protocol             \\
+  BPF, cBPF   & (classic) Berkeley Packet Filter    \\
+  cgroups     & Control groups                      \\
+  CLI         & Command-line interface              \\
+  CNCF        & Cloud Native Computing Foundation   \\
+  CNI         & Container Network Interface         \\
+  CRD         & Custom Resource Definition          \\
+  DAC         & Discretionary Access Control        \\
+  DoS         & Denial of Service                   \\
+  eBPF        & Extended Berkeley Packet Filter     \\
+  gRPC        & Google Remote Procedure Call        \\
+  HTTP        & Hypertext Transfer Protocol         \\
+  IPC         & Inter-process communication         \\
+  K8s         & Kubernetes                          \\
+  LXC         & Linux Containers                    \\
+  MAC         & Mandatory Access Control            \\
+  NAT         & Network Address Translation         \\
+  NIC         & Network Interface Controller        \\
+  OOM         & Out-of-memory                       \\
+  OpenVZ      & Open Virtuozzo                      \\
+  OS          & Operating System                    \\
+  PID         & Process ID                          \\
+  RCE         & Remote code execution               \\
+  SELinux     & Security-Enhanced Linux             \\
+  Seccomp     & Secure computing mode               \\
+  TC          & Traffic Control                     \\
+  VXLAN       & Virtual Extensible LAN              \\
+  XDP         & eXpress Data Path                   \\
+  ZTA         & Zero Trust Architecture             \\
 \end{tabular}
 
 
@@ -607,7 +635,7 @@ Otaniemi, 9 February 2023\\
 %% Text body begins.
 \section{Introduction} \label{sec:intro}
 
-During the last decade, the IT industry has shifted from monolithic software applications towards microservices. In the microservice architecture, each application is split into a suite of smaller independent services that handle part of the business logic \cite{fowler2014microservices}. Each service runs its own process, and the application data is sent between the components using lightweight communication mechanisms such as Hypertext Transfer Protocol (HTTP) and gRPC.
+During the last decade, the IT industry has shifted from monolithic software applications towards microservices. In the microservice architecture, each application is split into a suite of smaller independent services that handle part of the business logic \cite{fowler2014microservices}. Each service runs its own process, and the application data is sent between the components using lightweight communication mechanisms such as Hypertext Transfer Protocol (HTTP) and Google Remote Procedure Call (gRPC).
 This architectural approach also increases software agility because each service becomes an independent unit of development, deployment, operations, versioning, and scaling \cite{jamshidi2018microservices}. This modularity is often associated with benefits like faster delivery and improved scalability.
 \jb{The point is that misroservices have become popular because of containers}
 During the same time period, containers have become widely used method for deploying applications. Containers are a lightweight virtualization technique in which the application is bundled with all its dependencies into a single, deployable unit that executes on top of the host machine kernel \cite{bui2015analysis}. As such, a single microservice is quite often build and deployed as a container. In more complex systems with multiple containers, an orchestrator is often used to manage workloads. Kubernetes is one of the most widely used orchestrator tools. \jb{Describe shortly what an orchestrator does and what is the difference between orchestrator and container runtime. Maybe this should go to the background.}
@@ -776,7 +804,7 @@ The CNI specification has five distinct definitions: i) a format for network con
 %     - Orchestrating the underlay – usually done with BGP for on-prem or some form of dynamically-provisioned static routes for public cloud environments.
 %     - Encapsulating in the overlay – VXLAN is still the most popular encap type.
 
-The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}. For connectivity, each Pod must have a network interface controller (NIC) for communication outside its networking namespace. The NIC must have IP address reachable from the host Node, so that cluster processes like Kubelet health and readiness checks can reach the Pod. Reachability means that all Pods can be reached from other Nodes directly without NAT. Thus, each Pod receives an unique IP address from the \texttt{PodCIDR} \jb{This should be introduced properly} range configured on the Node by the Kubelet bootstrapping phase. The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network (for example with VXLAN) or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
+The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}. For connectivity, each Pod must have a network interface controller (NIC) for communication outside its networking namespace. The NIC must have IP address reachable from the host Node, so that cluster processes like Kubelet health and readiness checks can reach the Pod. Reachability means that all Pods can be reached from other Nodes directly without NAT. Thus, each Pod receives an unique IP address from the \texttt{PodCIDR} \jb{This should be introduced properly} range configured on the Node by the Kubelet bootstrapping phase. The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network, for example with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
 
 % Kubernetes Network Policy is the means to enforce rules
 % indicating which network traffic is allowed and which Pods
@@ -897,7 +925,7 @@ TC programs are executed when both incoming and outgoing packets reach kernel tr
   \item Mounted docker socket, creating privileged containers
 \end{itemize}
 
-All of the example attack scenarios start by attacker getting shell access to a container running in a Pod, usually through a remote code exectuion (RCE) flaw on the container application and then executing reverse shell inside the Pod. The scope of the examples is not in the initial attack, but in the Pod template misconfiugrations that then provide some path for the attacker to escalate the attack and even take over the whole cluster in the end.
+All of the example attack scenarios start by attacker getting shell access to a container running in a Pod, usually through a remote code execution (RCE) flaw on the container application and then executing reverse shell inside the Pod. The scope of the examples is not in the initial attack, but in the Pod template misconfiugrations that then provide some path for the attacker to escalate the attack and even take over the whole cluster in the end.
 
 TODO: add file \label{yaml:priv-container}
 
