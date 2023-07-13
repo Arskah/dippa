@@ -607,7 +607,7 @@ Otaniemi, 9 February 2023\\
 %% Text body begins.
 \section{Introduction} \label{sec:intro}
 
-% No need to say modern 
+% No need to say modern
 During the last decade, the IT industry has shifted from monolithic software applications towards microservices. In the microservice architecture, each application is split into a suite of smaller independent services that handle \jb{\st{some logical}} part of the business logic \cite{fowler2014microservices}. Each service runs its own process, and the application data is sent between the components using  \jb{\st{some}} lightweight communication mechanisms such as Hypertext Transfer Protocol (HTTP). % You can also add gRPC
 The % This?
 architectural approach also increases software agility because each service becomes an independent unit of development, deployment, operations, versioning, and scaling \cite{jamshidi2018microservices}. This modularity is often associated with benefits like faster delivery and improved scalability.
@@ -807,7 +807,15 @@ The CNI plugin must provide at least connectivity and reachability for the conta
 % if multiple policies select a pod, traffic is restricted to what is
 % allowed by the union of those policies’ ingress/egress rules.
 
-Since Kubernetes does not provide networking between the Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature for CNI plugins is enforcing network traffic rules. Kubernetes provides a common object called \texttt{NetworkPolicy} for CNI plugins to consume. The NetworkPolicy specification consists of a \texttt{podSelector} that specifies pods that are subject to the policy and \texttt{policyTypes} to specify Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions \jb{if you add CRD here then you should discuss them in the earlier section} for their own, more granular, network policy rules. \jb{Not all CNIs implement NetworkPolicy rules (e.g., flannel)}
+Since Kubernetes does not provide networking between the Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature for CNI plugins is enforcing network traffic rules. Kubernetes provides a common object called \texttt{NetworkPolicy} for CNI plugins to consume. The listing \ref{lst:example-np} is an example of network policies for a frontend web application. The first policy functions as a default rule that denies all implicit egress and ingress traffic. The second policy allows traffic to the default HTTP port, and the third policy allows frontend application to send traffic to any Pod in the \emph{backend} namespace.
+
+\lstinputlisting[
+  caption={Example NetworkPolicies for a frontend web application},
+  label={lst:example-np},
+  language=yaml
+]{code/example-network-policy.yml}
+
+The NetworkPolicy specification consists of a \texttt{podSelector} that specifies pods that are subject to the policy and \texttt{policyTypes} to specify Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions \jb{if you add CRD here then you should discuss them in the earlier section} for their own, more granular, network policy rules. \jb{Not all CNIs implement NetworkPolicy rules (e.g., flannel)}
 
 While all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods. In this thesis, we focus on three different CNI plugins: Calico, Cilium and Multus.
 
@@ -1147,19 +1155,34 @@ The first solution enforces firewall rules inside the appication Pod's network n
   \label{fig:single-net-solution}
 \end{figure}
 
+The figure \ref{fig:single-net-solution} illustrates the network architecture with all of the required network rule enforcement points. The solution needs to enforce network rules in four scenarios: i) external components and Pod's \texttt{eth0}, ii) main container and \texttt{lo}, iii) sidecar container and \texttt{lo}, and sidecar container and \texttt{eth0}. The ingress and egress rules in the first scenario are most easily enforced with \texttt{NetworkPolicies}, as shown in listing \ref{lst:network-policy}. The policies allow cluster and external traffic to the main application's port \texttt{8888}, while denying all other traffic in and out of the Pod.
 
-The figure \ref{fig:single-net-solution} illustrates the network architecture with all of the required network rule enforcement points.
+\lstinputlisting[
+  caption={Network Policy handling traffic between Pod and external components},
+  label={lst:network-policy},
+  language={yaml}
+]{code/zero-trust-policy.yml}
 
-% With the testing environment, the rules must make sure that the sidecar cannot access any other
+The other scenarios cannot be enforced with NetworkPolicies, since the rules depend on individual containers instead of Pods. The rules need to be applied inside the Pod's network namespace with tools such as IPTables.
 
 \subsubsection{IPTables}
 
 % TODO: Check process id
 Usually, IPTables rules are applied to packets by their IP addresses and ports. However, modern versions of IPTables ship with an owner module, which support rules based on application's user, group and session identifiers. For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user id. While the session identifier is assigned at runtime by the kernel, containers' user and group ids can be overridden with Pod definition's \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively. Thus, any ingress or egress traffic of a container with unique user identifier can be filtered with IPTables.
 
-This apporach is similar to how Istio redirects all Pod traffic through the Envoy sidecar and the service mesh. Istio adds IPTables rules that re-route all traffic, except that which originates from user id 1337, to the Envoy proxy \cite{istio-iptables}. The user id itself is reserved for the proxy, and it is used to avoid re-routing the proxy traffic, which would cause an infinite loop.
+Listing \ref{lst:iptables-bash} shows IPTables rules that can enforce network rules in the other scenarios. As ingress rules, the main application port is opened on all network devices while sidecar port is only allowed on loopback device. For egress traffic, the main application is given access to both containers' ports, while the sidecar can only access its own port. All other traffic is rejected by default.
 
-eBPF programs were also considered as an option for IPTables. Since XDP programs support only ingress rules, a TC program that could distinguish sidecar container traffic from others could be a possible option. TC programs can mangle packets by modifying \texttt{struct \_\_sk\_buff} in user space. The complete C structure is listed as Example \ref{lst:sk-buff}. As can be seen from the example, the structure has no identifiers that are unique for each container.
+% need to be applied to Pod's network namespace. Each container receives an own chain. The sidecar container's chain REJECTs all egressing traffic from the sidecar, which prevents the container from accessing any container inside or outside of the Pod. The main application's chain only affects egress traffic to loopback device, and allows traffic only to the port used by the sidecar. Any other egress traffic should be handled by the Network Policy.
+
+\lstinputlisting[
+  caption={IPTables rules for the Pod},
+  label={lst:iptables-bash},
+  language={bash}
+]{code/iptables.sh}
+
+The apporach is similar to how Istio redirects all Pod traffic through the Envoy sidecar and the service mesh. Istio adds IPTables rules that re-route all traffic, except that which originates from user id 1337, to the Envoy proxy \cite{istio-iptables}. The user id itself is reserved for the proxy, and it is used to avoid re-routing the proxy traffic, which would cause an infinite loop.
+
+eBPF programs were also considered as an option for IPTables. Since XDP programs support only ingress rules, they are not a valid option for solving the problem. However, a TC program that could distinguish sidecar container traffic from others could be a possible option. TC programs mangle packets by modifying \texttt{struct \_\_sk\_buff} in the user space. The complete C structure is listed as Example \ref{lst:sk-buff}.
 
 \lstinputlisting[
   caption={\texttt{skbuff} struct in Linux v6.3 \cite{linux-kernel-skbuff}},
@@ -1167,7 +1190,7 @@ eBPF programs were also considered as an option for IPTables. Since XDP programs
   language={C}
 ]{code/skbuff.c}
 
-One notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel. It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack. If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering the traffic. However, using eBPF brings a extra layer of complexity than simply using IPtables for the traffic filtering. Furthermore, eBPF programs do not provide any performance gains for egressing traffic since the TC hooks execute after the packet has been processed by IPTables.
+As can be seen from the example, the structure has no identifiers that are unique for each container. One notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel. It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack. If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering the traffic. However, using eBPF brings a extra layer of complexity than simply using IPtables for the traffic filtering. Furthermore, eBPF programs do not provide any performance gains for egressing traffic since the TC hooks execute after the packet has been processed by IPTables.
 
 \subsubsection{Deployment}
 
@@ -1210,32 +1233,52 @@ The commands for creating the IPTables rules could be applied to Pod with initCo
   \label{fig:multi-pod-net-solution}
 \end{figure}
 
-The figure \ref{fig:multi-pod-net-solution} illustrates network architecture where containers are deployed in different Pods. The idea behind this approach is to use Network Policies for filtering the traffic between the containers. Since the containers are not anymore sidecars, the solution needs to re-create communication via \texttt{localhost} address.
+The figure \ref{fig:multi-pod-net-solution} illustrates network architecture for the solution where containers are deployed in different Pods. The idea behind this approach is to use Network Policies for filtering the traffic between the containers. Since the containers are not technically sidecars anymore, the solution needs to re-create communication via \texttt{localhost} address.
 
-\subsubsection{Creating network for sidecar traffic}
+Even though it is possible to use the default network created by CNI plugin for the sidecar traffic, the proposed solution creates a new, isolated network for the traffic with Multus. The isolation allows the use of separate IP address pool, which comes in handy when re-creating the communication via localhost.
+
+\subsubsection{Creating isolated network for sidecar traffic}
+
+
 
 It is completely possible to use the default Pod network created by the CNI plugin for the traffic between sidecars. With this setup, the network rules are simply Network Policies on top of the policy that implicitly denies all other traffic.
 
-It is also possible to build a new network interfaces for sidecar traffic with Multus. The setup requires creating \texttt{NetworkAttachmentDefinition} CRD for the network. Each Pod that should be part of the network needs a \texttt{k8s.v1.cni.cncf.io/networks} annotation.
+It is also possible to build a new network interfaces for sidecar traffic with Multus.
 
-Network policies are not applied to the Multus network. However, the Multus developers have introduced another CRD, \texttt{MultiNetworkPolicy}, which works similarly to NetworkPolicies. The Multus CNI does not enforce these rules, so the setup requires another dependency that would read and enforce the \texttt{MultiNetworkPolicy} rules. The team behind Multus also provides \texttt{multi-networkpolicy-iptables} DaemonSet, which implements the policies as IPTables rules on the Pod's network namespace.
+\lstinputlisting[
+  caption={NetworkAttachmentDefinition for creating MacVLAN bridge between the Pods},
+  label={lst:attachment},
+  language={yaml}
+]{code/attachment.yml}
 
-\subsubsection{Routing localhost to other network namespace}
+The setup requires creating \texttt{NetworkAttachmentDefinition} CRD for the network. Each Pod that should be part of the network needs a \texttt{k8s.v1.cni.cncf.io/networks} annotation, as seen in example \ref{lst:pod-with-bridge}.
+
+\lstinputlisting[
+  caption={Deployment with Pod connected to the bridge},
+  label={lst:pod-with-bridge},
+  language={yaml}
+]{code/minimal-deployment.yml}
+
+The common Network policies are not applied to the Multus network. However, the Multus developers have introduced another CRD, \texttt{MultiNetworkPolicy} \cite{multi-network-policy}, which mimics the NetworkPolicies but only works for networks created by Multus. The resource is identical to NetworkPolicies, as seen in the example \ref{lst:policies}.
+
+\lstinputlisting[
+  caption={Zero trust MultiNetworkPolicies for br0 network interface},
+  label={lst:policies},
+  language={yaml}
+]{code/multi-network-policies.yml}
+
+However, the Multus CNI does not enforce the \texttt{MultiNetworkPolicy} rules in any way. The implementation is left for other DaemonSets like \texttt{multi-networkpolicy-iptables} \cite{multi-network-policy-iptables} and \texttt{multi-networkpolicy-tc} \cite{multi-network-policy-tc}, both of which are created by the team behind Multus. As the names suggest, the DaemonSets implement the enforcement with IPTables and eBPF TC programs, respectively. The \texttt{multi-networkpolicy-iptables} is used for the solution, since IPTables implements all other network rules for the cluster.
 
 % TODO: Check security of this https://github.com/kubernetes/kubernetes/issues/90259
 % https://security.stackexchange.com/questions/137602/what-are-the-security-implications-of-net-ipv4-conf-eth0-route-localnet-1-rout
 
-The script in listing \ref{lst:dnat} shows how to re-route egressing traffic from \texttt{localhost} to external address. By default the kernel refuses to re-route local traffic. The \lstinline{net.ipv4.conf.all.route_localnet=1} allows routing of local traffic, while the IPTables rules handle the routing. The example routes all egressing traffic with source \texttt{127.0.0.1:8125} to \texttt{192.168.1.202:8125}.
+With these configurations and dependencies, the containers should have new network and reach each other via the bridge interface. As a next step, the solution needs to find a way for re-routing the traffic destinated for localhost to the new network. The script in listing \ref{lst:dnat} shows how to re-route all egressing traffic with IPTables from the source of \texttt{127.0.0.1:8125} to a network interface with external IP address, like \texttt{192.168.1.202:8125}. By default, the re-routing of local traffic outside the local machine is denied by the kernel. To overrule this default, the script needs to set a flag \lstinline{net.ipv4.conf.all.route_localnet=1}.
 
 \lstinputlisting[
   caption={Script for mapping localhost to br0 interface},
   label={lst:dnat},
   language={bash}
 ]{code/localhost.sh}
-
-\subsubsection{Scheduling containers on same Nodes}
-
-Using affinity rules
 
 \subsubsection{Mutating sidecars to multiple Pods?}
 
