@@ -641,10 +641,13 @@ This architectural approach also increases software agility because each service
 During the same period of time, containers have become a widely used method to deploy applications. Containers are a lightweight virtualization technique in which the application is bundled with all its dependencies into a single deployable unit that executes on top of the host machine kernel \cite{bui2015analysis}. As such, a single microservice is quite often built and deployed as a container. In more complex systems with multiple containers, an orchestrator is often used to manage workloads. Kubernetes is one of the most widely used orchestrator tools.
 \jb{Describe shortly what an orchestrator does and what is the difference between orchestrator and container runtime. Maybe this should be in the background.}
 
-
-Similarly to how design patterns emerged from the birth of object-oriented software systems, the modularity of containers and microservices has allowed the development of distributed system design patterns \cite{burns2016design}. The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as their own containers from the main application container. Basically, the sidecar pattern is an extension of the modularity of the microservices architecture inside the microservice itself. The benefits of sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services and provide a failure containment boundary, for example. In Kubernetes, the basic unit of deployment is called a Pod, which may include one or more co-scheduled containers. The Pod is analogous to a microservice, while it contains one main container and all its sidecars, bundled into one deployable unit.
-
-\jb{The sidecar pattern allows to add non-functional features to a container (e.g., logging, authentication,authorization) without them leaking into the source code (source code is only for business logic).}
+Similarly to how design patterns emerged from the birth of object-oriented software systems, the modularity of containers and microservices has allowed the development of distributed system design patterns \cite{burns2016design}.
+The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as their own containers from the main application container.
+The pattern allows easier installation of these nonfunctional features, while also keeping them away from the main container's source code.
+Basically, the sidecar pattern is an extension of the modularity of the microservices architecture inside the microservice itself.
+The benefits of sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services and provide a failure containment boundary, for example.
+In Kubernetes, the basic unit of deployment is called a Pod, which may include one or more co-scheduled containers.
+The Pod is analogous to a microservice, while it contains one main container and all its sidecars bundled into one deployable unit.
 
 \subsection{Problem Statement}
 
