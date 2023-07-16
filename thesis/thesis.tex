@@ -852,9 +852,12 @@ The CNI plugin must provide at least connectivity and reachability for the conta
 % if multiple policies select a Pod, traffic is restricted to what is
 % allowed by the union of those policies’ ingress/egress rules.
 
-Since Kubernetes does not provide networking between Pods, it has no capabilities to enforce network isolation between workloads. Thus, another key feature of CNI plugins is to enforce network traffic rules. Kubernetes provides a common object called \texttt{NetworkPolicy} for CNI plugins to consume. The Listing~\ref{lst:example-np} is an example of network policies for a web application front-end. The first policy functions as a default rule that denies all implicit egress and ingress traffic. The second policy allows traffic to the default HTTP port, and the third policy allows the front-end application to send traffic to any Pod in the \emph{backend} namespace.
-
-\jb{Not all CNIs implement NetworkPolicy rules (e.g., flannel)}
+Since Kubernetes does not provide networking between Pods, it has no capabilities to enforce network isolation between workloads.
+Thus, another key feature of some CNI plugins is the enforcement of network traffic rules.
+For this purpose, Kubernetes provides a common built-in resource called \texttt{NetworkPolicy} for the CNI plugins to consume.
+The Listing~\ref{lst:example-np} is an example of network policies for a web application front-end.
+The first policy functions as a default rule that denies all implicit egress and ingress traffic.
+The second policy allows traffic to the default HTTP port, and the third policy allows the front-end application to send traffic to any Pod in the \emph{backend} namespace.
 
 \lstinputlisting[
   caption={Example NetworkPolicies for a frontend web application},
@@ -864,6 +867,7 @@ Since Kubernetes does not provide networking between Pods, it has no capabilitie
 
 The NetworkPolicy specification consists of a \texttt{podSelector} that specifies Pods that are subject to the policy and \texttt{policyTypes} to specify the Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod. Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule. The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies. Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
+% TODO: Not everything listed above is requirements
 Although all CNI plugins meet the requirements listed above, they may differ in architecture significantly. The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods. In this thesis, we focus on three different CNI plugins: Calico, Cilium, and Multus.
 
 % TODO: CNI plugins, daemons and binary \cite{qi2020understanding}.
