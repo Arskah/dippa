@@ -849,7 +849,6 @@ The IP addresses are assigned to the Pods by an IP address management (IPAM) plu
 IPAM plugins are \emph{delegated plugins} of the CNI, which means that the CNI plugin is responsible for invoking the IPAM plugin when needed.
 Thus, many CNI plugins are installed with their own IPAM plugins for convenience.
 Quite often IPAM plugins assign Pods with IP address from the Node's \texttt{podCIDR}, but sophisticated IPAMs like those of Calico and Cilium use Custom Resources for more configurable IP pools.
-% Thus, each Pod receives a unique IP address from the \texttt{PodCIDR} \jb{This should be introduced properly} range configured on the Node by the Kubelet bootstrapping phase.
 The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network, for example, with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
 
 % Kubernetes Network Policy is the means to enforce rules
