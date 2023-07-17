@@ -802,8 +802,6 @@ Sidecar containers can also be developed with different tools and dependencies a
 From the testing point of view, the componentized system might improve testing if the smaller units can be tested independently.
 However, on the downside, the combination of all container version combinations that might be seen in a production environment also increases.
 
-\jb{One thing to add here is how in k8s you setup sidecars. In most cases, you either set iptables rules to route traffic from the sidecar to the main container (and vice versa) or use shared files to read information (e.g., logs).}
-
 \subsection{Kubernetes network model}
 
 % https://kubernetes.io/docs/concepts/services-networking/
