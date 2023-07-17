@@ -606,6 +606,7 @@ Otaniemi, 9 February 2023 \\
   eBPF        & Extended Berkeley Packet Filter     \\
   gRPC        & Google Remote Procedure Call        \\
   HTTP        & Hypertext Transfer Protocol         \\
+  IPAM        & IP Address Management               \\
   IPC         & Inter-process communication         \\
   K8s         & Kubernetes                          \\
   LXC         & Linux Containers                    \\
@@ -818,7 +819,20 @@ The CNI specification has five distinct definitions: i) a format for network con
 %     - Orchestrating the underlay – usually done with BGP for on-prem or some form of dynamically-provisioned static routes for public cloud environments.
 %     - Encapsulating in the overlay – VXLAN is still the most popular encap type.
 
-The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}. For connectivity, each Pod must have a network interface controller (NIC) for communication outside its networking namespace. The NIC must have an IP address that is reachable from the host Node, so that cluster processes like Kubelet health and readiness checks can reach the Pod. Reachability means that all Pods can be reached from other Nodes directly without NAT. Thus, each Pod receives a unique IP address from the \texttt{PodCIDR} \jb{This should be introduced properly} range configured on the Node by the Kubelet bootstrapping phase. The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network, for example, with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
+The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}.
+For connectivity, each Pod must have a network interface controller (NIC) for communication outside its networking namespace.
+The NIC must have an IP address that is reachable from the host Node, so that cluster processes like Kubelet health and readiness checks can reach the Pod.
+
+Reachability means that all Pods can be reached from other Nodes directly without NAT.
+Thus, each Pod should receive a unique IP address from an IP pool range designated for the Pods.
+When a cluster is installed, the administrator assigns a CIDR for the whole cluster.
+Then the \texttt{kube-controller-manager} can be configured to assign each node its own CIDR range, defined in the Node's \texttt{spec.podCIDR} field.
+The IP addresses are assigned to the Pods by an IP address management (IPAM) plugin.
+IPAM plugins are \emph{delegated plugins} of the CNI, which means that the CNI plugin is responsible for invoking the IPAM plugin when needed.
+Thus, many CNI plugins are installed with their own IPAM plugins for convenience.
+Quite often IPAM plugins assign Pods with IP address from the Node's \texttt{podCIDR}, but sophisticated IPAMs like those of Calico and Cilium use Custom Resources for more configurable IP pools.
+% Thus, each Pod receives a unique IP address from the \texttt{PodCIDR} \jb{This should be introduced properly} range configured on the Node by the Kubelet bootstrapping phase.
+The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network, for example, with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
 
 % Kubernetes Network Policy is the means to enforce rules
 % indicating which network traffic is allowed and which Pods
