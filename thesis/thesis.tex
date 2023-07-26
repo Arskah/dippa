@@ -1257,14 +1257,14 @@ Finally, an example development environment is introduced to test out the soluti
 A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system.
 Threat modeling is a structured approach to identify and prioritize potential threats to a system.
 This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
-The idea is to build a catalog of all potential threats, prioritize issues and try to find mitigations so that attackers cannot use the vulnerabilities against the system.
+The idea is to build a catalog of all potential threats, prioritize issues and try to find mitigations so that attackers cannot use the vulnerabilities against the system. \jb{This introduction has a colloquial tone. It should only briefly mention the content of the section.}
 
 % TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
-
+\jb{Avoid using K8s, use Kubernetes instead}
 For generic K8s clusters there exist a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
 The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
-The \textit{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}.
-
+The \textit{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}. \jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
+\jb{Regarding the table, you can only mention the threats that apply to network security.}
 \begin{table}[H]
   \sffamily% change the font in the table to sans serif
   \centering
@@ -1293,6 +1293,8 @@ The \textit{Threat Matrix for Kubernetes} is used to identify threats in this sc
 \end{minipage}
 \end{table}
 
+\subsection{Attacker model}
+\jb{What are the attacker capabilities? How can they damage the system?}
 
 \subsection{Security requirements}
 
@@ -1364,6 +1366,7 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   \caption{Pod fields enforced by \texttt{restricted} Security Standard}
   \label{table:pod-hardening}
   \sffamily% change the font in the table to sans serif
+  \small
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
@@ -1392,7 +1395,7 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   language=yaml
 ]{code/restricted-ns.yml}
 
-The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a K8s namespace resource, as shown in Listing~\ref{lst:pss}.
+The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a K8s namespace resource, as shown in Listing~\ref{lst:pss}. \jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
 % readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
@@ -1486,15 +1489,15 @@ Thus, all traffic outside the Pod, from any of the containers, passes through th
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
 As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container.
-For intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins.
+For intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins \jb{And by which component? I assume CRI (container runtime interface). Note for the future: Does it different significantly in different implementation of CRI?}.
 This means that NetworkPolicies do not have an effect on the loopback device.
 Furthermore, since all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be used for traffic filtering.
 This chapter introduces two general approaches as solutions for the issue.
 
 The first solution enforces firewall rules inside the application Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods.
 While deploying containers in their own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container.
-Most notably, the sidecars will have their own independent lifecycle and schedulation, and the communication via the loopback device will be broken.
-In the scope of this thesis, we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}.
+Most notably, the sidecars will have their own independent lifecycle and schedulation \jb{scheduling}, and the communication via the loopback device will be broken.
+In the scope of this thesis, we consider sidecars to be scheduled  along the application container and be accessible via \texttt{127.0.0.1}.
 Thus, re-introducing these characteristics to the containers is also part of the solution.
 
 \subsection{Applying firewall rules inside Pod network namespace}
@@ -1639,7 +1642,6 @@ Thus, it is more optimal to apply the rules outside the Pod's context; for examp
   \caption{Multiple network namespaces architecture}
   \label{fig:multi-pod-net-solution}
 \end{figure}
-
 Figure~\ref{fig:multi-pod-net-solution} illustrates the network architecture for the solution in which containers are deployed in different Pods.
 The idea behind this approach is to use Network Policies for filtering the traffic between the containers.
 Since containers are not technically sidecars anymore, the solution must recreate communication via the \texttt{localhost} address.
