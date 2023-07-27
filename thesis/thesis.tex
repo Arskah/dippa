@@ -780,12 +780,12 @@ This is an important concept to mention.}
 Kubernetes (K8s) \cite{kubernetes} is an open-source container orchestrator, i.e., a system to automate the deployment, scaling and management of containerized applications.
 It allows the creation of a cluster which consists of a set of servers, called Nodes, on which application containers are scheduled by the system.
 The automation provides resilience and efficient resource utilization for workloads in the cluster: if a container or Node dies, the system attempts to restart and reschedule containers so that the desired cluster state is maintained.
-K8s is hosted by the Cloud Native Computing Foundation (CNCF), but its origins are at Google, where it was created as an open-source option for Google's proprietary Borg and Omega orchestrators \cite{burns2016borg}.
-K8s was open-sourced in 2014.
+Kubernetes is hosted by the Cloud Native Computing Foundation (CNCF), but its origins are at Google, where it was created as an open-source option for Google's proprietary Borg and Omega orchestrators \cite{burns2016borg}.
+Kubernetes was open-sourced in 2014.
 
 \subsubsection{Kubernetes objects}
 
-\textbf{Pods} are the basic atomic scheduling unit in K8s.
+\textbf{Pods} are the basic atomic scheduling unit in Kubernetes.
 Pods consist of one or more tightly-coupled containers with shared storage volume and networking \cite{k8s-docs-pods}.
 Containers in a Pod are always co-located and co-scheduled and run in a shared context, i.e. a set of Linux namespaces.
 The network, UTS and IPC namespaces are shared by default, and the process namespace can be shared with \texttt{v1.PodSpec.shareProcessNamespace}.
@@ -797,7 +797,7 @@ Multiple \texttt{initContainers} are run sequentially, and a failing container b
 If a Pod fails, a replacement Pod is not automatically created.
 Quite often, developers want to have more control over the compute resources and specify a target state for them.
 This includes replication, scaling, and distribution among various nodes.
-To meet these needs, K8s provides additional resources.
+To meet these needs, Kubernetes provides additional resources.
 
 Instead of directly creating Pods, \textbf{Deployment} workload resources can be used to create Pods in a cluster \cite{k8s-docs-pods}.
 With Deployments, the user describes the desired state in a declarative manner.
@@ -821,9 +821,9 @@ The field is designed as a nested functionality; each \texttt{ServiceType} level
 \jb{Usually services are proxies that route requests to the different Pods. There are also Headless services that only add DNS entries for the Pods.}
 
 \textbf{Namespaces} allow logical grouping of resources under a single name.
-New K8s cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}.
+New Kubernetes cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}.
 Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined.
-\texttt{kube-system} is the namespace for all objects created by the K8s system which is discussed in more detail in the next Chapter~\ref{control-plane}.
+\texttt{kube-system} is the namespace for all objects created by the Kubernetes system which is discussed in more detail in the next Chapter~\ref{control-plane}.
 Namespaces also provide a scope for naming; names of resources need to be unique within a namespace, but not across namespaces.
 Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example, in multi-tenancy setups.
 Pod Security Standards \cite{k8s-docs-pss}, which are used by the Pod Security admission controller, are also defined at the namespace level.
@@ -1227,7 +1227,7 @@ TODO: add file \label{yaml:host-path}
 
 The second example file~\ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access to mount the entire host's filesystem, with read and write access.
 Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack.
-Important credentials include \texttt{kubeconfig} files that store access tokens to the K8s API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
+Important credentials include \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
 
 TODO: some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
 
@@ -1241,7 +1241,7 @@ the prerequisites for an attack, and which parts of the threat matrix are involv
 
 
 
-This chapter analyzes threats in the K8s cluster from the perspective of sidecars and defines the security requirements for the solution introduced in the following chapters.
+This chapter analyzes threats in the Kubernetes cluster from the perspective of sidecars and defines the security requirements for the solution introduced in the following chapters.
 First, threat modeling is used to identify possible attack vectors and readily available mitigations.
 Then, the model is used to identify all issues that should be solved with the solution.
 Finally, an example development environment is introduced to test out the solution.
@@ -1260,8 +1260,7 @@ This includes profiles of potential attackers and their goals and methods, as we
 The idea is to build a catalog of all potential threats, prioritize issues and try to find mitigations so that attackers cannot use the vulnerabilities against the system. \jb{This introduction has a colloquial tone. It should only briefly mention the content of the section.}
 
 % TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
-\jb{Avoid using K8s, use Kubernetes instead}
-For generic K8s clusters there exist a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
+For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
 The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
 The \textit{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}. \jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
 \jb{Regarding the table, you can only mention the threats that apply to network security.}
@@ -1269,7 +1268,7 @@ The \textit{Threat Matrix for Kubernetes} is used to identify threats in this sc
   \sffamily% change the font in the table to sans serif
   \centering
 
-  \caption{K8s sidecar threat model}
+  \caption{Kubernetes sidecar threat model}
   \label{table:threat-model}
 
   % minipage so that footnotes are printed
@@ -1321,7 +1320,7 @@ Based on the model, the solution should provide answers to these main questions:
 As for the first question, existing mitigations were already found while threat modeling.
 A solution in which all mitigations are applied is introduced in Chapter~\ref{sec:pod-hardening}.
 For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC and intra-Pod communications on the loopback NIC.
-However, K8s does not provide any built-in solution for creating these firewalls.
+However, Kubernetes does not provide any built-in solution for creating these firewalls.
 Few possible solutions for building the Zero Trust network inside the Pod are given in the Chapter~\ref{sec:network-solution}.
 
 %TODO: check loopback CNI plugin in cni.dev example plugins
@@ -1339,7 +1338,7 @@ A simple Node.js webserver with StatsD sidecar is used as the application worklo
 The source code can be found in Appendix~\ref{app:node-webapp}.
 The webserver serves "Hello world" on port \texttt{8888} and writes response times to the StatsD sidecar via the loopback device on port \texttt{8125}, which is the default for StatsD.
 
-For penetration testing purposes, another sidecar is introduced with common networking and K8s command line tools.
+For penetration testing purposes, another sidecar is introduced with common networking and Kubernetes command line tools.
 When deployed instead of the StatsD client, this sidecar can be used to simulate situations where the attacker has managed to get access to the shell inside the sidecar.
 The Dockerfile for the image can be found in Appendix~\ref{app:malicious-sidecar}.
 
@@ -1348,7 +1347,7 @@ The Dockerfile for the image can be found in Appendix~\ref{app:malicious-sidecar
 \section{Hardening Pod security} \label{sec:pod-hardening}
 
 This chapter provides a solution for hardening Pods against privilege escalation attacks.
-The solution enforces that deployed resources follow K8s best security practices.
+The solution enforces that deployed resources follow Kubernetes best security practices.
 Most of the practices are enforced by the built-in Pod Security Admission controller.
 However, this chapter also introduces extra security measures that fix a few oversights regarding sidecar containers in the controller.
 
@@ -1356,7 +1355,7 @@ However, this chapter also introduces extra security measures that fix a few ove
 
 \subsection{Restricted Pod Security Standard}
 
-Since version 1.25, K8s has shipped with the Pod Security Admission controller as a stable feature.
+Since version 1.25, Kubernetes has shipped with the Pod Security Admission controller as a stable feature.
 The controller, as discussed in Chapter~\ref{admission-controllers}, provides three different Pod Security Standards that can be used to warn and enforce against insecure Pod configurations.
 The \texttt{restricted} Pod Security Standard is the strictest of the standards and aims at the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution.
 The table~\ref{table:pod-hardening} lists all fields affected by the standard.
@@ -1395,7 +1394,7 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   language=yaml
 ]{code/restricted-ns.yml}
 
-The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a K8s namespace resource, as shown in Listing~\ref{lst:pss}. \jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
+The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}. \jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
 % readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
@@ -1483,8 +1482,8 @@ TODO: Summarize all the solutions into one.
 
 \section{Network Isolation} \label{sec:network-solution}
 
-Implementing a zero trust network architecture in K8s cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
-The root cause for this is that the lowest level of networking abstraction in K8s is the Pod, and that by definition, all containers in a Pod share network namespace.
+Implementing a zero trust network architecture in Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
+The root cause for this is that the lowest level of networking abstraction in Kubernetes is the Pod, and that by definition, all containers in a Pod share network namespace.
 Thus, all traffic outside the Pod, from any of the containers, passes through the same \texttt{eth0} NIC and shares a common source IP address.
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
