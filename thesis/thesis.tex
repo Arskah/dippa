@@ -715,7 +715,7 @@ Processes executing in containers run on the kernel of the host machine.
 However, each container is isolated to its own network, process namespace, and so on; two containers on the same host OS do not know that they share resources.
 Furthermore, containers are similarly isolated from accessing host OS resources.
 
-BSD jails and \textit{chroot} can be considered early forms of containerization technology, so the idea of containers is not new \cite{combe2016docker}.
+BSD jails and \emph{chroot} can be considered early forms of containerization technology, so the idea of containers is not new \cite{combe2016docker}.
 Recent Linux container solutions rely on two main implementations: Linux Containers (LXC) -based solution that relies on kernel features such as control groups (cgroups) and namespaces, and a custom kernel and Linux distribution called Open Virtuozzo (OpenVZ).
 Docker \cite{docker} is a hugely popular LXC-based container runtime and provides an easy-to-use API and tooling for creating and managing containers.
 Docker also provides containerization for other OSes as well.
@@ -725,12 +725,12 @@ However, in this thesis we focus only on the Linux implementation.
 
 The Linux containers technology implements container isolation and containment using a Linux kernel feature called namespaces \cite{lin2018measurement}.
 Namespaces \cite{manpages-namespace} are a construct that wraps a global system resource in an abstraction that makes it appear to the processes in the namespace that they have their own isolated instance of the global resource.
-There are a total of eight namespaces: i) \textit{Cgroup} which is used for resource management, ii) \textit{Inter-process communication} (IPC) that isolates POSIX message queues, etc., iii) \textit{Network} which isolates network devices, stack ports, etc., iv) \textit{Mount} for file system isolation, v) \textit{Process ID} (PID), vi) \textit{Time}, vii) \textit{User} for isolating user and group identifiers, and viii) \textit{UTS} which isolates hostnames and NIS domain names.
-For example, the \textit{network} namespace provides each container with its own loopback device, and even \texttt{iptables} rules.
-In another example, \textit{mount} namespace ensures that container has no visibility or access to the host's or other container's file system.
-Compared to other namespaces that concern the isolation of kernel data, \textit{cgroups} focuses on limiting available system resources per namespace \cite{lin2018measurement}.
+There are a total of eight namespaces: i) \emph{Cgroup} which is used for resource management, ii) \emph{Inter-process communication} (IPC) that isolates POSIX message queues, etc., iii) \emph{Network} which isolates network devices, stack ports, etc., iv) \emph{Mount} for file system isolation, v) \emph{Process ID} (PID), vi) \emph{Time}, vii) \emph{User} for isolating user and group identifiers, and viii) \emph{UTS} which isolates hostnames and NIS domain names.
+For example, the \emph{network} namespace provides each container with its own loopback device, and even \texttt{iptables} rules.
+In another example, \emph{mount} namespace ensures that container has no visibility or access to the host's or other container's file system.
+Compared to other namespaces that concern the isolation of kernel data, \emph{cgroups} focuses on limiting available system resources per namespace \cite{lin2018measurement}.
 Each namespace can be configured with its own limits on CPU and memory usage and available devices.
-Using Docker as an example, setting \textit{--cpu}, \textit{--memory} and \textit{--devices} options will limit available resources for the container.
+Using Docker as an example, setting \texttt{--cpu}, \texttt{--memory} and \texttt{--devices} options will limit available resources for the container.
 % One critical security risk of the container mechanism is that all containers running on the same host share the same Linux kernel. If a process inside the container compromises the Linux kernel, the isolation provided by the container mechanism becomes invalid. Therefore, several Linux kernel security mechanisms are adopted to constrain the capability of the processes inside the containers, such as Capability [48], Seccomp [29] and Mandatory Access Control (MAC) mechanisms. Through Capability mechanism, the superuser privilege (i.e., ROOT privilege) is divided into 38 distinct units, known as capabilities. Each capability represents a permission to process some speci"c kernel resources. For example, the CAP_NET_ADMIN capability denotes the permissions to perform network-related operations. By default, the containers created by Docker own 14 capabilities [21]. The Seccomp mechanism constrains the system calls a process can invoke. Docker de"nes the available system calls for a container through a Seccomp pro"le "le, which by default includes more than 300 system calls [26]. Both Capability and Seccomp are Discretionary Access Control (DAC) mechanisms, and SELinux [52] and AppArmor [24] are two MAC mechanisms adopted by containers. SELinux has been integrated in CentOS / RHEL / Fedora distros, and AppArmor has been integrated in Debian/Ubuntu distros. AppArmor utilizes a path-based enforcement model [5], while SELinux adopts a label-based enforcement model [52].
 
 Since all containers and the host machine run on the same kernel, any container that manages to breakout from isolation may compromise other containers, the host, and the whole kernel.
@@ -1142,7 +1142,7 @@ Since Multus does not provide any networking and thus does not independently, it
 
 Multus system includes a binary, a CNI configuration file, and a namespaced \texttt{NetworkAttachmentDefinition} CRD that is used to define network interfaces used in Pods.
 The binary and the configuration file are often installed on cluster nodes via a DaemonSet.
-The daemon consists of an \textit{initContainer} that copies the binary into the \texttt{/opt/cni/bin} directory, and a daemon container that configures the configuration file and optionally spawns an HTTP server for additional features such as metrics \cite{multus-cni}.
+The daemon consists of an \emph{initContainer} that copies the binary into the \texttt{/opt/cni/bin} directory, and a daemon container that configures the configuration file and optionally spawns an HTTP server for additional features such as metrics \cite{multus-cni}.
 The configuration file satisfies the CNI specification with few additional attributes of which the combination of \texttt{clusterNetwork} and \texttt{defaultNetworks} or \texttt{delegates} are imperative for the CNI plugin to function \cite{multus-cni-config}.
 The \texttt{clusterNetwork} specifies the main network of the cluster, which implements the \texttt{eth0} interface and the Pod IP address.
 The \texttt{defaultNetworks} is an optional array of networks that should be added for any Pods by default.
@@ -1154,8 +1154,8 @@ In this scenario, the first element of the array functions as \texttt{clusterNet
 
 Attaching additional interfaces to workloads is most often configured by adding a special annotations field \texttt{k8s.v1.cni.cncf.io/networks} to workload resource definitions.
 In the simplest configuration, the field takes a comma separated list of the \texttt{ NetworkAttachmentDefinition} names as input.
-The network interface identifiers can be modified by providing the attachment input in \textit{name@interface-identifier} format.
-Otherwise, Multus names the interfaces \textit{net0}, \textit{net1} and so on.
+The network interface identifiers can be modified by providing the attachment input in \texttt{name@interface-identifier} format.
+Otherwise, Multus names the interfaces \emph{net0}, \emph{net1} and so on.
 If extra configuration for the networks is needed, the annotation also supports the JSON array format.
 
 \subsubsection{Extended Berkeley Packet Filter}
@@ -1165,7 +1165,7 @@ BPF works by deploying the filtering part of the application, \texttt{packet fil
 The \texttt{packet filter} is provided with a program (often denoted as BPF program) consisting of BPF instructions, which works as a set of rules for selecting which packets are of interest in the user-space application and should be copied from kernel-space to user-space.
 The instructions are executed in a register-based pseudo machine.
 Since network monitors are often interested only in subset of network traffic, this limits the number of expensive copy operations across the kernel/user-space protection boundary only to packets that are of interest in the user-space application.
-A notable use-case for BPF is \textit{libpcap} library, which is used by a network monitoring tool called \texttt{tcpdump}.
+A notable use-case for BPF is \emph{libpcap} library, which is used by a network monitoring tool called \texttt{tcpdump}.
 
 Later in the 2010s the Linux community realized that BPF and it's ability to instrument the kernel could benefit other areas than packet filtering as well \cite{vieira2020fast}.
 This reworked version of BPF was first merged into the Linux kernel in 2014 and is publicly called the extended Berkeley Packet Filter (eBPF) to distinguish it from the original cBPF.
@@ -1181,7 +1181,7 @@ There are two different network event interfaces in eBPF: eXpress Data Path (XDP
 XDP programs are attached to an NIC and can handle only incoming packets \cite{hoiland2018express}.
 The programs are called directly by the NIC driver if it has XDP support, thus executing before packets enter the network stack.
 This skips expensive packet parsing and memory allocation operations and allows XDP programs to run at very high throughput.
-Thus, even the main network buffer \textit{skbuff} is not populated.
+Thus, even the main network buffer \emph{skbuff} is not populated.
 Some SmartNICs even support offloading the program to the NIC's own processor from the host CPU, further improving the performance of the host machine \cite{cilium-program-types}.
 If the driver does not support XDP, generic XDP is used and the programs run after the packet has been parsed by the network stack.
 
@@ -1195,12 +1195,13 @@ The packet can also be bounced back to the same NIC on which it arrived with \te
 \texttt{XDP\_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
 
 TC programs are executed when both incoming and outgoing packets reach the kernel traffic control function within the Linux network stack \cite{vieira2020fast}.
-The ingress hook runs after the packet is parsed to \textit{skbuff} but before most of the network stack.
+The ingress hook runs after the packet is parsed to \emph{skbuff} but before most of the network stack.
 On egress the stack is traversed in reverse; thus, the hook executes after most of the network stack.
 TC programs can read and write directly to a packet in memory.
 Similarly to XDP programs, the return value of the program determines the further processing of the packet.
 The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped with \texttt{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \texttt{TC\_ACT\_RECLASSIFY}, among others.
 \jb{Do we need this level of detail to understand your solution?}
+
 % TODO: delete or find a good place for these scenarios
 \clearpage
 \subsection{Example attack scenarios}
@@ -1248,22 +1249,17 @@ Finally, an example development environment is introduced to test out the soluti
 
 \subsection{Threat modeling}
 
-% Threat modeling is a structured approach of identifying and prioritizing potential threats to a system, and determining the value that potential mitigations would have in reducing or neutralizing those threats
-
-% Threat modeling methods are used to create an abstraction of the system; profiles of potential attackers, including their goals and methods; and a catalog of potential threats that may arise. There are many threat modeling methods that have been developed. Not all of them are comprehensive; some focus on the abstraction and encourage granularity while others are more people-centric. Some methods focus specifically on risk or privacy concerns. Threat modeling methods can be combined to create a more robust and well-rounded view of potential threats.
-
-% A threat is defined as a potential loss of confidentiality and integrity of an asset caused by an attacker acting to compromise that asset via some attack surface.
-
 A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system.
 Threat modeling is a structured approach to identify and prioritize potential threats to a system.
 This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
 The idea is to build a catalog of all potential threats, prioritize issues and try to find mitigations so that attackers cannot use the vulnerabilities against the system. \jb{This introduction has a colloquial tone. It should only briefly mention the content of the section.}
 
 % TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
-For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \textit{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
+For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \emph{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
 The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
-The \textit{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}. \jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
+The \emph{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}. \jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
 \jb{Regarding the table, you can only mention the threats that apply to network security.}
+
 \begin{table}[H]
   \sffamily% change the font in the table to sans serif
   \centering
