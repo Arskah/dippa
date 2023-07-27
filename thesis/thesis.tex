@@ -1202,10 +1202,73 @@ Similarly to XDP programs, the return value of the program determines the furthe
 The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped with \texttt{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \texttt{TC\_ACT\_RECLASSIFY}, among others.
 \jb{Do we need this level of detail to understand your solution?}
 
-% TODO: delete or find a good place for these scenarios
 \clearpage
-\subsection{Example attack scenarios}
-\jb{This is part of the threat modeling}
+
+\jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
+
+\section{Threat modeling}
+
+This chapter analyzes threats in the Kubernetes cluster from the perspective of sidecars.
+The chapter first discusses existing Kubernetes threat models, which are then used to identify possible attack vectors and readily available mitigations.
+Finally, the chapter discusses attack model and demonstrates the attacker capabilities with example attack scenarios.
+
+\subsection{Existing threat models}
+
+A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system.
+Threat modeling is a structured approach to identify and prioritize potential threats to a system.
+This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
+
+% TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
+For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \emph{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
+The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
+The \emph{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}.
+\jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
+
+\begin{table}[H]
+  \sffamily
+  \centering
+
+  \caption{Kubernetes sidecar threats}
+  \label{table:threat-model}
+
+  % minipage so that footnotes are printed
+  \begin{minipage}{\textwidth}
+  \renewcommand{\thempfootnote}{\arabic{mpfootnote}} % footnotes in minipage are letters instead of numbers, fix that
+  \begin{tabularx}{\textwidth}{CCC}
+    \hline
+    \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
+    Privileged containers & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
+    Writing to the host file system & TODO. & Do not allow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
+    Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
+    There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
+  \end{tabularx}
+\end{minipage}
+\end{table}
+
+\begin{table}[H]
+  \sffamily
+  \centering
+
+  \caption{Networking threats for sidecars}
+  \label{table:threat-model-network}
+
+  % minipage so that footnotes are printed
+  \begin{minipage}{\textwidth}
+  \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
+  \begin{tabularx}{\textwidth}{CCC}
+    \hline
+    \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
+    The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
+    Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
+    Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
+    Sidecar is used to sniff the main application's traffic & TODO & mTLS? Requires a service mesh. \\ \hline
+  \end{tabularx}
+\end{minipage}
+\end{table}
+
+\subsection{Attacker model}
+
+\jb{What are the attacker capabilities? How can they damage the system?}
 
 \begin{itemize}
   \item Privileged container
@@ -1236,60 +1299,7 @@ TODO: some extra issues (finding .kubeconfig files, running on control-plane -> 
 
 \section{Solution requirements} \label{sec:methods}
 
-\jb{Threat model can also be a separate section.
-In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster),
-the prerequisites for an attack, and which parts of the threat matrix are involved.}
-
-
-
-This chapter analyzes threats in the Kubernetes cluster from the perspective of sidecars and defines the security requirements for the solution introduced in the following chapters.
-First, threat modeling is used to identify possible attack vectors and readily available mitigations.
-Then, the model is used to identify all issues that should be solved with the solution.
-Finally, an example development environment is introduced to test out the solution.
-
-\subsection{Threat modeling}
-
-A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system.
-Threat modeling is a structured approach to identify and prioritize potential threats to a system.
-This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
-The idea is to build a catalog of all potential threats, prioritize issues and try to find mitigations so that attackers cannot use the vulnerabilities against the system. \jb{This introduction has a colloquial tone. It should only briefly mention the content of the section.}
-
-% TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
-For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \emph{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
-The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
-The \emph{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}. \jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
-\jb{Regarding the table, you can only mention the threats that apply to network security.}
-
-\begin{table}[H]
-  \sffamily% change the font in the table to sans serif
-  \centering
-
-  \caption{Kubernetes sidecar threat model}
-  \label{table:threat-model}
-
-  % minipage so that footnotes are printed
-  \begin{minipage}{\textwidth}
-  % footnotes in minipage are letters instead of numbers, fix that
-  \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
-  \begin{tabularx}{\textwidth}{CCC}
-    \hline
-    \textbf{Threat} & \textbf{Description} & \textbf{Mitigation}\\ \hline
-    Privileged containers & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
-    Writing to the host file system & TODO. & Do not allow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
-    Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
-    There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
-    The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
-    Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
-    Sidecar has network access to cloud resources & Cloud providers may attach cloud identities to cluster Nodes, so that Pods can access resources outside the cluster. & \textbf{Same issue as above!} Block mounting volumes with access to cloud credentials. \\ \hline
-    Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
-    Sidecar is used to sniff the main application's traffic & TODO & mTLS? Requires a service mesh. \\ \hline
-    Unencrypted secrets & TODO & Encrypt at rest \\ \hline
-  \end{tabularx}
-\end{minipage}
-\end{table}
-
-\subsection{Attacker model}
-\jb{What are the attacker capabilities? How can they damage the system?}
+This chapter defines the security requirements of the solutions that are discussed in the following chapters. The chapter also introduces the development environment, which is used for testing and implementing the solutions.
 
 \subsection{Security requirements}
 
@@ -1301,7 +1311,6 @@ Based on the model, the solution should provide answers to these main questions:
 %   \item Set PSA to restricted
 %   \item Add resource limits
 %   \item Prevent SA auto mount
-%   \item Encrypt all secrets at rest?
 %   \item Create zero trust Network Policy outside the cluster
 %   \item Create zero trust network for sidecar egress (inter-Pod)
 %   \item Create zero trust network on loopback device (intra-Pod)
@@ -1318,8 +1327,6 @@ A solution in which all mitigations are applied is introduced in Chapter~\ref{se
 For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC and intra-Pod communications on the loopback NIC.
 However, Kubernetes does not provide any built-in solution for creating these firewalls.
 Few possible solutions for building the Zero Trust network inside the Pod are given in the Chapter~\ref{sec:network-solution}.
-
-%TODO: check loopback CNI plugin in cni.dev example plugins
 
 \subsection{Environment}
 
@@ -1386,7 +1393,7 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
 
 \lstinputlisting[
   caption={Namespace resource with \texttt{restricted} Security Standard},
-  label={lst:pdss},
+  label={lst:pss},
   language=yaml
 ]{code/restricted-ns.yml}
 
@@ -1484,7 +1491,8 @@ Thus, all traffic outside the Pod, from any of the containers, passes through th
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
 As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container.
-For intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins \jb{And by which component? I assume CRI (container runtime interface). Note for the future: Does it different significantly in different implementation of CRI?}.
+For intra-Pod communication, the traffic goes through the loopback device which is not managed by CNI plugins.
+\jb{And by which component? I assume CRI (container runtime interface). Note for the future: Does it different significantly in different implementation of CRI?}
 This means that NetworkPolicies do not have an effect on the loopback device.
 Furthermore, since all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be used for traffic filtering.
 This chapter introduces two general approaches as solutions for the issue.
@@ -1492,7 +1500,7 @@ This chapter introduces two general approaches as solutions for the issue.
 The first solution enforces firewall rules inside the application Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods.
 While deploying containers in their own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container.
 Most notably, the sidecars will have their own independent lifecycle and schedulation \jb{scheduling}, and the communication via the loopback device will be broken.
-In the scope of this thesis, we consider sidecars to be scheduled  along the application container and be accessible via \texttt{127.0.0.1}.
+In the scope of this thesis, we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}.
 Thus, re-introducing these characteristics to the containers is also part of the solution.
 
 \subsection{Applying firewall rules inside Pod network namespace}
@@ -1645,8 +1653,6 @@ Although it is possible to use the default network created by the CNI plugin for
 The isolation allows the use of separate IP address pool, which comes in handy when re-creating the communication via localhost.
 
 \subsubsection{Creating isolated network for sidecar traffic}
-
-
 
 It is completely possible to use the default Pod network created by the CNI plugin for traffic between sidecars.
 With this setup, the network rules are simply Network Policies on top of the policy that implicitly denies all other traffic.
