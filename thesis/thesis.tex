@@ -1204,25 +1204,26 @@ The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped
 
 \clearpage
 
-\jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
-
-\section{Threat modeling}
+\section{The threat model}
 
 This chapter analyzes threats in the Kubernetes cluster from the perspective of sidecars.
 The chapter first discusses existing Kubernetes threat models, which are then used to identify possible attack vectors and readily available mitigations.
-Finally, the chapter discusses attack model and demonstrates the attacker capabilities with example attack scenarios.
+Finally, the chapter discusses the attack model and demonstrates attacker capabilities with example attack scenarios.
 
-\subsection{Existing threat models}
+\subsection{Existing models}
 
 A security threat is any possible event in a system that could lead to a potential loss of confidentiality and integrity of an asset in the system.
 Threat modeling is a structured approach to identify and prioritize potential threats to a system.
 This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
 
-% TODO: Check the NSA security stuff \cite{nsa-cisa-hardening}
-For generic Kubernetes clusters, there exist a number of extensive threat models, for example the \emph{Threat Matrix for Kubernetes} by Microsoft \cite{k8s-threat-matrix}.
-The scope of this thesis is on sidecar security, so we will only focus on the possible threats that can be leveraged after the attacker has gained access to a sidecar container inside the cluster.
-The \emph{Threat Matrix for Kubernetes} is used to identify threats in this scenario, while the results are listed in Table~\ref{table:threat-model}.
-\jb{In general the MITRE framework is the standard to threat modeling. However, Microsoft developed a specific version tailored to Kubernetes.}
+For Kubernetes clusters, there exists an extensive \emph{Threat Matrix for Kubernetes} created by Microsoft \cite{k8s-threat-matrix}.
+The matrix is adapted from \emph{MITRE adversarial tactics, techniques, and common knowledge (ATT\&CK)} Framework's container matrix \cite{mitre-matrix} and is a de-facto industry standard for describing the threats.
+The matrix, illustrated in Figure~\ref{fig:threat-matrix}, describes common techniques used by attackers in chronological stages, from initial access to impact \cite{minna2021understanding}.
+A defense-in-depth strategy is achieved by addressing the threats in all the attack stages.
+
+The adversary in this model is a compromised sidecar container in the cluster.
+Since sidecar containers are compromised in similar fashion to other containers, for example by installing a malicious or vulnerable container, the model assumes that the first stage is already breached and the adversary has command line access in the sidecar, and instead focuses on limiting the attacker from escalating the attack further.
+The identified threats are listed in Tables~\ref{table:threat-model} and \ref{table:threat-model-network}, with networking related threats split into the latter one.
 
 \begin{table}[H]
   \sffamily
@@ -1266,7 +1267,16 @@ The \emph{Threat Matrix for Kubernetes} is used to identify threats in this scen
 \end{minipage}
 \end{table}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/Matrix.png}
+  \caption{Kubernetes threat matrix. The attack techniques addressed are highlighted in green.}
+  \label{fig:threat-matrix}
+\end{figure}
+
 \subsection{Attacker model}
+
+\jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
 
 \jb{What are the attacker capabilities? How can they damage the system?}
 
