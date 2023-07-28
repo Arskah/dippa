@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: privileged
+  namespace: insecure-ns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: privileged
+  template:
+    metadata:
+      labels:
+        app: privileged
+    spec:
+      # hostNetwork: true # vector: exit network namespace isolation
+      # hostPID: true # vector: exit PID namespace isolation
+      # hostIPC: true # vector: exit IPC namespace isolation
+      # nodeName: k8s-control-plane-node # Share Node with control plane
+      containers:
+        - name: sidecar-container
+          image: malicious-sidecar
+          command: ["/bin/sleep", "3650d"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: host-root
+              mountPath: /host-root
+      volumes:
+        - name: host-root # vector: mount the host filesystem
+          hostPath:
+            path: /

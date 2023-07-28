@@ -1280,34 +1280,50 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
 \end{minipage}
 \end{table}
 
+One of the worst-case scenarios is that the attacker has access to a privileged sidecar container.
+A privileged container has all the capabilities of the host machine, so basically a root user inside a privileged container means that the attacker has root privileges on the host Node.
+Furthermore, the container lacks restrictions from Seccomp, AppArmor and Linux capabilities.
+
+% in minkube setup:
+% chroot to host-path
+% mount /dev/vda1
+The Listing~\ref{lst:privileged-container} describes a Deployment with a privileged container.
+Since the container mounts the host filesystem to a volume in \texttt{/host-root}, the attacker can trivially use \texttt{chroot} to execute commands as root user in the host Node context.
+
+Even without the explicit \texttt{hostPath} mount, the host machine's \texttt{/dev} is accessible from the privileged container, which means that the container can see the disk that contains hosts's filesystem and mount the disk.
+The attacker can use this technique to find any credentials stored on the host machine and  escalate the attack.
+Important credentials include for example \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
+
+\lstinputlisting[
+  caption={Privileged container},
+  label={lst:privileged-container},
+  language={yaml}
+]{code/privileged.yml}
+
+The \emph{malicious-sidecar} is a simple, custom-made container image that includes some basic tools for penetration testing.
+Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
+
+% Container breakout from sidecar => privilege escalation and lateral movement to Node
+% Exessive Service Account => "admin-like" permissions on the cluster
+
 \jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
 
 \jb{What are the attacker capabilities? How can they damage the system?}
 
-\begin{itemize}
-  \item Privileged container
-  \item CAP\_SYS\_ADMIN, mounting /proc and chroot
-  \item CAP\_SYS\_PTRACE, shellcode injection to running program, nc 172.17.0.1 on port running shell
-  \item Mounted docker socket, creating privileged containers
-\end{itemize}
+% TODO: add file \label{yaml:priv-container}
 
-All of the example attack scenarios start by an attacker getting shell access to a container running in a Pod, usually through a remote code execution (RCE) flaw on the container application and then executing reverse shell inside the Pod.
-The scope of the examples is not in the initial attack, but in the Pod template misconfigurations that then provide some path for the attacker to escalate the attack and even take over the whole cluster in the end.
+% The first attack scenario includes a privileged container, as described in File~\ref{yaml:priv-container}.
+% Privileged containers have all the capabilities of the host machine, so practically they can be perform almost any action available on the host.
+% This includes, but is not restricted to, for example "pipeing" (TODO: a better word for undock.sh and other scripts) commands as root to the Node's shell and mounting the host's disks.
+% If combined with \texttt{hostPID:\ true}, the attacker can see all processes on the host and use \texttt{nsenter} to execute commands in the namespaces of the other processes.
 
-TODO: add file \label{yaml:priv-container}
+% TODO: add file \label{yaml:host-path}
 
-The first attack scenario includes a privileged container, as described in File~\ref{yaml:priv-container}.
-Privileged containers have all the capabilities of the host machine, so practically they can be perform almost any action available on the host.
-This includes, but is not restricted to, for example "pipeing" (TODO: a better word for undock.sh and other scripts) commands as root to the Node's shell and mounting the host's disks.
-If combined with \texttt{hostPID:\ true}, the attacker can see all processes on the host and use \texttt{nsenter} to execute commands in the namespaces of the other processes.
+% The second example file~\ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access to mount the entire host's filesystem, with read and write access.
+% Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack.
+% Important credentials include \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
 
-TODO: add file \label{yaml:host-path}
-
-The second example file~\ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access to mount the entire host's filesystem, with read and write access.
-Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack.
-Important credentials include \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
-
-TODO: some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
+% some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
 
 \clearpage
 
