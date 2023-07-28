@@ -1175,7 +1175,7 @@ Similarly to the kernel community, the term BPF always refers to the eBPF in thi
 The eBPF programs are compiled to bytecode and loaded into the kernel with \texttt{bpf()} system call \cite{miano2021framework}.
 Most often, programs are written in restricted C and compiled with the LLVM Clang compiler to bytecode.
 It is also possible to use the eBPF assembly instructions and \texttt{bpf\_asm} utility for converting instructions to bytecode.
-eBPF programs follow an event-driven architecture: a loaded eBPF program is hooked to a particular type of event, and each occurrence of the event triggers the program execution.
+eBPF programs follow an event-driven architecture: a loaded eBPF program is hooked to a particular type of event and each occurrence of the event triggers the program execution.
 
 There are two different network event interfaces in eBPF: eXpress Data Path (XDP) and Traffic Control (TC) \cite{miano2021framework}.
 XDP programs are attached to an NIC and can handle only incoming packets \cite{hoiland2018express}.
@@ -1217,13 +1217,26 @@ Threat modeling is a structured approach to identify and prioritize potential th
 This includes profiles of potential attackers and their goals and methods, as well as potential mitigations \cite{shevchenko2018threat}.
 
 For Kubernetes clusters, there exists an extensive \emph{Threat Matrix for Kubernetes} created by Microsoft \cite{k8s-threat-matrix}.
-The matrix is adapted from \emph{MITRE adversarial tactics, techniques, and common knowledge (ATT\&CK)} Framework's container matrix \cite{mitre-matrix} and is a de-facto industry standard for describing the threats.
+The matrix is adapted from \emph{MITRE adversarial tactics, techniques, and common knowledge (ATT\&CK)} Framework's container matrix \cite{mitre-matrix} and is a de-facto industry standard for describing threats.
 The matrix, illustrated in Figure~\ref{fig:threat-matrix}, describes common techniques used by attackers in chronological stages, from initial access to impact \cite{minna2021understanding}.
-A defense-in-depth strategy is achieved by addressing the threats in all the attack stages.
+A defense-in-depth strategy is achieved by addressing threats at all stages of attack.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{files/Matrix.png}
+  \caption{Kubernetes threat matrix. The attack techniques addressed are highlighted in green.}
+  \label{fig:threat-matrix}
+\end{figure}
+
+\subsection{Attacker model}
 
 The adversary in this model is a compromised sidecar container in the cluster.
-Since sidecar containers are compromised in similar fashion to other containers, for example by installing a malicious or vulnerable container, the model assumes that the first stage is already breached and the adversary has command line access in the sidecar, and instead focuses on limiting the attacker from escalating the attack further.
-The identified threats are listed in Tables~\ref{table:threat-model} and \ref{table:threat-model-network}, with networking related threats split into the latter one.
+Since sidecar containers are compromised in a similar fashion to other containers, for example, by running a malicious or vulnerable container in the cluster, the model assumes that the first stage is already breached.
+The model also assumes that the adversary has execution capabilities in the sidecar container, specifically a shell access to the sidecar container in our examples.
+This type of security breach can occur if the application has a remote code execution (RCE) vulnerability that the attacker can exploit to run a reverse shell script inside the application.
+As another example, the attacker could acquire valid credentials to an application running a Secure Shell (SSH) server through brute-force or phishing attacks.
+The goal of the model is to prevent the attacker from escalating the attack.
+Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the identified threats, with threats related to networking divided into the latter.
 
 \begin{table}[H]
   \sffamily
@@ -1262,19 +1275,10 @@ The identified threats are listed in Tables~\ref{table:threat-model} and \ref{ta
     The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
     Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
-    Sidecar is used to sniff the main application's traffic & TODO & mTLS? Requires a service mesh. \\ \hline
+    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in cluster is unencrypted by default. A privileged sidecar can sniff and hijack the traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. For intra-Pod traffic, the only feasible solution is to limit the container permissions. (TODO: TLS traffic over loopback device? Can be switched off by attacker?) \\ \hline
   \end{tabularx}
 \end{minipage}
 \end{table}
-
-\begin{figure}[h!]
-  \centering
-  \includegraphics[width=\linewidth]{files/Matrix.png}
-  \caption{Kubernetes threat matrix. The attack techniques addressed are highlighted in green.}
-  \label{fig:threat-matrix}
-\end{figure}
-
-\subsection{Attacker model}
 
 \jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
 
