@@ -948,14 +948,14 @@ A fundamental part of a Kubernetes cluster is how nodes and resources are networ
 Specifically, the networking model needs to address four different types of networking problems: i) intra-Pod (that is, container-to-container within the same Pod) communication, ii) inter-Pod communication between Pods, iii) Service-to-Pod communication and iv) communication from external sources to Services \cite{k8s-docs-cluster-networking}.
 The model also requires that each Pod is IP addressable and can communicate with other Pods without network address translation (NAT), even when Pods are scheduled on different hosts \cite{qi2020assessing}.
 All agents on a host should also be able to communicate with Pods on the same host.
-The implementation of this model is not part of Kubernetes, but is handed to special plugins that implement the Container Network Interface (CNI) specification.
-\jb{K8s defines the CNI interface to allow different vendors and operators to use different networking mechanisms in kubernetes.}
+Kubernetes does not implement this model out-of-the-box, but hands the implementation to special Container Network Interface (CNI) plugins.
+This allows different vendors and operators to use varying networking mechanisms in Kubernetes.
 
 \subsubsection{Container Network Interface} \label{cni}
 
-The Container Network Interface (CNI) \cite{cni} is a networking specification, which has become the de-facto industry standard for container networking.
-It is backed by CNCF \cite{qi2020assessing}.
-CNI was first developed for the container runtime \texttt{rkt} \cite{hausenblas2018container}, but it is supported by all container runtimes, and there are a large number of implementations to choose from.
+The Container Network Interface \cite{cni} is a networking specification, which has become the de-facto industry standard for container networking and is backed by CNCF \cite{qi2020assessing}.
+The specification was first developed for the container runtime \texttt{rkt} \cite{hausenblas2018container}, but it is now supported by nearly all major container runtimes and orchestrators.
+As many runtimes seek to solve the same problem of making the network layer pluggable, the CNI was developed as a common API to promote interchangeability.
 Most container orchestrators have adopted the specification as their networking solution.
 The biggest outlier is Docker Swarm, which instead implements its own proprietary approach to container networking.
 
