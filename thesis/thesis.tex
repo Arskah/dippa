@@ -1420,7 +1420,8 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   language=yaml
 ]{code/restricted-ns.yml}
 
-The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}. \jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
+The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
+\jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
 % readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
@@ -1522,7 +1523,7 @@ This chapter introduces two general approaches as solutions for the issue.
 
 The first solution enforces firewall rules inside the application Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods.
 While deploying containers in their own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container.
-Most notably, the sidecars will have their own independent lifecycle and schedulation \jb{scheduling}, and the communication via the loopback device will be broken.
+Most notably, the sidecars will have their own independent lifecycle and scheduling, and the communication via the loopback device will be broken.
 In the scope of this thesis, we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}.
 Thus, re-introducing these characteristics to the containers is also part of the solution.
 
