@@ -1268,7 +1268,6 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
   \caption{Networking threats for sidecars}
   \label{table:threat-model-network}
 
-  % minipage so that footnotes are printed
   \begin{minipage}{\textwidth}
   \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
   \begin{tabularx}{\textwidth}{CCC}
@@ -1318,28 +1317,6 @@ Furthermore, any unpatched vulnerability in the underlying kernel, container eng
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
 The image also installs \texttt{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default \texttt{minikube} installation.
 Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
-
-% Container breakout from sidecar => privilege escalation and lateral movement to Node
-% Exessive Service Account => "admin-like" permissions on the cluster
-
-\jb{In principle, you should discuss the attacks you want to defend against (e.g., installing a malicious sidecar, or legitimate sidecar with vulnerabilities), the location of the attacker in the system (inside a specific container, in any container, outside the cluster), the prerequisites for an attack, and which parts of the threat matrix are involved.}
-
-\jb{What are the attacker capabilities? How can they damage the system?}
-
-% TODO: add file \label{yaml:priv-container}
-
-% The first attack scenario includes a privileged container, as described in File~\ref{yaml:priv-container}.
-% Privileged containers have all the capabilities of the host machine, so practically they can be perform almost any action available on the host.
-% This includes, but is not restricted to, for example "pipeing" (TODO: a better word for undock.sh and other scripts) commands as root to the Node's shell and mounting the host's disks.
-% If combined with \texttt{hostPID:\ true}, the attacker can see all processes on the host and use \texttt{nsenter} to execute commands in the namespaces of the other processes.
-
-% TODO: add file \label{yaml:host-path}
-
-% The second example file~\ref{yaml:host-path} does not have similar privileges for executing commands as the first, but has unlimited access to mount the entire host's filesystem, with read and write access.
-% Thus, the attacker can try to find any credentials stored on the host machine and use these to escalate the attack.
-% Important credentials include \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
-
-% some extra issues (finding .kubeconfig files, running on control-plane -> etcd and secrets within, cloud metadata)
 
 \clearpage
 
