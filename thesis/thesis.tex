@@ -600,6 +600,7 @@ Otaniemi, 9 February 2023 \\
   OOM         & Out-of-memory                       \\
   OpenVZ      & Open Virtuozzo                      \\
   OS          & Operating System                    \\
+  OSI         & Open Systems Interconnection        \\
   PID         & Process ID                          \\
   RCE         & Remote code execution               \\
   SELinux     & Security-Enhanced Linux             \\
@@ -1150,8 +1151,6 @@ The values can be names of the \texttt{NetworkAttachmentDefinition} objects or p
 Optionally, the \texttt{delegates} attribute can be used; it supports similar format of values.
 In this scenario, the first element of the array functions as \texttt{clusterNetwork} and the rest are inferred as \texttt{defaultNetworks}.
 
-% TODO: Add examples of NetworkAttachmentDefinition and Pod annotations
-
 Attaching additional interfaces to workloads is most often configured by adding a special annotations field \texttt{k8s.v1.cni.cncf.io/networks} to workload resource definitions.
 In the simplest configuration, the field takes a comma separated list of the \texttt{ NetworkAttachmentDefinition} names as input.
 The network interface identifiers can be modified by providing the attachment input in \texttt{name@interface-identifier} format.
@@ -1479,8 +1478,6 @@ Since volume mounts are defined per container and service account tokens can be 
   language={yaml}
 ]{code/SA.yml}
 
-% TODO: serviceAccountName: foo-service-account and automatic creation of tokens
-
 Listing~\ref{lst:service-account} shows how to create a Service Account token with the permission to read the status of Pods in the cluster.
 While Role, RoleBinding, and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with auto-mounting of service account tokens would create and mount on the containers.
 When the token created by the Secret resource is mounted to the same path as the automatic mounting, as in Listing~\ref{lst:service-account-mount}, the token is only mounted to the container that needs it.
@@ -1584,9 +1581,9 @@ The rules need to be applied inside the Pod's network namespace with tools such 
 
 \subsubsection{IPTables}
 
-% TODO: Check process id
+% https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html#OWNERMATCH
 Usually, IPTables rules are applied to packets by their IP addresses and ports.
-However, modern versions of IPTables ship with an owner module, which supports rules based on application's user, group, and session identifiers.
+However, modern versions of IPTables ship with an owner module, which supports rules based on process's name and user, group, process and session identifiers \cite{iptables-manpage}.
 For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user id.
 While the session identifier is assigned at runtime by the kernel, containers' user and group ids can be overridden with Pod definition's \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively.
 Thus, any ingress or egress traffic of a container with unique user identifier can be filtered with IPTables.
