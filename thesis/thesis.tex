@@ -699,6 +699,10 @@ This achieves a multi-layered security boundaries, where the breach of one compo
 Instead of having permission to access all resources within the perimeter, malicious actors could only laterally move to the resources that the compromised component required to function.
 Any other component is still protected by its own perimeter, which would require another successful attack to be breached.
 Thus, the compromised component is of limited usefulness to the attacker instead of serving as a general attack vector against the system.
+% TODO: https://www.infoq.com/articles/zero-trust-k8s/, https://www.cncf.io/blog/2022/11/04/seven-zero-trust-rules-for-kubernetes/
+% - Workload identity: K8s identity instead of IP address
+% - mTLS
+% - Network is not trusted: each Pod does its own authentication
 \jb{How is the Zero trust implemented in practice? Is there a relationship between zero trust and sidecars?}
 
 \subsection{Containerization and Docker}
@@ -1748,9 +1752,39 @@ MutatingAdmissionWebhook?
 
 \section{Solution Evaluation} \label{sec:solution}
 
+TODO:
+\begin{itemize}
+  \item Discuss how the solution prevents deployment of privileged containers (use example scenarios)
+  \item Network demonstration: try to curl places from the sidecar
+  \item What can be really measured?
+\end{itemize}
+
+Qualitative assesment?
+\begin{itemize}
+  \item The solutions are complex and a production ready version requires own controller
+  \item multi-network-policy operators are not production ready
+  \item Multus solution and co-scheduling (not a sidecar technically)
+  \item Service meshes are becoming sidecarless: what kind of situation would require this sort of solution?
+  \item Improving the security: mTLS, observability?
+\end{itemize}
+
 \clearpage
 
 \section{Discussion} \label{sec:discussion}
+
+A solution "loopback CNI with Network Policy" possible?
+Or a new CNI operator that "hijacks" loopback CNI and handles the NP?
+The DaemonSet would need to write over CNI json on all Nodes.
+
+\begin{itemize}
+  \item Service meshes and ZTA (meshes seem to be the standard in security nowadays)
+  \item Sidecarless service meshes (eBPF as the forerunner of this change)
+  \item Cilum v1.14: https://isovalent.com/blog/post/cilium-release-114/
+  \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
+\end{itemize}
+
+% https://isovalent.com/blog/post/2022-05-16-tetragon/
+% https://isovalent.com/learning-tracks/#securityProfessionals
 
 \clearpage
 
