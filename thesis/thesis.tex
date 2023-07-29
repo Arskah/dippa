@@ -1633,7 +1633,7 @@ The same capabilities are paramount to any CNI plugin controllers that enforce N
 
 For demonstration purposes, a custom container installed with IPTables and \texttt{crictl} CLI is used.
 The container uses \texttt{crictl} to find the PID of a container in the Pod and uses \texttt{nsenter} to apply the IPTables rules inside the container's network namespace.
-The DaemonSet is shown in Listing~ \ref{lst:iptables-injector}.
+The Dockerfile is found in Appendix\ref{app:iptables-injector}, and the DaemonSet is shown in the following Listing~ \ref{lst:iptables-injector}.
 
 \lstinputlisting[
   caption={DaemonSet for a container injecting IPTables rules inside Pods},
@@ -1797,6 +1797,15 @@ MutatingAdmissionWebhook?
   caption={Dockerfile for the server},
   language={Docker}
 ]{code/appendix/app/Dockerfile}
+
+\clearpage
+
+\section{Dockerfile for penetration testing} \label{app:iptables-injector}
+
+\lstinputlisting[
+  caption={Dockerfile for injecting IPTables rules},
+  language={Docker}
+]{code/appendix/iptables-injector.Dockerfile}
 
 \clearpage
 
