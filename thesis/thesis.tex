@@ -1231,11 +1231,13 @@ A defense-in-depth strategy is achieved by addressing threats at all stages of a
 \subsection{Attacker model}
 
 The adversary in this model is a compromised sidecar container in the cluster.
-Since sidecar containers are compromised in a similar fashion to other containers, for example, by running a malicious or vulnerable container in the cluster, the model assumes that the first stage is already breached.
-The model also assumes that the adversary has execution capabilities in the sidecar container, specifically a shell access to the sidecar container in our examples.
+Since sidecar containers do not technically differ from main containers, they are compromised in a similar fashion.
+For example, the cluster could run a container with security vulnerability or the admins could have been tricked to installing a malicious sidecar to the cluster.
+Thus, the model assumes that the first stage is already breached.
+The model also assumes that the adversary has execution capabilities in the sidecar container, specifically a shell access to the sidecar container in the examples.
 This type of security breach can occur if the application has a remote code execution (RCE) vulnerability that the attacker can exploit to run a reverse shell script inside the application.
 As another example, the attacker could acquire valid credentials to an application running a Secure Shell (SSH) server through brute-force or phishing attacks.
-The goal of the model is to prevent the attacker from escalating the attack.
+The goal of the model is to prevent the attacker from escalating the attack from the initial breach.
 Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the identified threats, with threats related to networking divided into the latter.
 
 \begin{table}[H]
@@ -1300,8 +1302,8 @@ Important credentials include for example \texttt{kubeconfig} files that store a
   language={yaml}
 ]{code/privileged.yml}
 
-The \emph{malicious-sidecar} is a simple, custom-made container image that includes some basic tools for penetration testing.
-Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
+The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
+Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
 
 % Container breakout from sidecar => privilege escalation and lateral movement to Node
 % Exessive Service Account => "admin-like" permissions on the cluster
