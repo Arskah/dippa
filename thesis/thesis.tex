@@ -825,8 +825,8 @@ The field is designed as a nested functionality; each \texttt{ServiceType} level
 New Kubernetes cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}.
 Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined.
 \texttt{kube-system} is the namespace for all objects created by the Kubernetes system which is discussed in more detail in the next Chapter~\ref{control-plane}.
-Namespaces also provide a scope for naming; names of resources need to be unique within a namespace, but not across namespaces.
-Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example, in multi-tenancy setups.
+Namespaces also provide a scope for naming; names of resources must be unique within a namespace, but not across namespaces.
+Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example, in multitenancy setups.
 Pod Security Standards \cite{k8s-docs-pss}, which are used by the Pod Security admission controller, are also defined at the namespace level.
 Admission controllers are discussed in Chapter~\ref{admission-controllers}.
 
@@ -860,7 +860,7 @@ The control plane consists of these main components:
 It is an HTTP server that is used to send commands to the cluster.
 The server handles authentication and validation of the commands.
 For valid commands, the server then forwards these to other control plane components that then modify the cluster state.
-The easiest way to send commands to the server is by using the \texttt{kubectl} command-line interface (CLI) tool, which actively sends the commands as HTTP under the hood.
+The easiest way to send commands to the server is by using the \texttt{kubectl} command-line interface (CLI), which actively sends the commands as HTTP under the hood.
 The main implementation of the server is \texttt{kube-apiserver}.
 The server can be horizontally scaled by running several instances on multiple Nodes and load-balancing traffic between the instances.
 
@@ -917,7 +917,7 @@ As mentioned before, Pods are the basic scheduling abstraction in Kubernetes and
 This co-scheduling and management of multiple symbiotic containers as a single unit enables multi-container application design patterns to emerge \cite{burns2016design}.
 The sidecar pattern is the most common of these design patterns.
 As an example of this pattern, the main application container can be a simple web server paired with a container that collects server logs from a file and streams them to a centralized log management system.
-Listing~\ref{lst:sidecar-pattern} shows how the logs can be shared to the sidecar with file mounts.
+Listing~\ref{lst:sidecar-pattern} shows how the can be shared to the sidecar with file mounts.
 Another example of this pattern is the Istio service mesh \cite{istio} and its Envoy proxy sidecar, which routes all traffic through the Istio control plane for management, observability, and security operations.
 
 \lstinputlisting[
@@ -949,13 +949,13 @@ A fundamental part of a Kubernetes cluster is how nodes and resources are networ
 Specifically, the networking model needs to address four different types of networking problems: i) intra-Pod (that is, container-to-container within the same Pod) communication, ii) inter-Pod communication between Pods, iii) Service-to-Pod communication and iv) communication from external sources to Services \cite{k8s-docs-cluster-networking}.
 The model also requires that each Pod is IP addressable and can communicate with other Pods without network address translation (NAT), even when Pods are scheduled on different hosts \cite{qi2020assessing}.
 All agents on a host should also be able to communicate with Pods on the same host.
-Kubernetes does not implement this model out-of-the-box, but hands the implementation to special Container Network Interface (CNI) plugins.
+Kubernetes does not provide a built-in solution for this model, instead it entrusts the implementation to Container Network Interface (CNI) plugins.
 This allows different vendors and operators to use varying networking mechanisms in Kubernetes.
 
 \subsubsection{Container Network Interface} \label{cni}
 
 The Container Network Interface \cite{cni} is a networking specification, which has become the de-facto industry standard for container networking and is backed by CNCF \cite{qi2020assessing}.
-The specification was first developed for the container runtime \texttt{rkt} \cite{hausenblas2018container}, but it is now supported by nearly all major container runtimes and orchestrators.
+The specification was first developed for the container runtime \texttt{rkt} \cite{hausenblas2018container}, but it is now supported by almost all major container runtimes and orchestrators.
 As many runtimes seek to solve the same problem of making the network layer pluggable, the CNI was developed as a common API to promote interchangeability.
 Most container orchestrators have adopted the specification as their networking solution.
 The biggest outlier is Docker Swarm, which instead implements its own proprietary approach to container networking.
@@ -1051,9 +1051,9 @@ The second policy allows traffic to the default HTTP port, and the third policy 
   language=yaml
 ]{code/example-network-policy.yml}
 
-The NetworkPolicy specification consists of a \texttt{podSelector} that specifies Pods that are subject to the policy and \texttt{policyTypes} to specify the Ingress and Egress rules for the traffic \cite{budigiri2021network} to the target Pod.
+The NetworkPolicy specification consists of a \texttt{podSelector} that specifies Pods that are subject to the policy and \texttt{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
 Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule.
-The policies are additive; when multiple rules are defined for a Pod, the traffic is restricted to what is allowed by the union of the policies.
+The policies are additive; when multiple rules are defined for a Pod, traffic is restricted to what is allowed by the union of the policies.
 Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
 % TODO: Not everything listed above is requirements
@@ -1108,7 +1108,7 @@ This includes, for example, the registration of CRDs.
 
 % TODO: Move OSI layer to somewhere else
 Although default Kubernetes NetworkPolicies provides security on OSI layers L3 and L4, Cilium provides CRDs that also support L7 policies \cite{cilium-policy-language}.
-If L7 policies exist, the traffic is directed to Envoy instance bundled into the agent Pod which filters the traffic.
+If L7 policies exist, traffic is directed to Envoy instance bundled into the agent Pod which filters traffic.
 Unlike on layers 3 and 4, policy violation does not result in dropped packet but an application protocol specific denied message.
 For example, HTTP traffic is denied with \texttt{HTTP 403 Forbidden} and DNS requests with \texttt{DNS REFUSED}.
 Cilium provides \texttt{CiliumNetworkPolicy} CRD that supports all L3, L4, and L7 policies.
@@ -1231,7 +1231,7 @@ A defense-in-depth strategy is achieved by addressing threats at all stages of a
 
 The adversary in this model is a compromised sidecar container in the cluster.
 Since sidecar containers do not technically differ from main containers, they are compromised in a similar fashion.
-For example, the cluster could run a container with security vulnerability or the admins could have been tricked to installing a malicious sidecar to the cluster.
+For example, the cluster could run a container with security vulnerability, or the admins could have been tricked to install a malicious sidecar to the cluster.
 Thus, the model assumes that the first stage is already breached.
 The model also assumes that the adversary has execution capabilities in the sidecar container, specifically a shell access to the sidecar container in the examples.
 This type of security breach can occur if the application has a remote code execution (RCE) vulnerability that the attacker can exploit to run a reverse shell script inside the application.
@@ -1275,7 +1275,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
     Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
-    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in cluster is unencrypted by default. A privileged sidecar can sniff and hijack the traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. For intra-Pod traffic, the only feasible solution is to limit the container permissions. (TODO: TLS traffic over loopback device? Can be switched off by attacker?) \\ \hline
+    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. For intra-Pod traffic, the only feasible solution is to limit the container permissions. (TODO: TLS traffic over loopback device? Can be switched off by attacker?) \\ \hline
   \end{tabularx}
 \end{minipage}
 \end{table}
@@ -1512,7 +1512,7 @@ Thus, all traffic outside the Pod, from any of the containers, passes through th
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
 As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container.
-For intra-Pod communication, the traffic goes through the loopback device, which is created by a \emph{loopback} plugin \cite{k8s-docs-cni}.
+For intra-Pod communication, traffic goes through the loopback device, which is created by a \emph{loopback} plugin \cite{k8s-docs-cni}.
 The plugin is not managed by the CNI plugin installed on the Nodes; instead Kubernetes requires that the underlying container runtime provides the implementation.
 Most runtimes implement the reference CNI plugin \cite{cni-loopback} but for example CRI-O implements its own.
 Due to this, the plugin does not install with a controller that would enforce NetworkPolicies on the loopback device.
@@ -1620,7 +1620,7 @@ The complete C structure is listed as Listing~\ref{lst:sk-buff}.
 As can be seen in the example, the structure has no identifiers that are unique for each container.
 A notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel.
 It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack.
-If combined with \texttt{iptables} rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering the traffic.
+If combined with \texttt{iptables} rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering traffic.
 However, using eBPF brings an extra layer of complexity in comparison to simply using IPtables for traffic filtering.
 Furthermore, eBPF programs do not provide any performance gains for egressing traffic, since the TC hooks execute after the packet has been processed by IPTables.
 
@@ -1668,7 +1668,7 @@ Thus, it is more optimal to apply the rules outside the Pod's context; for examp
   \label{fig:multi-pod-net-solution}
 \end{figure}
 Figure~\ref{fig:multi-pod-net-solution} illustrates the network architecture for the solution in which containers are deployed in different Pods.
-The idea behind this approach is to use Network Policies for filtering the traffic between the containers.
+The idea behind this approach is to use Network Policies for filtering traffic between the containers.
 Since containers are not technically sidecars anymore, the solution must recreate communication via the \texttt{localhost} address.
 
 Although it is possible to use the default network created by the CNI plugin for sidecar traffic, the proposed solution creates a new isolated network for traffic with Multus.
@@ -1715,7 +1715,7 @@ The \texttt{multi-networkpolicy-iptables} is used for the solution, since \textt
 % https://security.stackexchange.com/questions/137602/what-are-the-security-implications-of-net-ipv4-conf-eth0-route-localnet-1-rout
 
 With these configurations and dependencies, the containers should have a new network and reach each other via the bridge interface.
-As the next step, the solution must find a way to redirect the traffic destined for the localhost to the new network.
+As the next step, the solution must find a way to redirect traffic destined for the localhost to the new network.
 The script in Listing~\ref{lst:dnat} shows how to redirect all egressing traffic with IPTables from the source of \texttt{127.0.0.1:8125} to another network interface with an external IP address, like \texttt{192.168.1.202:8125}.
 By default, the re-routing of local traffic outside the local machine is denied by the kernel.
 To overrule this default behavior, the script sets a kernel flag with \lstinline{net.ipv4.conf.all.route_localnet=1}.
