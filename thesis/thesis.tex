@@ -1285,24 +1285,32 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
 One of the worst-case scenarios is that the attacker has access to a privileged sidecar container.
 A privileged container has all the capabilities of the host machine, so basically a root user inside a privileged container means that the attacker has root privileges on the host Node.
 Furthermore, the container lacks restrictions from Seccomp, AppArmor and Linux capabilities.
+The Listing~\ref{lst:privileged-container} describes a Deployment with a privileged container with extremely insecure specification.
 
-% in minkube setup:
-% chroot to host-path
-% mount /dev/vda1
-The Listing~\ref{lst:privileged-container} describes a Deployment with a privileged container.
-Since the container mounts the host filesystem to a volume in \texttt{/host-root}, the attacker can trivially use \texttt{chroot} to execute commands as root user in the host Node context.
-
-Even without the explicit \texttt{hostPath} mount, the host machine's \texttt{/dev} is accessible from the privileged container, which means that the container can see the disk that contains hosts's filesystem and mount the disk.
-The attacker can use this technique to find any credentials stored on the host machine and  escalate the attack.
-Important credentials include for example \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
-
+% Without hostPid, nsenter works for namespaces running in the container
+% hostNetwork: sniff traffic with tcpdump, try to bypass NetworkPolicies
+% hostIPC: look for shared resources in /dev/shm and ipcs
 \lstinputlisting[
   caption={Privileged container},
   label={lst:privileged-container},
   language={yaml}
 ]{code/privileged.yml}
 
+The three first fields in the \texttt{spec} remove namespace isolations from the container and use the corresponding Node namespaces instead.
+With a privileged container and \texttt{hostPID: true}, the attacker can enter Node's namespace with \texttt{nsenter} (easy target PID is the \textbf{init} system running as 1), and execute commands on the host.
+The attacker can also see and enter other container's and processes running on the same Node.
+In a non-privileged container, the \texttt{hostPID} still allows Denial of Service (DoS) attacks by killing the processes on the Node.
+
+% in minkube setup:
+% chroot to host-path
+% mount /dev/vda1
+Since the container mounts the host filesystem to a volume in \texttt{/host-root}, the attacker in a privileged container can trivially use \texttt{chroot} to execute commands as root user in the host Node context.
+Even without the explicit \texttt{hostPath} mount, the host machine's \texttt{/dev} is accessible from the privileged container, which means that the container can see the disk that contains hosts's filesystem and mount the disk.
+The attacker can use this technique to find any credentials stored on the host machine and  escalate the attack.
+Important credentials include for example \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
+
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
+The image also installs \texttt{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default \texttt{minikube} installation.
 Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
 
 % Container breakout from sidecar => privilege escalation and lateral movement to Node

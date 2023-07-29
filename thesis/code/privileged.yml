@@ -13,10 +13,10 @@ spec:
       labels:
         app: privileged
     spec:
-      # hostNetwork: true # vector: exit network namespace isolation
-      # hostPID: true # vector: exit PID namespace isolation
-      # hostIPC: true # vector: exit IPC namespace isolation
-      # nodeName: k8s-control-plane-node # Share Node with control plane
+      hostPID: true # vector: nsenter works now for namespaces running outside the container
+      hostNetwork: true # vector: sniff traffic with tcpdump, try to bypass NetworkPolicies
+      hostIPC: true # vector: look for shared resources in /dev/shm and ipcs
+      nodeName: k8s-control-plane-node # deploy workload on a control plane Node
       containers:
         - name: sidecar-container
           image: malicious-sidecar
