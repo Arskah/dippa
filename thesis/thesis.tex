@@ -1309,6 +1309,12 @@ Even without the explicit \texttt{hostPath} mount, the host machine's \texttt{/d
 The attacker can use this technique to find any credentials stored on the host machine and  escalate the attack.
 Important credentials include for example \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
 
+The biggest risks considering a non-privileged container with all the isolations intact relate to lateral movement and discovring of secrets.
+Kubernetes automatically mounts each container in a Pod with Service Account token, which can be used to attack the control plane if it is over-permissive.
+Since the cluster has no NetworkPolicies in place by default, any misconfigured control plane component, like Kubelet or API server with \texttt{anonymous-auth} set to true, could be exploited.
+In addition,the attacker can try to be breach or DoS any control plane component or workload in the cluster, or other connected services like those in a cloud hosted system.
+Furthermore, any unpatched vulnerability in the underlying kernel, container engine or Kubernetes can exploited.
+
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
 The image also installs \texttt{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default \texttt{minikube} installation.
 Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
