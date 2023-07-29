@@ -1626,10 +1626,24 @@ Furthermore, eBPF programs do not provide any performance gains for egressing tr
 
 \subsubsection{Deployment}
 
-The commands for creating the IPTables rules could be applied to the Pod with the initContainer or postStart lifecycle handler.
-However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities.
-Using these methods would require changing Pod's security admission level to privileged.
-Thus, it is more optimal to apply the rules outside the Pod's context; for example, by using a DaemonSet, similarly to how many CNI plugins configure the Pod network.
+The commands for creating the IPTables rules could be applied to the Pod with a initContainer or postStart lifecycle handler.
+However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities and would require changing Pod's security admission level to privileged.
+Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example by using a controller in operator pattern.
+The same capabilities are paramount to any CNI plugin controllers that enforce Network Policies using IPTables or eBPF.
+
+For demonstration purposes, a custom container installed with IPTables and \texttt{crictl} CLI is used.
+The container uses \texttt{crictl} to find the PID of a container in the Pod and uses \texttt{nsenter} to apply the IPTables rules inside the container's network namespace.
+The DaemonSet is shown in Listing~ \ref{lst:iptables-injector}.
+
+\lstinputlisting[
+  caption={DaemonSet for a container injecting IPTables rules inside Pods},
+  label={lst:iptables-injector},
+  language={yaml}
+]{code/iptables-injector.yml}
+
+The script is not a valid controller since it does not react to container lifecycles or other orchestrator events.
+Thus, the script should only be used for testing the ruleset and for demonstration.
+Furthermore, the DaemonSet requires extensive privileges: the \texttt{crictl} for finding the PID must be run on a privileged Pod while \texttt{nsenter} requires access to host PID namespace.
 
 \subsection{Own network namespace for sidecar}
 
