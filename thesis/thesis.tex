@@ -1261,7 +1261,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
     There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
   \end{tabularx}
-\end{minipage}
+  \end{minipage}
 \end{table}
 
 \begin{table}[H]
@@ -1387,35 +1387,8 @@ However, this chapter also introduces extra security measures that fix a few ove
 Since version 1.25, Kubernetes has shipped with the Pod Security Admission controller as a stable feature.
 The controller, as discussed in Chapter~\ref{admission-controllers}, provides three different Pod Security Standards that can be used to warn and enforce against insecure Pod configurations.
 The \texttt{restricted} Pod Security Standard is the strictest of the standards and aims at the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution.
+The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
 The table~\ref{table:pod-hardening} lists all fields affected by the standard.
-
-\begin{table}[H]
-  \centering
-  \caption{Pod fields enforced by \texttt{restricted} Security Standard}
-  \label{table:pod-hardening}
-  \sffamily% change the font in the table to sans serif
-  \small
-  \begin{tabularx}{\textwidth}{CCC}
-    \hline
-    \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
-    hostPID, hostIPC, hostNetwork & Controls whether container uses host's PID, IPC and network namespace. & false \\ \hline
-    privileged & Controls whether Pod can run privileged containers. & false \\ \hline
-    capabilities.add & Defines Linux capabilities for the container. & NET\_BIND\_SERVICE \\ \hline
-    capabilities.drop & Defines Linux capabilities for the container. & ALL \\ \hline
-    volumes[*] & All volume types are not allowed. For example, hostPath, that maps host directories, are not allowed. & \texttt{volumes[*].configMap}, \texttt{volumes[*].csi}, \texttt{volumes[*].downwardAPI}, \texttt{volumes[*].emptyDir}, \texttt{volumes[*].ephemeral}, \texttt{volumes[*].persistentVolumeClaim}, \texttt{volumes[*].projected}, \texttt{volumes[*].secret} \\ \hline
-    hostPort & Expose container via host's network port. & undefined \\ \hline
-    container.apparmor.security.beta.kubernetes.io/* annotation & Sets the AppArmor profile used by containers.
-    On supported hosts, the runtime/default AppArmor profile is applied by default. & runtime/default, localhost/* \\ \hline
-    seLinuxOptions & Sets the SELinux context of the container. & Set if supported by environment. \\ \hline
-    procMount & The default /proc masks are set up to reduce attack surface, and should be required. & Default \\ \hline
-    seccompProfile.type & Sets the seccomp profile used to sandbox containers. & RuntimeDefault or Localhost \\ \hline
-    sysctls[*].name & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & kernel.shm\_rmid\_forced, net.ipv4.ip\_local\_port\_range, net.ipv4.ip\_unprivileged\_port\_start, net.ipv4.tcp\_syncookies, net.ipv4.ping\_group\_range \\ \hline
-    allowPrivilegeEscalation & Restricts escalation to root privileges. & false \\ \hline
-    runAsNonRoot & Controls whether container can run as root user. & true \\ \hline
-    runAsUser, runAsGroup & Controls the user and group used by container. & Set both to non-zero to run as non-root. \\ \hline
-    windowsOptions.hostProcess & Runs Windows containers as privileged HostProcess. & false \\ \hline
-  \end{tabularx}
-\end{table}
 
 \lstinputlisting[
   caption={Namespace resource with \texttt{restricted} Security Standard},
@@ -1423,7 +1396,38 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   language=yaml
 ]{code/restricted-ns.yml}
 
-The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
+\begin{table}[H]
+  \centering
+  \caption{Pod fields enforced by \texttt{restricted} Security Standard}
+  \label{table:pod-hardening}
+  \sffamily% change the font in the table to sans serif
+  \small
+  \begin{minipage}{\textwidth}
+  \renewcommand{\thempfootnote}{\arabic{mpfootnote}} % footnotes in minipage are letters instead of numbers, fix that
+  \begin{tabularx}{\textwidth}{CCC}
+    \hline
+    \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
+    hostPID, hostIPC, hostNetwork & Controls whether container uses host's PID, IPC and network namespace. & false \\ \hline
+    privileged & Controls whether Pod can run privileged containers. & false \\ \hline
+    capabilities.add / drop & Defines Linux capabilities for the container. & Add NET\_BIND\_SERVICE allowed, drop ALL required \\ \hline
+    volumes[*] & All volume types are not allowed. For example, hostPath, that maps host directories, are not allowed. & \texttt{configMap}, \texttt{csi}, \texttt{downwardAPI}, \texttt{emptyDir}, \texttt{ephemeral}, \texttt{persistentVolumeClaim}, \texttt{projected}, \texttt{secret} \\ \hline
+    hostPort & Expose container via host's network port. & undefined \\ \hline
+    AppArmor annotation\footnote{container.apparmor.security.beta.kubernetes.io/*} & Sets the AppArmor profile used by containers.
+    On supported hosts, the runtime/default AppArmor profile is applied by default. & runtime/default, localhost/* \\ \hline
+    seLinuxOptions & Sets the SELinux context of the container. & Set if supported by environment. \\ \hline
+    procMount & The default /proc masks are set up to reduce attack surface, and should be required. & Default \\ \hline
+    seccompProfile.type & Sets the seccomp profile used to sandbox containers. & RuntimeDefault or Localhost \\ \hline
+    sysctls[*].name & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & \texttt{kernel.shm\_rmid\_forced}, \texttt{net.ipv4.ip\_local\_port\_range}, \texttt{net.ipv4.ip\_unprivileged\_port\_start}, \texttt{net.ipv4.tcp\_syncookies}, \texttt{net.ipv4.ping\_group\_range} \\ \hline
+    allowPrivilegeEscalation & Controls whether the process can gain more privileges than the parent \footnote{Controls the \texttt{no\_new\_privs} flag} & false \\ \hline
+    runAsNonRoot & Controls whether container can run as root user. & true \\ \hline
+    runAsUser, runAsGroup & Controls the user and group used by container. & Set both to non-zero to run as non-root. \\ \hline
+    windowsOptions.hostProcess & Runs Windows containers as privileged HostProcess. & false \\ \hline
+  \end{tabularx}
+  \end{minipage}
+\end{table}
+
+
+
 \jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
