@@ -1387,14 +1387,19 @@ However, this chapter also introduces extra security measures that fix a few ove
 Since version 1.25, Kubernetes has shipped with the Pod Security Admission controller as a stable feature.
 The controller, as discussed in Chapter~\ref{admission-controllers}, provides three different Pod Security Standards that can be used to warn and enforce against insecure Pod configurations.
 The \texttt{restricted} Pod Security Standard is the strictest of the standards and aims at the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution.
-The Security Standard can be enforced trivially by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
-The table~\ref{table:pod-hardening} lists all fields affected by the standard.
+The Security Standard can be easily enforced by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
 
 \lstinputlisting[
   caption={Namespace resource with \texttt{restricted} Security Standard},
   label={lst:pss},
   language=yaml
 ]{code/restricted-ns.yml}
+
+Table~\ref{table:pod-hardening} illustrates the fields that the restricted security standard affects.
+From the table, it can be noted that the standard already blocks 2 out of the 4 identified threats: the deployment of privileged containers and host directory mounts.
+However, it should be noted that the standard restricts the networking solution discussed in the following chapter.
+Since the security standard only allows for the \texttt{NET\_BIND\_SERVICE} capability, any Pod attempting to modify the network stack will not work.
+Therefore, the network modifications must be implemented outside the Pod's context, which is discussed in greater detail in Section \ref{sec:network-solution:deployment}.
 
 \begin{table}[H]
   \centering
@@ -1425,10 +1430,6 @@ The table~\ref{table:pod-hardening} lists all fields affected by the standard.
   \end{tabularx}
   \end{minipage}
 \end{table}
-
-
-
-\jb{Since the work is on network security, it would be good to spend couple of words about the connection between the security standard and the networking.}
 
 % resources & Sets resource limits for the container. & Add limits, containers without limits can starve other containers. \\ \hline
 % readOnlyRootFilesystem & Requires the use of a read only root file system. & Set to true when possible. \\ \hline
@@ -1632,7 +1633,7 @@ If combined with \texttt{iptables} rule that uniquely marks the packets egressin
 However, using eBPF brings an extra layer of complexity in comparison to simply using IPtables for traffic filtering.
 Furthermore, eBPF programs do not provide any performance gains for egressing traffic, since the TC hooks execute after the packet has been processed by IPTables.
 
-\subsubsection{Deployment}
+\subsubsection{Deployment} \label{sec:network-solution:deployment}
 
 The commands for creating the IPTables rules could be applied to the Pod with a initContainer or postStart lifecycle handler.
 However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities and would require changing Pod's security admission level to privileged.
