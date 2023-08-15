@@ -696,7 +696,7 @@ This thesis proposes a solution for restricting the capabilities of sidecar whil
 The following Chapter~\ref{sec:bg} gives background about containers and Kubernetes, and discusses about Kubernetes networking and container network interface plugins.
 Chapter~\ref{sec:threats} analyzes security threats in a Kubernetes cluster with sidecars based on existing threat models and also demonstrates potential attack scenarios.
 Chapter~\ref{sec:methods} defines the requirements of the solution and introduces the development environment used for the solutions.
-Chapters~\ref{sec:pod-hardening} and \ref{sec:network-solution} propose solutions to mitigate the security threats by hardening Pods and setting up network isolation, respectively.
+Chapters~\ref{sec:pod-hardening} and \ref{sec:network-solution} propose solutions to mitigate security threats by hardening Pods and setting up network isolation, respectively.
 Chapter~\ref{sec:solution} evaluates the pros and cons of the solutions.
 Finally, Chapters~\ref{sec:discussion} and \ref{sec:conclusion} discuss future research and conclude the thesis.
 
@@ -704,6 +704,7 @@ Finally, Chapters~\ref{sec:discussion} and \ref{sec:conclusion} discuss future r
 
 \section{Background} \label{sec:bg}
 
+% TODO: Maybe move this after Kubernetes?
 \subsection{Zero trust architecture}
 
 Conventional network security has historically focused on perimeter defense \cite{kerman2020implementing}.
@@ -718,20 +719,21 @@ This achieves a multi-layered security boundaries, where the breach of one compo
 Instead of having permission to access all resources within the perimeter, malicious actors could only laterally move to the resources that the compromised component required to function.
 Any other component is still protected by its own perimeter, which would require another successful attack to be breached.
 Thus, the compromised component is of limited usefulness to the attacker instead of serving as a general attack vector against the system.
-% TODO: https://www.infoq.com/articles/zero-trust-k8s/, https://www.cncf.io/blog/2022/11/04/seven-zero-trust-rules-for-kubernetes/
-% - Workload identity: K8s identity instead of IP address
-% - mTLS
-% - Network is not trusted: each Pod does its own authentication
 
+% https://www.infoq.com/articles/zero-trust-k8s/
+% https://www.cncf.io/blog/2022/11/04/seven-zero-trust-rules-for-kubernetes/
 Zero-trust networking is based on the concept that the network, even if it is internal and behind a firewall, should never be trusted.
 Instead of authenticating and authorizing only at the boundary, trust is verified at each component of the network.
 This implies that each service should communicate securely in the network using protocols such as Mutual TLS (mTLS), and rely on more precise identifiers than just IP addresses.
 Furthermore, access to a resource should be as limited as possible, and the policy can be further refined to restrict access based on, for example, HTTP routes on L7.
 The ultimate aim in all cases is to achieve a policy of least privilege.
 
-In Kubernetes, service meshes can be used as a
-
-\jb{How is the Zero trust implemented in practice? Is there a relationship between zero trust and sidecars?}
+The complexity of managing the trust boundary in each component can be overwhelming.
+Fortunately, Kubernetes can be extended with Service meshes such as \emph{Istio}.
+Service meshes provide a dedicated infrastructure layer in the application that allows the addition of features such as observability, traffic management, and security without having to modify the application code \cite{istio}.
+Istio consists of two components: the data plane, which is composed of Envoy proxies that are deployed along with each service in the cluster, and the control plane.
+The proxies intercept all network traffic of the parent service and implement all the features such as mTLS and traffic management, while also sending logs and other telemetry data to the control plane.
+When the \texttt{istio-injection=enabled} label is applied to a Namespace, any new pods created in that Namespace will have a sidecar automatically injected into them.
 
 \subsection{Containerization and Docker}
 
