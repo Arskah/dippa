@@ -1552,16 +1552,16 @@ Thus, all traffic outside the Pod, from any of the containers, passes through th
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
 As a result, NetworkPolicies cannot be used to manage egress traffic from sidecar independently of the main container.
-For intra-Pod communication, traffic goes through the loopback device, which is created by a \emph{loopback} plugin \cite{k8s-docs-cni}.
+For intra-Pod communication, traffic passes through the loopback device, which is created by a \emph{loopback} plugin \cite{k8s-docs-cni}.
 The plugin is not managed by the CNI plugin installed on the Nodes; instead Kubernetes requires that the underlying container runtime provides the implementation.
-Most runtimes implement the reference CNI plugin \cite{cni-loopback} but for example CRI-O implements its own.
+Most runtimes implement the reference CNI plugin \cite{cni-loopback}, but, for example, CRI-O implements its own.
 Due to this, the plugin does not install with a controller that would enforce NetworkPolicies on the loopback device.
-Furthermore, since all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets have no clear identifiers that could be used for traffic filtering.
-This chapter introduces two general approaches as solutions for the issue.
+Furthermore, since all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets do not have clear identifiers that could be used for traffic filtering.
+This chapter introduces two general approaches to solving the issue.
 
 The first solution enforces firewall rules inside the application Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods.
 While deploying containers in their own Pods is an obvious option for creating the isolation, the approach breaks the tight integration of sidecar containers to the application container.
-Most notably, the sidecars will have their own independent lifecycle and scheduling, and the communication via the loopback device will be broken.
+Most importantly, sidecars will have their own independent lifecycle and scheduling, and communication via the loopback device will be broken.
 In the scope of this thesis, we consider sidecars to be scheduled along the application container and be accessible via \texttt{127.0.0.1}.
 Thus, re-introducing these characteristics to the containers is also part of the solution.
 
