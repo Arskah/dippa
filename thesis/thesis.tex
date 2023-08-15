@@ -615,6 +615,7 @@ Otaniemi, 9 February 2023 \\
   K8s         & Kubernetes                          \\
   LXC         & Linux Containers                    \\
   MAC         & Mandatory Access Control            \\
+  mTLS        & Mutual Transport Layer Security     \\
   NAT         & Network Address Translation         \\
   NIC         & Network Interface Controller        \\
   OOM         & Out-of-memory                       \\
@@ -705,14 +706,10 @@ Finally, Chapters~\ref{sec:discussion} and \ref{sec:conclusion} discuss future r
 
 \subsection{Zero trust architecture}
 
-% Conventional network security has focused on perimeter defense. Historically, most corporate resources have been located within and protected by the enterprise’s network perimeter, which tended to be large and static. Subjects that are inside the network perimeter are often assumed to be implicitly trusted and are given broad access to the corporate resources within the network perimeter. Attempts to access resources from outside the network perimeter, i.e., from the internet, are often subject to more scrutiny than those originating from within. However, a subject can be compromised regardless of whether it is inside or outside of the network perimeter. Once a subject is compromised, malicious actors—through impersonation and escalation—can gain access to the resources that the subject is authorized to access and move laterally within the network perimeter to access adjacent corporate resources.
-
 Conventional network security has historically focused on perimeter defense \cite{kerman2020implementing}.
 Subjects like workload resources and users inside the perimeter are often assumed to be trusted and implicitly given access inside the network, while any request originating outside the network is subject to more scrutiny.
 Although the systems seem initially secure, the modern IT landscape with cloud-based systems, third-party components, remote workers, etc. increases the attack surface of threat actors.
 Once any subject inside the perimeter is compromised, the attackers can gain access to all the resources that the subject is authorized to access and move laterally within the perimeter, escalating the attack on other resources.
-
-%By protecting each resource individually and employing extensive identity, authentication, and authorization measures to verify a subject’s requirement to access each resource, zero trust can ensure that authorized users, applications, and systems have access to only those resources that they absolutely have a need to access in order to perform their duties, not to a broad set of resources that all happen to be within the network perimeter. This way, if a malicious actor does manage to gain unauthorized access to one resource, this access will not provide them with any advantage when trying to move laterally to other nearby resources. To compromise those other resources, the attacker would be required to figure out how to circumvent the mechanisms that are protecting those resources individually because it is not possible to reach those resources from nearby compromised resources. In this way, ZTA limits the insider threat because instead of having permission to access all resources within the network perimeter, malicious insiders would only be permitted to access those resources they require to perform their official roles.
 
 Zero trust architecture (ZTA) is a security paradigm that focuses on data and resource protection and on the premise that trust must always be explicitly granted and continuously evaluated \cite{kerman2020implementing, rose2020zero}.
 In contrast to a single perimeter defense, the focus in ZTA is to create fine-grained access rules around each of the resources while at the same time enforcing rules that deny other access, which is not explicitly allowed.
@@ -725,6 +722,15 @@ Thus, the compromised component is of limited usefulness to the attacker instead
 % - Workload identity: K8s identity instead of IP address
 % - mTLS
 % - Network is not trusted: each Pod does its own authentication
+
+Zero-trust networking is based on the concept that the network, even if it is internal and behind a firewall, should never be trusted.
+Instead of authenticating and authorizing only at the boundary, trust is verified at each component of the network.
+This implies that each service should communicate securely in the network using protocols such as Mutual TLS (mTLS), and rely on more precise identifiers than just IP addresses.
+Furthermore, access to a resource should be as limited as possible, and the policy can be further refined to restrict access based on, for example, HTTP routes on L7.
+The ultimate aim in all cases is to achieve a policy of least privilege.
+
+In Kubernetes, service meshes can be used as a
+
 \jb{How is the Zero trust implemented in practice? Is there a relationship between zero trust and sidecars?}
 
 \subsection{Containerization and Docker}
