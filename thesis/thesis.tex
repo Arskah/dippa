@@ -641,18 +641,21 @@ Otaniemi, 9 February 2023 \\
 %% Text body begins.
 \section{Introduction} \label{sec:intro}
 
-During the last decade, the IT industry has shifted from monolithic software applications towards microservices.
-In the microservice architecture, each application is split into a suite of smaller independent services that handle part of the business logic \cite{fowler2014microservices}.
-Each service runs its own process, and the application data is sent between the components using lightweight communication mechanisms such as Hypertext Transfer Protocol (HTTP) and Google Remote Procedure Call (gRPC).
-This architectural approach also increases software agility because each service becomes an independent unit of development, deployment, operations, versioning, and scaling \cite{jamshidi2018microservices}.
-This modularity is often associated with benefits like faster delivery and improved scalability.
-\jb{The point is that microservices have become popular because of containers}
-During the same period of time, containers have become a widely used method to deploy applications.
-Containers are a lightweight virtualization technique in which the application is bundled with all its dependencies into a single deployable unit that executes on top of the host machine kernel \cite{bui2015analysis}.
-As such, a single microservice is quite often built and deployed as a container.
-In more complex systems with multiple containers, an orchestrator is often used to manage workloads.
-Kubernetes is one of the most widely used orchestrator tools.
-\jb{Describe shortly what an orchestrator does and what is the difference between orchestrator and container runtime. Maybe this should be in the background.}
+During the last decade, the IT industry has moved away from monolithic software applications and towards microservices.
+The microservice architecture divides an application into a set of smaller, independent services that each handle a part of the business logic \cite{fowler2014microservices}.
+Each service runs its own process, and the application data is sent between components using lightweight communication protocols such as the Hypertext Transfer Protocol (HTTP) and Google Remote Procedure Call (gRPC).
+This approach increases software agility, as each service becomes an independent unit of development, deployment, operations, versioning, and scaling \cite{jamshidi2018microservices}.
+This modularity is often associated with benefits such as faster delivery and better scalability.
+
+The increasing use of containers has been a driving force behind the shift to microservices.
+Containers are a lightweight virtualization technique where an application and all its dependencies are bundled into a single deployable unit running on the host machine kernel \cite{bui2015analysis}.
+In a container-based microservice architecture, each service is bundled in its own container and deployed independently from the other services.
+Popular container runtimes include \emph{Docker}, \emph{containerd}, and \emph{CRI-O}.
+
+For more complex systems with multiple containers, scaling needs, and fault tolerance, a container orchestrator can be used.
+Container orchestration tools automate the deployment, management, scaling, and networking of container workloads and handle tasks such as resource allocation and health monitoring.
+The container orchestrators operate on top of a group of host machines, called a cluster, which serves as a resource pool for all container workloads.
+Kubernetes is the most widely used orchestrator tool.
 
 Similarly to how design patterns emerged from the birth of object-oriented software systems, the modularity of containers and microservices has allowed the development of distributed system design patterns \cite{burns2016design}.
 The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as their own containers from the main application container.
@@ -689,13 +692,12 @@ This thesis proposes a solution for restricting the capabilities of sidecar whil
 
 \subsection{Thesis outline}
 
-The following Chapter~\ref{sec:bg} gives background about containers, Kubernetes and explains their common attack vectors.
-It also discusses Kubernetes networking and container network interface plugins.
-Chapter~\ref{sec:methods} proposes ideas for isolating sidecars from the main application container.
-The chapter discusses both container and network security in the context of Kubernetes Pod.
-Chapter~\ref{sec:solution} introduces an implementation based on the findings of the previous chapter.
-The pros and cons of the solution are discussed in Chapter~\ref{sec:discussion}.
-Finally, Chapter~\ref{sec:conclusion} discusses future research and concludes the thesis.
+The following Chapter~\ref{sec:bg} gives background about containers and Kubernetes, and discusses about Kubernetes networking and container network interface plugins.
+Chapter~\ref{sec:threats} analyzes security threats in a Kubernetes cluster with sidecars based on existing threat models and also demonstrates potential attack scenarios.
+Chapter~\ref{sec:methods} defines the requirements of the solution and introduces the development environment used for the solutions.
+Chapters~\ref{sec:pod-hardening} and \ref{sec:network-solution} propose solutions to mitigate the security threats by hardening Pods and setting up network isolation, respectively.
+Chapter~\ref{sec:solution} evaluates the pros and cons of the solutions.
+Finally, Chapters~\ref{sec:discussion} and \ref{sec:conclusion} discuss future research and conclude the thesis.
 
 \clearpage
 
@@ -1227,7 +1229,7 @@ The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped
 
 \clearpage
 
-\section{The threat model}
+\section{The threat model} \label{sec:threats}
 
 This chapter analyzes threats in the Kubernetes cluster from the perspective of sidecars.
 The chapter first discusses existing Kubernetes threat models, which are then used to identify possible attack vectors and readily available mitigations.
