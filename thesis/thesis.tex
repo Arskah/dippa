@@ -1145,7 +1145,7 @@ For example, HTTP traffic is denied with \texttt{HTTP 403 Forbidden} and DNS req
 Cilium provides \texttt{CiliumNetworkPolicy} CRD that supports all L3, L4, and L7 policies.
 Cilium also provides \texttt{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to all namespaces in the cluster or even to nodes when using \texttt{nodeSelector}.
 
-As even more advanced features, Cilium also includes natively \texttt{kube-proxy} replacement, encryption for Cilium-managed traffic, and Service Mesh, among others.
+As even more advanced features, Cilium also includes native \texttt{kube-proxy} replacement, encryption for Cilium-managed traffic, and Service Mesh, among others.
 By default, \texttt{kube-proxy} uses \texttt{iptables} to route the Service traffic \cite{cilium-proxy-free}.
 With \texttt{kubeProxyReplacement} installation option, Cilium implements Service load-balancing as XDP and TC programs on the Node network stack.
 For encryption, Cilium supports IPsec and WireGuard implementations \cite{cilium-encryption}.
@@ -1726,6 +1726,7 @@ Furthermore, the DaemonSet requires extensive privileges: the \texttt{crictl} fo
   \caption{Multiple network namespaces architecture}
   \label{fig:multi-pod-net-solution}
 \end{figure}
+
 Figure~\ref{fig:multi-pod-net-solution} illustrates the network architecture for the solution in which containers are deployed in different Pods.
 The idea behind this approach is to use Network Policies for filtering traffic between the containers.
 Since containers are not technically sidecars anymore, the solution must recreate communication via the \texttt{localhost} address.
@@ -1803,12 +1804,16 @@ Because of the complexity and the amount of work required to implement co-schedu
 
 \section{Solution Evaluation} \label{sec:solution}
 
+\subsection{Security Evaluation}
+
 TODO:
 \begin{itemize}
   \item Discuss how the solution prevents deployment of privileged containers (use example scenarios)
   \item Network demonstration: try to curl places from the sidecar
   \item What can be really measured? Qualitative assessment?
 \end{itemize}
+
+\subsection{Qualitative assessment}
 
 \begin{itemize}
   \item The solutions are complex and a production ready version requires own controller
@@ -1818,19 +1823,57 @@ TODO:
   \item Improving the security: mTLS, observability?
 \end{itemize}
 
+The proposed solutions serve as a proof-of-concept and are by no-means production-ready.
+The complexity of the setup
+
+The solution with
+
 \clearpage
 
 \section{Discussion} \label{sec:discussion}
 
-A solution "loopback CNI with Network Policy" is possible?
-Or a new CNI operator that "hijacks" loopback CNI and handles the NP?
-The DaemonSet would need to write over CNI json on all Nodes.
+\subsection{Future considerations}
+
+This chapter discusses future considerations for improving the proposed solution.
+As argued in previous chapter, the proposed solution should not be used in production environments.
+A production-ready solution should definitely include a valid controller loop instead of the shell script we used for demonstration.
+Ideally, the desired policies would be described with a custom resource in similar fashion to NetworkPolicies.
+
+% A solution "loopback CNI with Network Policy" is possible?
+% Or a new CNI operator that "hijacks" loopback CNI and handles the NP?
+% The DaemonSet would need to write over CNI json on all Nodes.
+
+
+
+\subsection{Future of service mesh}
+
+From security perspective, avoiding sidecars is the safest option.
+Since sidecars are often used for service mesh, it should be noted that service mesh can be implemented without the sidecar proxy.
+For example, Cilium service mesh handles all networking layer operations with eBPF and uses per-host Envoy proxy for application layer operations such as L7 load-balancing and policies \cite{cilium-114}.
+For sidecarless mTLS, Cilium implements a combination of TLS handshake and network level encryption with IPSec or Wireguard.
+Thus, the service mesh can actually function proxyless for a number of usecases, and the proxy contianer is utilized only when needed.
+The Envoy proxy is included as part of the cilium-operator, but since Cilium version 1.14, which was released in July 2023, the proxy can also be deployed seperately as a DaemonSet.
+
+Istio ambient mesh \cite{istio-ambient-mesh}, which is in open alpha stage, implements sidecarless architecture with per-node ZTunnel proxies.
+ZTunnel proxies implement L4 service mesh features such as mTLS, telemetry, authentication, and authorizations.
+However, the ZTunnel cannot handle any L7 features.
+The L7 features are instead implemented by a waypoint proxy, which by default applies to Pods in the same Namespace.
+Sidecarless traffic encryption is implemented using encrypted HBONE tunnels.
+
+% https://www.youtube.com/watch?v=CpunxUIm5kA
+% (Multi-tenancy issues: noisy neighbor, extensibility, secuirty issues like impersonation => proxy becomes critical part of the infrastructure. Linkerd started per-node and refactored to sidecar => is this a move backwards?)
+
+However, sidecarless service mesh comes with its own drawbacks.
+Since all Pods on the Node use the same proxy, the proxy becomes subject to multi-tenancy issues such as degraded performance on other workloads when another uses disproportionate amount of resources, ie. the noisy neighbor anti-pattern.
+In addition, the single proxy becomes a single point of failure and have to be thought as a critical part of the infrastructure.
+A failing proxy would essentially make all Pods running on the Node unreachable.
+Furthermore, a comporomised proxy is more valueable target for an attacker, since it could be used to impersonate any Pod residing on the Node.
+The first ever service mesh, Linkerd, actually offered sidecarless service mesh in its version 1, so the concept is not new.
+It used the same per-host proxy model, but due to challenges in operations, management and security, the version 2 was based on sidecars.
 
 \begin{itemize}
-  \item Service meshes and ZTA (meshes seem to be the standard in security nowadays)
-  \item Sidecarless service meshes (eBPF as the forerunner of this change)
-  \item Cilum v1.14: https://isovalent.com/blog/post/cilium-release-114/
   \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
+  \item Sidecar KEP in K8s v1.28 %https://github.com/kubernetes/enhancements/issues/753
 \end{itemize}
 
 % https://isovalent.com/blog/post/2022-05-16-tetragon/
@@ -1839,6 +1882,15 @@ The DaemonSet would need to write over CNI json on all Nodes.
 \clearpage
 
 \section{Conclusion} \label{sec:conclusion}
+
+This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern and Zero Trust security architecture.
+The thesis identified security implications of using sidecar containers in Kubernetes, and demonstrated how these attack vectors could be leveraged by an attacker.
+For challenges that could not be mitigated with built-in tools, the thesis proposes proof-of-concept solutions for creating network isolation between the application and sidecar containers.
+Since sidecar containers are subject to same security restrictions as the application container in the Pod, following best practices in hardening Kubernetes clusters gets you a long way.
+However, the architecture of Pods in Kubernetes severly hampers any possibility for network isolation of sidecars.
+The first proposed solution implements network isolation inside the Pod's network namespace using iptables, while the second solution creates a network mimicing the shared network namespace of sidecars.
+The solutions proof that the isolation of sidecars is possible; however, the added complexity and the special infrastructure needed for overcoming this architctural restriction quickly exceeds the benefits gained.
+From security perspective tried and tested components are always preferred to custom infrastructure that requires maintenance.
 
 \clearpage
 
