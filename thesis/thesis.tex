@@ -1844,6 +1844,8 @@ The controller loop should be responsible for managing both Pods and policy reso
 In contrast to common CNI plugins, the solution does not require the implementation of a CNI plugin, as the container runtime generates the loopback network interface.
 However, it is important to ensure that the selected container runtime does not require connectivity via the loopback device, which would be blocked by the applied policies.
 
+% https://isovalent.com/blog/post/2022-05-16-tetragon/
+% https://isovalent.com/learning-tracks/#securityProfessionals
 \begin{itemize}
   \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
 \end{itemize}
@@ -1889,9 +1891,6 @@ The architecture of service meshes is a subject of much discussion in the indust
 In fact, the first service mesh, Linkerd, used the per-host proxy model in its version 1, but due to operational, management, and security issues, version 2 was based on sidecars.
 
 \subsection{Conclusion}
-
-% https://isovalent.com/blog/post/2022-05-16-tetragon/
-% https://isovalent.com/learning-tracks/#securityProfessionals
 
 This thesis provided an overview on containers, Kubernetes networking, sidecar design pattern, and Zero Trust security architecture.
 It identified the security risks associated with sidecar containers in Kubernetes and showed how an attacker could exploit them.
