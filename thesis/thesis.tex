@@ -1831,64 +1831,62 @@ The solution with
 
 \clearpage
 
-\section{Discussion \& conclusions} \label{sec:discussion}
+\section{Discussion \& conclusion} \label{sec:discussion}
 
 \subsection{Future considerations}
 
 % My understanding of CNIs with NPs: CNI (.json etc.) handles creating of interface. Then the controller follows a number of resources: NPs and any managed resrouces, and applies the policies (for example IPTables cmds). This means that on Pod creation, there is a small window of opportunity in which Pod is open to the world (in all CNIs with this architecture).
 
-This chapter discusses future considerations for improving the proposed solution.
-As argued in the previous chapter, the proposed solution should not be used in production environments.
-A production-ready solution should include a valid controller loop instead of the shell script we used for demonstration.
-Furthermore, instead of relying on raw IPTables rules, the ideal solution could describe the policies with a custom resource in similar fashion to NetworkPolicies.
-The controller loop should manage both Pods and policy resources, in somewhat similar fashion to how CNI controllers implement NetworkPolicies.
-An actual CNI implementation is not needed, if the container runtime handles already handles the creation of the interface.
-However, it should be made sure that the selected container runtime does not depend on some connectivity via the loopback device that would be blocked the applied policies.
+This chapter examines potential improvements to the proposed solution.
+As previously discussed, the proposed solution should not be used in production environments.
+A production-ready solution should incorporate a valid controller loop instead of the shell script that was proposed.
+Additionally, instead of relying on raw IPTables rules, the ideal solution should describe the policies with a custom resource, similar to NetworkPolicies.
+The controller loop should be responsible for managing both Pods and policy resources, similar to how many CNI plugins have been designed to accommodate NetworkPolicies.
+In contrast to common CNI plugins, the solution does not require the implementation of a CNI plugin, as the container runtime generates the loopback network interface.
+However, it is important to ensure that the selected container runtime does not require connectivity via the loopback device, which would be blocked by the applied policies.
 
 \subsection{Future of service mesh}
 
-From security perspective, avoiding sidecars is the safest option.
-Since sidecars are often used for service mesh, it should be noted that service mesh can be implemented without the sidecar proxy.
-For example, Cilium service mesh handles all networking layer operations with eBPF and uses per-host Envoy proxy for application layer operations such as L7 load-balancing and policies \cite{cilium-114}.
-For sidecarless mTLS, Cilium implements a combination of TLS handshake and network level encryption with IPSec or Wireguard.
-Thus, the service mesh can actually function proxyless for a number of usecases, and the proxy contianer is utilized only when needed.
-The Envoy proxy is included as part of the cilium-operator, but since Cilium version 1.14, which was released in July 2023, the proxy can also be deployed seperately as a DaemonSet.
+From a security standpoint, the safest option is to avoid sidecars altogether.
+It is worth mentioning that the sidecar proxy is not a requirement for the implementation of a service mesh.
+For example, Cilium service mesh uses eBPF for network layer operations and an Envoy proxy per host for application layer operations such as L7 load balancing and policies \cite{cilium-114}.
+For sidecarless mTLS, Cilium combines TLS handshake and network level encryption with IPSec or Wireguard.
+This means that the service mesh can actually operate without a proxy in some cases, and the proxy container is only used when necessary.
+The Envoy proxy is included in the cilium-operator, but since Cilium version 1.14, which was released in July 2023, the proxy can also be deployed as a DaemonSet independently.
 
-Istio ambient mesh \cite{istio-ambient-mesh}, which is in open alpha stage, implements sidecarless architecture with per-node ZTunnel proxies.
-ZTunnel proxies implement L4 service mesh features such as mTLS, telemetry, authentication, and authorizations.
-However, the ZTunnel cannot handle any L7 features.
-The L7 features are instead implemented by a waypoint proxy, which by default applies to Pods in the same Namespace.
-Sidecarless traffic encryption is implemented using encrypted HBONE tunnels.
+Istio's service mesh also facilitates a sidecarless architecture.
+Ambient mesh \cite{istio-ambient-mesh}, which is currently available as an open alpha version, uses ZTunnel proxies on each Node to provide L4 service mesh features such as mTLS, telemetry, authentication, and authorization.
+However, the ZTunnel is not capable of handling any L7 features, which are instead implemented by a waypoint proxy.
+The proxy operates on a per-namespace and per-service account basis, and it applies to all Pods in the same namespace by default.
+Sidecarless traffic encryption is enabled through encrypted HBONE tunnels.
 
 % https://www.youtube.com/watch?v=CpunxUIm5kA
 % (Multi-tenancy issues: noisy neighbor, extensibility, secuirty issues like impersonation => proxy becomes critical part of the infrastructure. Linkerd started per-node and refactored to sidecar => is this a move backwards?)
 
-However, sidecarless service mesh comes with its own drawbacks.
-Since all Pods on the Node use the same proxy, the proxy becomes subject to multi-tenancy issues such as degraded performance on other workloads when another uses disproportionate amount of resources, ie. the noisy neighbor anti-pattern.
-In addition, the single proxy becomes a single point of failure and have to be thought as a critical part of the infrastructure.
-A failing proxy would essentially make all Pods running on the Node unreachable.
-Furthermore, a comporomised proxy is more valueable target for an attacker, since it could be used to impersonate any Pod residing on the Node.
-The first ever service mesh, Linkerd, actually offered sidecarless service mesh in its version 1, so the concept is not new.
-It used the same per-host proxy model, but due to challenges in operations, management and security, the version 2 was based on sidecars.
+Despite the advantages of sidecarless service mesh, it comes with its own drawbacks.
+Since all Pods on the Node use the same proxy, it can be subject to multi-tenancy issues such as the "noisy neighbor" anti-pattern, where one workload uses an excessive amount of resources and affects the performance of other workloads.
+Furthermore, the single proxy is a single point of failure, and if it fails, all Pods on the Node become unreachable.
+Additionally, the proxy is a more attractive target for attackers, as it can be used to impersonate any Pod on the Node.
+The architecture of service meshes is a subject of much discussion in the industry, and the sidecarless design is not necessarily the next step in their development.
+In fact, the first service mesh, Linkerd, used the per-host proxy model in its version 1, but due to operational, management, and security issues, version 2 was based on sidecars.
 
 \begin{itemize}
   \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
   \item Sidecar KEP in K8s v1.28 %https://github.com/kubernetes/enhancements/issues/753
 \end{itemize}
 
-\subsection{Conclusions}
+\subsection{Conclusion}
 
 % https://isovalent.com/blog/post/2022-05-16-tetragon/
 % https://isovalent.com/learning-tracks/#securityProfessionals
 
 This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern and Zero Trust security architecture.
-The thesis identified security implications of using sidecar containers in Kubernetes, and demonstrated how these attack vectors could be leveraged by an attacker.
-For challenges that could not be mitigated with built-in tools, the thesis proposes proof-of-concept solutions for creating network isolation between the application and sidecar containers.
-Since sidecar containers are subject to same security restrictions as the application container in the Pod, following best practices in hardening Kubernetes clusters gets you a long way.
-However, the architecture of Pods in Kubernetes severly hampers any possibility for network isolation of sidecars.
-The first proposed solution implements network isolation inside the Pod's network namespace using iptables, while the second solution creates a network mimicing the shared network namespace of sidecars.
-The solutions proof that the isolation of sidecars is possible; however, the added complexity and the special infrastructure needed for overcoming this architctural restriction quickly exceeds the benefits gained.
-From security perspective tried and tested components are always preferred to custom infrastructure that requires maintenance.
+It identified the security risks associated with sidecar containers in Kubernetes and showed how an attacker could exploit them.
+For issues that could not be resolved with existing tools, the thesis proposed two proof-of-concept solutions for creating network isolation between the application and sidecar containers.
+Although following best practices in hardening Kubernetes clusters can help, the architecture of Pods in Kubernetes makes it difficult to isolate sidecars.
+The first proposed solution implements network isolation within the Pod's network namespace using IPTables, while the second solution creates a network that mimics the shared network namespace of sidecars.
+Solutions demonstrate that it is possible to isolate sidecars; however, the complexity and special infrastructure required to overcome this architectural limitation quickly outweigh the benefits.
+From a security standpoint, tried and tested components are always preferable to custom infrastructure that requires maintenance.
 
 \clearpage
 
