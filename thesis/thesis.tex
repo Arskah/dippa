@@ -1844,7 +1844,25 @@ The controller loop should be responsible for managing both Pods and policy reso
 In contrast to common CNI plugins, the solution does not require the implementation of a CNI plugin, as the container runtime generates the loopback network interface.
 However, it is important to ensure that the selected container runtime does not require connectivity via the loopback device, which would be blocked by the applied policies.
 
-\subsection{Future of service mesh}
+\begin{itemize}
+  \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
+\end{itemize}
+
+\subsection{Future of sidecars and service mesh}
+
+The release of Kubernetes version 1.28 in August 2023 brought with it the new "SidecarContainers" feature gate.
+This alpha-stage feature is designed to address the lifecycle and pod termination issues that are currently experienced with sidecar containers \cite{k8s-v1-28-changelog}.
+Although existing Kubernetes primitives are capable of adequately managing sidecars, they are not sufficient for certain use cases \cite{k8s-sidecar-kep}.
+For instance, service mesh sidecars must be running and ready before other containers to ensure that all traffic is routed through the mesh.
+Similarly, if the sidecar terminates before other containers during shutdown, traffic from other applications may be lost.
+Additionally, lifecycle-related issues can impede log and metric gathering sidecars, forcing applications to resort to unconventional workarounds.
+Furthermore, in the event of an OOM error, the sidecar will not restart for jobs with \texttt{restartPolicy: Never}.
+This can render the application unreachable, as is the case with service meshes, since the sidecar is necessary for application networking.
+
+The introduction of sidecar containers as a new type of initContainer has made it easier to initiate and combine initContainers and sidecars in the startup sequence.
+However, the proposal explicitly states as a non-goal that it does not allow the enforcement of different security regulations for sidecars compared to other containers.
+Therefore, it does not appear that the lowest security boundary will change from pod to container in the near future.
+Nevertheless, the new distinction between sidecars and other containers could allow this development in the future.
 
 From a security standpoint, the safest option is to avoid sidecars altogether.
 It is worth mentioning that the sidecar proxy is not a requirement for the implementation of a service mesh.
@@ -1860,7 +1878,7 @@ The proxy operates on a per-namespace and per-service account basis, and it appl
 Sidecarless traffic encryption is enabled through encrypted HBONE tunnels.
 
 % https://www.youtube.com/watch?v=CpunxUIm5kA
-% (Multi-tenancy issues: noisy neighbor, extensibility, secuirty issues like impersonation => proxy becomes critical part of the infrastructure. Linkerd started per-node and refactored to sidecar => is this a move backwards?)
+% (Multi-tenancy issues: noisy neighbor, extensibility, security issues like impersonation => proxy becomes critical part of the infrastructure. Linkerd started per-node and refactored to sidecar => is this a move backwards?)
 
 Despite the advantages of sidecarless service mesh, it comes with its own drawbacks.
 Since all Pods on the Node use the same proxy, it can be subject to multi-tenancy issues such as the "noisy neighbor" anti-pattern, where one workload uses an excessive amount of resources and affects the performance of other workloads.
@@ -1870,17 +1888,12 @@ Additionally, the proxy is a more attractive target for attackers, as it can be 
 The architecture of service meshes is a subject of much discussion in the industry, and the sidecarless design is not necessarily the next step in their development.
 In fact, the first service mesh, Linkerd, used the per-host proxy model in its version 1, but due to operational, management, and security issues, version 2 was based on sidecars.
 
-\begin{itemize}
-  \item Tetragon %(https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=10138542, https://cdn.techscience.cn/files/iasc/2023/TSP_IASC-37-2/TSP_IASC_39565/TSP_IASC_39565.pdf, )
-  \item Sidecar KEP in K8s v1.28 %https://github.com/kubernetes/enhancements/issues/753
-\end{itemize}
-
 \subsection{Conclusion}
 
 % https://isovalent.com/blog/post/2022-05-16-tetragon/
 % https://isovalent.com/learning-tracks/#securityProfessionals
 
-This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern, and Zero Trust security architecture.
+This thesis provided an overview on containers, Kubernetes networking, sidecar design pattern, and Zero Trust security architecture.
 It identified the security risks associated with sidecar containers in Kubernetes and showed how an attacker could exploit them.
 For issues that could not be resolved with existing tools, the thesis proposed two proof-of-concept solutions for creating network isolation between the application and sidecar containers.
 Although following best practices in hardening Kubernetes clusters can help, the architecture of Pods in Kubernetes makes it difficult to isolate sidecars.
