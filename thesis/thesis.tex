@@ -1820,7 +1820,6 @@ TODO:
   \item The solutions are complex and a production ready version requires own controller
   \item multi-network-policy operators are not production ready
   \item Multus solution and co-scheduling (not a sidecar technically)
-  \item Service meshes are becoming sidecarless: what kind of situation would require this sort of solution?
   \item Improving the security: mTLS, observability?
 \end{itemize}
 
@@ -1880,7 +1879,7 @@ In fact, the first service mesh, Linkerd, used the per-host proxy model in its v
 % https://isovalent.com/blog/post/2022-05-16-tetragon/
 % https://isovalent.com/learning-tracks/#securityProfessionals
 
-This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern and Zero Trust security architecture.
+This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern, and Zero Trust security architecture.
 It identified the security risks associated with sidecar containers in Kubernetes and showed how an attacker could exploit them.
 For issues that could not be resolved with existing tools, the thesis proposed two proof-of-concept solutions for creating network isolation between the application and sidecar containers.
 Although following best practices in hardening Kubernetes clusters can help, the architecture of Pods in Kubernetes makes it difficult to isolate sidecars.
