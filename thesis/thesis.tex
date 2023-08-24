@@ -1874,7 +1874,7 @@ This means that the service mesh can actually operate without a proxy in some ca
 The Envoy proxy is included in the cilium-operator, but since Cilium version 1.14, which was released in July 2023, the proxy can also be deployed as a DaemonSet independently.
 
 Istio's service mesh also facilitates a sidecarless architecture.
-Ambient mesh \cite{istio-ambient-mesh}, which is currently available as an open alpha version, uses ZTunnel proxies on each Node to provide L4 service mesh features such as mTLS, telemetry, authentication, and authorization.
+Ambient mesh \cite{istio-ambient-mesh}, currently available as an open alpha version, uses ZTunnel proxies on each Node to provide L4 service mesh features such as mTLS, telemetry, authentication, and authorization.
 However, the ZTunnel is not capable of handling any L7 features, which are instead implemented by a waypoint proxy.
 The proxy operates on a per-namespace and per-service account basis, and it applies to all Pods in the same namespace by default.
 Sidecarless traffic encryption is enabled through encrypted HBONE tunnels.
