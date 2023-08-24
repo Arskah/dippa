@@ -698,7 +698,7 @@ Chapter~\ref{sec:threats} analyzes security threats in a Kubernetes cluster with
 Chapter~\ref{sec:methods} defines the requirements of the solution and introduces the development environment used for the solutions.
 Chapters~\ref{sec:pod-hardening} and \ref{sec:network-solution} propose solutions to mitigate security threats by hardening Pods and setting up network isolation, respectively.
 Chapter~\ref{sec:solution} evaluates the pros and cons of the solutions.
-Finally, Chapters~\ref{sec:discussion} and \ref{sec:conclusion} discuss future research and conclude the thesis.
+Finally, Chapter~\ref{sec:discussion} discusses future research and concludes the thesis.
 
 \clearpage
 
@@ -1830,20 +1830,19 @@ The solution with
 
 \clearpage
 
-\section{Discussion} \label{sec:discussion}
+\section{Discussion \& conclusions} \label{sec:discussion}
 
 \subsection{Future considerations}
 
+% My understanding of CNIs with NPs: CNI (.json etc.) handles creating of interface. Then the controller follows a number of resources: NPs and any managed resrouces, and applies the policies (for example IPTables cmds). This means that on Pod creation, there is a small window of opportunity in which Pod is open to the world (in all CNIs with this architecture).
+
 This chapter discusses future considerations for improving the proposed solution.
-As argued in previous chapter, the proposed solution should not be used in production environments.
-A production-ready solution should definitely include a valid controller loop instead of the shell script we used for demonstration.
-Ideally, the desired policies would be described with a custom resource in similar fashion to NetworkPolicies.
-
-% A solution "loopback CNI with Network Policy" is possible?
-% Or a new CNI operator that "hijacks" loopback CNI and handles the NP?
-% The DaemonSet would need to write over CNI json on all Nodes.
-
-
+As argued in the previous chapter, the proposed solution should not be used in production environments.
+A production-ready solution should include a valid controller loop instead of the shell script we used for demonstration.
+Furthermore, instead of relying on raw IPTables rules, the ideal solution could describe the policies with a custom resource in similar fashion to NetworkPolicies.
+The controller loop should manage both Pods and policy resources, in somewhat similar fashion to how CNI controllers implement NetworkPolicies.
+An actual CNI implementation is not needed, if the container runtime handles already handles the creation of the interface.
+However, it should be made sure that the selected container runtime does not depend on some connectivity via the loopback device that would be blocked the applied policies.
 
 \subsection{Future of service mesh}
 
@@ -1876,12 +1875,10 @@ It used the same per-host proxy model, but due to challenges in operations, mana
   \item Sidecar KEP in K8s v1.28 %https://github.com/kubernetes/enhancements/issues/753
 \end{itemize}
 
+\subsection{Conclusions}
+
 % https://isovalent.com/blog/post/2022-05-16-tetragon/
 % https://isovalent.com/learning-tracks/#securityProfessionals
-
-\clearpage
-
-\section{Conclusion} \label{sec:conclusion}
 
 This thesis conducted an overview on containers, Kubernetes networking, sidecar design pattern and Zero Trust security architecture.
 The thesis identified security implications of using sidecar containers in Kubernetes, and demonstrated how these attack vectors could be leveraged by an attacker.
