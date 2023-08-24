@@ -1866,6 +1866,7 @@ Despite the advantages of sidecarless service mesh, it comes with its own drawba
 Since all Pods on the Node use the same proxy, it can be subject to multi-tenancy issues such as the "noisy neighbor" anti-pattern, where one workload uses an excessive amount of resources and affects the performance of other workloads.
 Furthermore, the single proxy is a single point of failure, and if it fails, all Pods on the Node become unreachable.
 Additionally, the proxy is a more attractive target for attackers, as it can be used to impersonate any Pod on the Node.
+
 The architecture of service meshes is a subject of much discussion in the industry, and the sidecarless design is not necessarily the next step in their development.
 In fact, the first service mesh, Linkerd, used the per-host proxy model in its version 1, but due to operational, management, and security issues, version 2 was based on sidecars.
 
