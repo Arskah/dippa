@@ -1647,7 +1647,7 @@ All other traffic is rejected by default.
 ]{code/iptables.sh}
 
 The approach is similar to how Istio redirects all Pod traffic through the Envoy sidecar and the service mesh.
-Istio adds IPTables rules that reroute all traffic, except that which originates from user id 1337, to the Envoy proxy \cite{istio-iptables}.
+Istio adds IPTables rules that reroute all traffic, except those that originate from user id 1337, to the Envoy proxy \cite{istio-iptables}.
 The user id itself is reserved for the proxy, and it is used to avoid re-routing the proxy traffic, which would cause an infinite loop.
 
 eBPF programs were also considered as an option for IPTables.
@@ -1671,12 +1671,12 @@ Furthermore, eBPF programs do not provide any performance gains for egressing tr
 
 \subsubsection{Deployment} \label{sec:network-solution:deployment}
 
-The commands for creating the IPTables rules could be applied to the Pod with a initContainer or postStart lifecycle handler.
+The commands for creating the IPTables rules could be applied to the Pod with an initContainer or postStart lifecycle handler.
 However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities and would require changing Pod's security admission level to privileged.
-Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example by using a controller in operator pattern.
+Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example, by using a controller in operator pattern.
 The same capabilities are paramount to any CNI plugin controllers that enforce Network Policies using IPTables or eBPF.
 
-For demonstration purposes, a custom container installed with IPTables and \texttt{crictl} CLI is used.
+For demonstration purposes, a custom container is used installed with IPTables and \texttt{crictl} CLI.
 The container uses \texttt{crictl} to find the PID of a container in the Pod and uses \texttt{nsenter} to apply the IPTables rules inside the container's network namespace.
 The Dockerfile is found in Appendix~\ref{app:iptables-injector}, and the DaemonSet is shown in the following Listing~\ref{lst:iptables-injector}.
 
@@ -1686,9 +1686,10 @@ The Dockerfile is found in Appendix~\ref{app:iptables-injector}, and the DaemonS
   language={yaml}
 ]{code/iptables-injector.yml}
 
-The script is not a valid controller since it does not react to container lifecycles or other orchestrator events.
-Thus, the script should only be used for testing the ruleset and for demonstration.
-Furthermore, the DaemonSet requires extensive privileges: the \texttt{crictl} for finding the PID must be run on a privileged Pod while \texttt{nsenter} requires access to host PID namespace.
+The script is not a valid controller, as it does not implement a control loop that reacts to Pod creation.
+Instead, it only works when it is executed after the Pod has been created.
+Therefore, it is only useful for demonstrating the concept and should not be used for purposes other than testing.
+Additionally, DaemonSet requires extensive privileges: the \texttt{crictl} that is used to find the PID must be run on a privileged Pod, and the \texttt{nsenter} command needs access to the host PID namespace.
 
 \subsection{Own network namespace for sidecar}
 
