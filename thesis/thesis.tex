@@ -1534,7 +1534,7 @@ As there is no existing community solution, a custom-made ValidatingAdmissionWeb
 The Github development setup includes an example admission controller based on Slack's \emph{simple-kubernetes-webhook} \cite{simple-kubernetes-webhook}.
 A template is supplemented with a custom validation function, \emph{resource-validator}, which is shown in Listing~\ref{lst:resource-validator}.
 When a Pod specification with no \texttt{resource.limits} definition is validated, the if-statement on line 20 triggers, causing the validation to fail.
-The function can be easily extended to allow only CPU and memory values in a given range.
+The function can be trivially extended to allow CPU and memory values only in a given range.
 
 \lstinputlisting[
   caption={Go function for validating that resource limits are used},
