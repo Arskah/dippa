@@ -1346,7 +1346,8 @@ Furthermore, any unpatched vulnerability in the underlying kernel, container eng
 
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
 The image also installs \texttt{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default \texttt{minikube} installation.
-Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}. If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} may be used to enumerate attack options even further.
+Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}.
+If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} to enumerate attack options even further.
 
 \clearpage
 
