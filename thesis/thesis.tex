@@ -1818,27 +1818,22 @@ Because of the complexity and the amount of work required to implement co-schedu
 This chapter demonstrates with experiments how the solutions given in chapters \ref{sec:pod-hardening} and \ref{sec:network-solution} isolate containers residing in the same Pod from each other.
 This evaluation confirms that the solution actually solves the requirements set for the solutions, but also analyzes their potential and weaknesses that can be improved.
 
+The experiments in the first section include testing security admission by deploying privileged Pods to the cluster, as well as network isolation enforcement by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
+These tools are installed in the \emph{malicious-sidecar} container (Appendix \ref{app:malicious-sidecar}), which is used as an entrypoint for attacks in the experiments.
+Since both of the network isolation solutions should only allow UDP traffic from the webserver container to StatsD client, any other successful request is considered an failure in the isolation.
+The second section discusses qualitative aspects of the solutions, such as scalability and the ease of deployment.
+
 \subsection{Security Evaluation}
 
-The first part of the evaluation consists of a set of experiments in which we try to find holes in the isolation.
-The experiments include testing security admission by deploying privileged Pods to the cluster, as well as network isolation enforcement by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
-These tools are installed in the \emph{malicious-sidecar} container (Appendix \ref{app:malicious-sidecar}), which is used as an entrypoint for attacks in the experiments.
-Since the network isolation should only allow UDP traffic from the webserver container to StatsD client, any other successful network request is considered an succcessful attack.
+\subsubsection{Experiment 1: Test Pod security admission}
 
-\subsubsection{Experiment 1: Pod security admission}
+\subsubsection{Experiment 2: cURL webserver}
 
-Testing
+\subsubsection{Experiment 3: send UDP packet to StatsD}
 
-\subsubsection{Experiment 2: Control plane access}
+\subsubsection{Experiment 4: Control plane access}
 
-\subsubsection{Experiment 3: Access outside cluster}
-
-\subsubsection{Experiment 4: cURL to webserver from 3rd sidecar}
-
-\subsubsection{Experiment 5: send UDP packet to StatsD from 3rd sidecar}
-
-\subsubsection{Experiment 5: send UDP packet to StatsD from 3rd sidecar}
-\subsubsection{Experiment 5: send UDP packet to StatsD from 3rd sidecar}
+\subsubsection{Experiment 5: Access outside cluster}
 
 TODO:
 \begin{itemize}
