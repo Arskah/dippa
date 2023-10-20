@@ -1,5 +1,5 @@
 \documentclass{beamer}
-\title{Securing Sidecar Containers in a Zero Trust Kubernetes Cluster}
+\title{Extending Zero Trust architecture to Kubernetes sidecars}
 \author{Aarni Halinen}
 \institute{
   Department of Computer Science\\
@@ -20,149 +20,182 @@ Advisor: M.Sc.\ (Tech.)\ Jacopo\ Bufalino
 }
 
 \begin{frame}
-\frametitle{Zero Trust Architecture}
-
-\begin{itemize}
-  \item A
-\end{itemize}
+\frametitle{Contents}
 \end{frame}
 
 \begin{frame}
-\frametitle{Containers}
+\frametitle[ZTA]{Zero Trust Architecture}
+
+\emph{A security paradigm that focuses on the premise that trust must always be explicitly granted}
 
 \begin{itemize}
-  \item Linux namespaces
-  \item Container breakout
+  \item Each resource has its own, fine-grained access rules
+  \item A multi-layer, defense-in-depth approach
+  \item Network communication, even if internal and behind a firewall, should not be trusted.
+  \item Service communicate securely (mTLS), rely on more robust identifiers than IP addresses, and restrict traffic on L5-L7
+  \item Modern service meshes implement many of the above features
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Kubernetes}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{../thesis/files/k8s-arch.png}
+  \caption{Kubernetes cluster architecture [1]}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Kubernetes sidecars}
+
 \begin{itemize}
-  \item Industry standard container orchestrator
+  \item Sidecar pattern allows isolating of peripheral tasks (logging, observability, Envoy proxies) from application to own helper containers (sidecars)
+  \item Pods consist of one or more tightly-coupled containers, sidecars are not distinguishable from application container
+  \item Containers in Pod share Linux network namespace with each other
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Kubernetes Control Plane}
+\frametitle{K8s networking model}
 
 \begin{itemize}
-  \item TODO: Add image
+  \item Addresses 4 different types of networking communication
+  \begin{itemize}
+    \item Inside Pod's network namespace (localhost)
+    \item Pod-to-Pod, even accross different Nodes
+    \item Service-to-Pod
+    \item Cluster external sources to Services
+  \end{itemize}
+  \item Pod-to-Pod connection is implemented by a CNI plugin that creates NIC and assigns IP addresses (IPAM)
+  \item CNI plugins with operator daemons can also implement network rules (Network Policy resource)
+  \item Calico, Cilium
+  \item Meta-plugins such as Multus implement other features as part of the CNI chain
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Container Network Interface (CNI)}
+\frametitle{Sidecar threat modelling}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{../thesis/files/Matrix copy.png}
+  \caption{Kubernetes threat matrix (MITRE ATT\&CK) [2]}
+\end{figure}
 
 \begin{itemize}
-  \item Kubernetes has no built-in component that provides connectivity and reachability for Pods $\Rightarrow$ CNI plugins
-  \item Plugins may differ in architecture significantly
-  \item Calico and Cilium are powerful CNIs that work with IPTables and eBPF
+  \item Initial access is already assumed, and does not differ from sidecarless cluster
+  \item Attacks are also experimented with custom container in a Minikube cluster
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Network policies}
+\frametitle{Permission related threats}
 
 \begin{itemize}
-  \item Default Kubernetes resouce, allows creationg of Ingress and Egress rules for Pods
-  \item Rules are applied to Pod's default NIC by the CNI plugin
-  \item Does not affect intra-Pod communication via loopback device
+  \item Most of the threats found are easily mitigated with Pod Security Admission Controller
+  \item Other threats can be mitigated with custom admission controllers
+  \begin{itemize}
+    \item Containers in a Pod share and automatically mount Service Accounts $\Rightarrow$ do not allow automatic SA mounting, manually mount to containers when needed
+    \item Resource limits are not enforced (denial of service) $\Rightarrow$ enforce with admission webhooks
+  \end{itemize}
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Pod Security Admission control}
+\frametitle{Networking threats}
 
 \begin{itemize}
-  \item G
+  \item The common network namespace in Pod's allows unlimited access to other containers
+  \item Network policies apply to all containers in a Pod
+  \item No built-in options for fine-grained network access within the network namespace
+  \item Two different approaches invistigated
+  \item Both approaches should not interfere with permission related mitigations
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Sidecar pattern}
+\frametitle{Approach 1: Injecting networking rules to Pod}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{../thesis/files/iptables.png}
+\end{figure}
 
 \begin{itemize}
-  \item H
+  \item Inject IPTables rules to Pod net namespace after deployment
+  \item Containers are distinguished from one another by using unique user IDs and IPTables owner-module
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Sidecar pattern issues}
+  \frametitle{Approach 2: Split the Pod and rebuild sidecar-like connectivity}
 
-\begin{itemize}
-  \item Containers within a Pod share namespace $\Rightarrow$ same PSA rules
-  \item Same NetworkPolicy for all containers in a Pod $\Rightarrow$ all containers have same Egress policy
-  \item No isolation on loopback device
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Network Isolation Solution 1: IPTables or eBPF}
-
-\begin{itemize}
-  \item Add IPTables rules to sidecar after Pod is deployed
-  \item Containers share IP address $\Rightarrow$ need to use IPTables owner-module (user-id, similarly to Envoy proxy) to apply rules only for the sidecar
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Network Isolation Solution 2: Split containers to own namespace}
+  \begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{../thesis/files/multus.png}
+  \end{figure}
 
   \begin{itemize}
-    \item Own Pods $\Rightarrow$ NPs can be used to restrict communication
-    \item Own Kubernetes namespaces $\Rightarrow$ own PSA rules
-    \item Not sidecar anymore (no loopback connectivity, deployed to different Nodes...)
-    \item Prevent scheduling on different Nodes with Node and Pod affinity
+    \item All containers are inherently in own net NS
+    \item Multus used for static IPs, NPs and isolation from Pod network
+    \item Loopback connectivity with \texttt{net.ipv4.conf.all.route\_localnet=1}
   \end{itemize}
   \end{frame}
 
 \begin{frame}
-\frametitle{Multus}
+\frametitle{Findings}
 
 \begin{itemize}
-  \item CNI plugin that allows multiple NICs per Pod
-  \item Uses other CNI plugins for implementation the NICs
-  \item Allows creation of another network segment between Pods
+  \item Approaches work but are laborous to implement
+  \begin{itemize}
+    \item Keeping rules up-to-date requires a custom K8s operator
+    \item Multus is not yet a mature project
+    \item Multus approach breaks co-scheduling
+    \item mTLS between containers is not solved
+  \end{itemize}
+  \item \emph{Avoiding sidecars is the best mitigation}
+  \item $\Rightarrow$ Use DaemonSets to run sidecars per-Node
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Solution 2+: Re-routing loopback to Multus NIC}
+\frametitle{Future development}
 
 \begin{itemize}
-  \item Requires kernel flag to be set: net.ipv4.conf.all.route\_localnet=1
-  \item DNAT rule on IPTables in sufficient but eBPF solution is also possible
-  \item Open source Network Policy implementation for Multus network exists
-  \item Combined with affinity, sidecar is deployed on same Node and communicates via loopback!
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Refining the solutions}
-
-\begin{itemize}
-  \item Use a custom CNI plugin or controller loop to modify Pod network namespaces, however no available implementations yet exist
-  \item All solutions are somewhat hacky and unstable, including Multus network with policies
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Extra security}
-
-\begin{itemize}
-  \item Tetragon for observability?
-  \item Service meshes?
+  \item K8s v1.28 introduces SidecarContainers
+  \begin{itemize}
+    \item Introduced for fixing existing lifecycle issues of initContainers
+    \item Proposal explicitly states a non-goal of enforcing different security regulations for sidecars
+  \end{itemize}
+  \item Service meshes have introduced sidecarless architectures
+  \item Cilium service mesh (eBPF) and Istio ambient mesh
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Re-cap}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=\linewidth]{../thesis/files/Matrix.png}
+  \caption{Threat matrix. Attack techniques addressed are highlighted in green.}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Re-cap}
+
 \begin{itemize}
-  \item Kubernetes does not support Zero Trust Architecture
-  \item Custom CNIs and controllers can be used to build ZTA to Pod network namespace
+  \item The thesis investigated and found ways to mitigate sidecar related threats in K8s
+  \item Most vulnerable configuration can be prevented with PSA
+  \item Admission controller allows extending protections even further
+  \item No existing way to implement ZTA in sidecar networking, but it is possible
+  \item Implementing the network solutions are cumbersome and require extensive work
+  \item Avoiding sidecars altogether is the easiest mitigation
 \end{itemize}
 \end{frame}
 
@@ -170,7 +203,10 @@ Advisor: M.Sc.\ (Tech.)\ Jacopo\ Bufalino
 \frametitle{References}
 
 \begin{itemize}
-  \item N
+  \item [1] Kubernetes components, Kubernetes documentation.
+  [https://kubernetes.io/docs/concepts/overview/components/]
+  \item [2] Secure containerized environments with updated threat matrix for Kubernetes, By Yossi Weizman, Senior Security Researcher, Microsoft Defender for Cloud.
+  [https://www.microsoft.com/en-us/security/blog/2021/03/23/secure-containerized-environments-with-updated-threat-matrix-for-kubernetes/]
 \end{itemize}
 \end{frame}
 
