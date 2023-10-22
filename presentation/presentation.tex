@@ -25,32 +25,36 @@
   \begin{enumerate}
     \item Zero Trust Architecture
     \item Kubernetes: sidecars and networking model
-    \item Research: threat modelling and mitigation
+    \item Research: threat modeling and mitigation
     \item Future considerations
   \end{enumerate}
 }
 
 \frame{
-  \frametitle[ZTA]{Zero Trust Architecture}
+  \frametitle[ZTA]{Zero Trust Architecture (ZTA)}
 
   \emph{A security paradigm that focuses on the premise that trust must always be explicitly granted}
-
   \begin{itemize}
     \item Move security boundaries to the most granular level and use fine-grained access rules
     \item A multi-layer, defense-in-depth approach
     \item Network communication, even if internal and behind a firewall, should not be trusted
     \item Services communicate securely (Mutual authentication, with mTLS), rely on more robust identifiers than IP addresses, and restrict traffic on L5-L7
-    \item Modern service meshes help implementing the architecture in Kubernetes clusters, often using sidecars (like Envoy proxy)
+    \item Service meshes help implementing ZTA in Kubernetes clusters, often using sidecars (like Envoy proxy)
   \end{itemize}
 }
 
 \frame{
-  \frametitle{Kubernetes sidecars}
+  \frametitle{Kubernetes sidecar containers}
 
   \begin{itemize}
-    \item Sidecar pattern allows isolating of peripheral tasks (logging, observability, Envoy proxies) from application to own helper containers called sidecars
-    \item Pods consist of one or more tightly-coupled containers, sidecars are not technically distinguishable from application container
-    \item Containers in Pod share Linux network namespace with each other
+    \item Pods are the basic scheduling abstraction
+    \begin{itemize}
+      \item Consist of one or more tightly-coupled containers
+      \item Share Linux network namespace
+      \item Common lifecycle
+    \end{itemize}
+    \item Sidecar pattern allows isolating of peripheral tasks (logging, observability, Envoy proxies) from application to own helper containers
+    \item Sidecars are not technically different from other containers
   \end{itemize}
 }
 
@@ -73,29 +77,42 @@
 }
 
 \frame{
-  \frametitle{Sidecar threat modelling}
+  \frametitle{Research: Sidecar threat modeling}
 
   \begin{figure}[h!]
     \centering
     \includegraphics[width=\linewidth]{../thesis/files/Matrix copy.png}
-    \caption{Kubernetes threat matrix (MITRE ATT\&CK) [2]}
+    \caption{Microsoft's Threat Matrix for Kubernetes (adopted from MITRE ATT\&CK) [1]}
   \end{figure}
 
   \begin{itemize}
-    \item Initial access is already assumed
+    \item Threat matrix used as the main source
     \item Attacks are also experimented with custom container in a Minikube cluster
   \end{itemize}
 }
 
 \frame{
-  \frametitle{Permission related threats}
+  \frametitle{Sidecar threat modeling}
+
+  \begin{itemize}
+    \item Pods are the most granular security boundary of Kubernetes
+    \item Sidecars inherit execution and networking privileges from the Pod
+    \item $\Rightarrow$ Principle of least privilege is not respected
+    \item $\Rightarrow$ Custom solutions are needed for container-level Zero Trust
+  \end{itemize}
+}
+
+\frame{
+  \frametitle{Configuration related threats}
 
   \begin{itemize}
     \item Most of the threats found are easily mitigated with Pod Security Admission Controller
-    \item Other threats can be mitigated with custom admission controllers
+    \item Other threats can be mitigated with custom admission controllers (Validating and mutating webhooks)
     \begin{itemize}
-      \item Containers in a Pod share and automatically mount Service Accounts $\Rightarrow$ do not allow automatic SA mounting, manually mount to containers when needed
-      \item Resource limits are not enforced (denial of service) $\Rightarrow$ enforce with admission webhooks
+      \item Containers in a Pod share and automatically mount Service Accounts
+      \item $\Rightarrow$ Disable automatic SA mounting, manually mount when needed
+      \item Resource limits are not enforced by PSA (denial of service)
+      \item Custom ValidatingAdmissionWebhook can be used for enforcement
     \end{itemize}
   \end{itemize}
 }
@@ -104,11 +121,14 @@
   \frametitle{Networking threats}
 
   \begin{itemize}
-    \item The common network namespace in Pod's allows unlimited access to other containers
-    \item Network policies apply to all containers in a Pod
-    \item No built-in options for fine-grained network access within the network namespace
+    \item Two main issues found:
+    \begin{itemize}
+      \item The common network namespace allows unlimited access to other containers in the Pod
+      \item Network policies apply to all containers in a Pod
+    \end{itemize}
+    \item No built-in solution for fine-grained network access
     \item Two different approaches invistigated
-    \item Both approaches should not interfere with permission related mitigations
+    \item Neither should interfere with Admission Controller
   \end{itemize}
 }
 
@@ -136,8 +156,9 @@
 
   \begin{itemize}
     \item All containers are inherently in own net NS
-    \item Multus used for static IPs, NPs and isolation from Pod network
-    \item Loopback connectivity with \texttt{net.ipv4.conf.all.route\_localnet=1}
+    \item Multus used for static IPs, Network Policies and isolation from Pod network
+    \item Route loopback to Multus network
+    % \texttt{net.ipv4.conf.all.route\_localnet=1})
   \end{itemize}
 }
 
@@ -149,8 +170,7 @@
     \begin{itemize}
       \item Keeping access rules up-to-date requires a custom K8s operator
       \item Multus is not yet a mature project
-      \item Multus approach breaks co-scheduling
-      \item mTLS between containers is not solved
+      \item Multus approach breaks co-scheduling and shared lifecycle
     \end{itemize}
     \item \emph{Avoiding sidecars is the best mitigation}
     \item $\Rightarrow$ Use DaemonSets to run sidecars per-Node
@@ -197,10 +217,10 @@
 \frame{
   \frametitle{References}
 
+  Experimental solutions can be found in Github repository: https://github.com/Arskah/k8s-sidecar-security
+
   \begin{itemize}
-    \item [1] Kubernetes components, Kubernetes documentation.
-    [https://kubernetes.io/docs/concepts/overview/components/]
-    \item [2] Secure containerized environments with updated threat matrix for Kubernetes, By Yossi Weizman, Senior Security Researcher, Microsoft Defender for Cloud.
+    \item [1] Secure containerized environments with updated threat matrix for Kubernetes, By Yossi Weizman, Senior Security Researcher, Microsoft Defender for Cloud.
     [https://www.microsoft.com/en-us/security/blog/2021/03/23/secure-containerized-environments-with-updated-threat-matrix-for-kubernetes/]
   \end{itemize}
 }
