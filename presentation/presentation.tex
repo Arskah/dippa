@@ -107,13 +107,13 @@
 
   \begin{itemize}
     \item Most of the threats found are easily mitigated with Pod Security Admission Controller
-    \item Other threats can be mitigated with custom admission controllers (Validating and mutating webhooks)
-    \begin{itemize}
-      \item Containers in a Pod share and automatically mount Service Accounts
-      \item $\Rightarrow$ Disable automatic SA mounting, manually mount when needed
-      \item Resource limits are not enforced by PSA (denial of service)
-      \item Custom ValidatingAdmissionWebhook can be used for enforcement
-    \end{itemize}
+    \item Other threats can be mitigated with custom admission controllers (validating and mutating webhooks)
+    \begin{enumerate}
+      \item Containers in a Pod share and automatically mount Service Accounts autentication tokens \\
+        $\Rightarrow$ Set \texttt{automountServiceAccountToken: false}, and manually mount using volumes when needed
+      \item Resource limits are not enforced by PSA (denial of service) \\
+        $\Rightarrow$ Custom ValidatingAdmissionWebhook can be used for enforcement
+    \end{enumerate}
   \end{itemize}
 }
 
@@ -122,14 +122,14 @@
 
   \begin{itemize}
     \item Two main issues found:
-    \begin{itemize}
-      \item The common network namespace allows unlimited access to other containers in the Pod
-      \item Network policies apply to all containers in a Pod
-    \end{itemize}
+    \begin{enumerate}
+      \item Common network namespace allows unrestricted network access to other containers in the Pod
+      \item Network Policies apply to Pods, and do not differentiate between containers
+    \end{enumerate}
     \item No built-in solution for fine-grained network access
     \item Loopback device is managed by container runtime $\Rightarrow$ Network Policies are not applicable
     \item Two different approaches invistigated
-    \item Neither should interfere with Admission Controller
+    \item Extra requirement: solutions should not collide with restricted PSA policies
   \end{itemize}
 }
 
@@ -156,7 +156,7 @@
   \end{figure}
 
   \begin{itemize}
-    \item All containers are inherently in own net NS
+    \item All containers are inherently in own net namespaces
     \item Multus used for static IPs, Network Policies and isolation from Pod network
     \item Route loopback to Multus network
     % \texttt{net.ipv4.conf.all.route\_localnet=1})
@@ -175,7 +175,7 @@
       \item mTLS and Multus are not compatible
     \end{itemize}
     \item \emph{Avoiding sidecars is the best mitigation}
-    \item $\Rightarrow$ Use DaemonSets to run sidecars per-Node
+    \item DaemonSets can be used to run sidecar tasks per-Node
   \end{itemize}
 }
 
