@@ -1825,15 +1825,29 @@ The second section discusses qualitative aspects of the solutions, such as scala
 
 \subsection{Security Evaluation}
 
-\subsubsection{Experiment 1: Test Pod security admission}
+The experiments in this section verify the network isolation in both of the introduced network solutions.
 
-\subsubsection{Experiment 2: cURL webserver}
+As a prerequisite for the experiments, the built-in Pod Security Admission rules should be enabled for the environments.
+To verify this, the first step in the evaluation is to try deploying overly permissive Pod into the cluster.
+The Deployment used for testing this is shown in Listing~\ref{lst:privileged-container}.
+The definition's namespace metadata fields are changed corresponding to namespace under test, ie. \texttt{app} in our case.
 
-\subsubsection{Experiment 3: send UDP packet to StatsD}
+% Talk about the solutions respecting restricted PSA %
+Trying to add the Deployment in the test cluster results in a warning shown in Listing~\ref{lst:psa-warning}.
+Thus, the Pod Security Admissions are working in the test setup and the evaluation can proceed to testing network isolation.
 
-\subsubsection{Experiment 4: Control plane access}
+\lstinputlisting[
+  language={bash},
+  label={lst:psa-warning}
+]{code/psa-warning.sh}
 
-\subsubsection{Experiment 5: Access outside cluster}
+\subsubsection{Experiment 1: cURL webserver}
+
+\subsubsection{Experiment 2: send UDP packet to StatsD}
+
+\subsubsection{Experiment 3: Control plane access}
+
+\subsubsection{Experiment 4: Access outside cluster}
 
 TODO:
 \begin{itemize}
