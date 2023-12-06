@@ -39,7 +39,7 @@ spec:
   egress:
     - to:
         - namespaceSelector:
-          matchExpressions:
-            - key: namespace
-              operator: In
-              values: ["backend"]
+            matchExpressions:
+              - key: namespace
+                operator: In
+                values: ["backend"]
