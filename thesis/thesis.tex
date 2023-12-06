@@ -1847,7 +1847,8 @@ However, since \texttt{multi-network-policy-iptables} does not support Docker, t
 \subsubsection{Experiment 1: sidecars cannot access main application}
 
 The first experiment tests main application's network isolation from sidecar threats.
-The isolation is trivially tested by sending a HTTP request from the sidecar to localhost:8888 with cURL.
+Since no sidecars in the system require access to the main application container, the isolation should block requests from all sidecar containers.
+The isolation is trivially tested by sending a HTTP request from attacking or StatsD sidecar to \texttt{localhost:8888} with \texttt{cURL}.
 When successfully isolated, the request is rejected, which is visible in IPTables packet filter counters, which can be viewed with \texttt{iptables -xvn -L} command.
 
 The first solution successfully rejected packets when deployed running with Docker.
@@ -1887,21 +1888,27 @@ Since it also implements the policies with IPTables, and containerd was used, th
 
 \subsubsection{Experiment 2: only main application can access StasD sidecar}
 
-The second experiment tests
+The second experiment tests that only main application can send packets to the StatsD sidecar, and that any other traffic destinated there is blocked.
+The packet filtering rules are tested by sending UDP packets with netcat from attacker's malicious-sidecar to \texttt{localhost:8125} (\texttt{nc -u localhost 8125}).
+
+The IPTables rules in the first solution reject the packets, since the malicious-sidecar is deployed with different user ID than the main application.
+In similar fashion, the IPTables rules generated from MultiNetworkPolicies in second solution filter the unwanted packets.
 
 \subsubsection{Experiment 3: Access to other Pods is blocked}
 
-TODO:
-\begin{itemize}
-  \item Discuss how the solution prevents deployment of privileged containers (use example scenarios)
-  \item Network demonstration: try to curl places from the sidecar
-  \item What can be really measured? Qualitative assessment?
-\end{itemize}
+The third experiment tests that neither of the network solutions infere with NetworkPolicies applied outside the Pod network.
+The experiment environments use a simple NetworkPolicy that blocks all egressing traffic, and only allow ingressing traffic to main application.
+The policies are easily tested by trying to access for example \texttt{google.com} or Kubernetes API server from any container in the Pod.
+From outside the Pod, only the main application's port should be accessible.
+
+Both of the solutions function as expected and thus the solutions do not interfere with CNI's policies.
 
 \subsection{Qualitative assessment}
 
 \begin{itemize}
   \item The solutions are complex and a production ready version requires own controller
+  \item Own controller must be secure as well
+  \item Must block UserIDs with admission controller
   \item multi-network-policy operators are not production ready
   \item Multus solution and co-scheduling (not a sidecar technically)
   \item Improving the security: mTLS, observability?
