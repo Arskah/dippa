@@ -1886,7 +1886,7 @@ Since it also implements the policies with IPTables, and containerd was used, th
 % COMMIT
 % # Completed on Tue Nov 14 21:55:28 2023
 
-\subsubsection{Experiment 2: only main application can access StasD sidecar}
+\subsubsection{Experiment 2: only main application can access StatsD sidecar}
 
 The second experiment tests that only main application can send packets to the StatsD sidecar, and that any other traffic destinated there is blocked.
 The packet filtering rules are tested by sending UDP packets with netcat from attacker's malicious-sidecar to \texttt{localhost:8125} (\texttt{nc -u localhost 8125}).
@@ -1903,6 +1903,26 @@ From outside the Pod, only the main application's port should be accessible.
 
 Both of the solutions function as expected and thus the solutions do not interfere with CNI's policies.
 
+\subsubsection{Results}
+
+\begin{table}[H]
+  \sffamily
+  \centering
+  \caption{Experiment results}
+  \label{table:evaluation-results}
+
+  \begin{minipage}{\textwidth}
+  \renewcommand{\thempfootnote}{\arabic{mpfootnote}}
+  \begin{tabularx}{\textwidth}{CCCC}
+    \textbf{Experiment} & \textbf{Solution 1, Docker} & \textbf{Solution 1, containerd} & \textbf{Solution 2, containerd} \\ \hline
+    Isolated main & OK & Not OK! & OK \\ \hline
+    Isolated sidecar & OK & Not OK! & OK \\ \hline
+    Isolated Pod & OK & OK & OK \\ \hline
+  \end{tabularx}
+  \end{minipage}
+\end{table}
+
+
 \subsection{Qualitative assessment}
 
 \begin{itemize}
@@ -1918,8 +1938,6 @@ The proposed solutions serve as a proof-of-concept and are by no-means productio
 The complexity of the setup
 
 The solution with
-
-\subsection{Summary}
 
 \clearpage
 
