@@ -1815,11 +1815,12 @@ Because of the complexity and the amount of work required to implement co-schedu
 
 \section{Solution Evaluation} \label{sec:solution}
 
-This chapter demonstrates with experiments how the solutions given in chapters \ref{sec:pod-hardening} and \ref{sec:network-solution} isolate containers residing in the same Pod from each other.
-This evaluation confirms that the solution actually solves the requirements set for the solutions, but also analyzes their potential and weaknesses that can be improved.
+This chapter demonstrates with experiments that the solutions presented in Chapters \ref{sec:pod-hardening} and \ref{sec:network-solution} effectively isolate containers within the same Pod from one another.
+The evaluation not only verifies that the solutions meet the requirements, but also examines its potential and any weaknesses that can be improved.
 
-The experiments in the first section include testing security admission by deploying privileged Pods to the cluster, as well as network isolation enforcement by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
-These tools are installed in the \emph{malicious-sidecar} container (Appendix \ref{app:malicious-sidecar}), which is installed as an extra sidecar alongside the application containers and used as an entrypoint for attacks in the experiments.
+The experiments in the first section involve assessing security admission by deploying privileged Pods to the cluster, as well as enforcing network isolation by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
+The \emph{malicious-sidecar} container (outlined in Appendix \ref{app:malicious-sidecar}) is added to the application containers as an extra sidecar and serves as an entry point for attacks in the experiments.
+This container has the necessary tools installed.
 
 \lstinputlisting[
   language={yaml},
@@ -1827,59 +1828,60 @@ These tools are installed in the \emph{malicious-sidecar} container (Appendix \r
   caption={Attacker container config concated to deployments}
 ]{code/attacker.yml}
 
-Since both of the network isolation solutions should only allow UDP traffic from the webserver container to StatsD client, any other successful request is considered an failure in the isolation.
-The second section discusses qualitative aspects of the solutions, such as scalability and the ease of deployment.
+Both network isolation solutions should only permit UDP traffic from the webserver container to the StatsD client.
+Any other successful request is deemed a failure in isolation.
+The second section examines the qualitative characteristics of the solutions, such as scalability and simplicity of deployment.
 
 \subsection{Security Evaluation}
 
-The experiments in this section verify that the network isolation functions properly in the solutions.
+The experiments in this section verify that network isolation works correctly in solutions.
 As a prerequisite for the experiments, the built-in Pod Security Admission rules should be enabled for the environments.
-To verify this, the first step in the evaluation is to try deploying overly permissive Pod into the cluster.
-The Deployment used for testing this is shown in Listing~\ref{lst:privileged-container}.
-The definition's namespace metadata fields are changed corresponding to namespace under test, ie. \texttt{app} in our case.
+To verify this, the first step in the evaluation is to deploy a Pod that is overly permissive into the cluster.
+The Deployment used to test this is shown in Listing~\ref{lst:privileged-container}.
+The definition namespace metadata fields were altered to match the namespace being tested, for example, \texttt{app} in our case.
 
-Trying to add the Deployment in the test cluster results in a warning shown in Listing~\ref{lst:psa-warning}.
-Thus, the Pod Security Admissions are working in the test setup and the evaluation can proceed to testing network isolation.
+When adding the Deployment to the test cluster, there is a warning, displayed in the Listing~\ref{lst:psa-warning}, indicating that the Pod Security Admissions function correctly in the test environment. This allows the evaluation to move forward to testing network isolation.
 
 \lstinputlisting[
   language={bash},
   label={lst:psa-warning}
 ]{code/psa-warning.sh}
 
-The following experiments were conducted for both of the suggested solutions.
-The first solution with single network namespace is also tested with both Docker and containerd runtime.
-However, since \texttt{multi-network-policy-iptables} does not support Docker, the Multus solution is only evaluated on containerd runtime.
+Experiments were conducted for both proposed solutions.
+The first solution, which uses a single network namespace, was tested with both Docker and containerd runtimes.
+However, since \texttt{multi-network-policy-iptables} does not work with Docker, the Multus solution was only evaluated with containerd runtime.
 
 \subsubsection{Experiment 1: sidecars cannot access main application}
 
-The first experiment tests main application's network isolation from sidecar threats.
-Since no sidecars in the system require access to the main application container, the isolation should block requests from all sidecar containers.
-The isolation is trivially tested by sending a HTTP request from attacking or StatsD sidecar to \texttt{localhost:8888} with \texttt{cURL}.
-When successfully isolated, the request is rejected, which is visible in IPTables packet filter counters, which can be viewed with \texttt{iptables -xvn -L} command.
+The first experiment tests the main application's network isolation from sidecar threats.
+As none of the sidecars in the system requires access to the main application container, isolation should block all requests from the sidecar containers.
+This can be tested by sending an HTTP request from the attacking or StatsD sidecar to \texttt{localhost:8888} with \texttt{cURL}.
+If isolation is successful, the request will be rejected.
+This can be observed in the IPTables packet filter counters, which can be seen by using the \texttt{iptables -xvn -L} command.
 
-The first solution successfully rejected packets when deployed running with Docker.
-However, on containerd, the packets were not rejected, even though IPTables packet filter counters increased.
-This implies that there is a difference in how the CRIs implement the loopback CNI, and that containerd implementation might be optimized to bypass some parts of the network stack.
+The first solution successfully rejected packets when it was used with Docker runtime.
+However, when it was used with containerd, the packets were not rejected, even though the IPTables packet filter counters increased.
+This suggests that there is a discrepancy in how the CRIs implement the loopback CNI, and that containerd's implementation might be optimized to bypass certain elements of the network stack.
 
 The second solution also rejected the packets as expected.
 Since it also implements the policies with IPTables, and containerd was used, this further implies that the unexpected result with the other solution is caused by how containerd implements the loopback CNI.
 
 \subsubsection{Experiment 2: only main application can access StatsD sidecar}
 
-The second experiment tests that only main application can send packets to the StatsD sidecar, and that any other traffic destinated there is blocked.
-The packet filtering rules are tested by sending UDP packets with netcat from attacker's malicious-sidecar to \texttt{localhost:8125} (\texttt{nc -u localhost 8125}).
+The second experiment verifies that only the main application is able to send packets to the StatsD sidecar and that any other traffic directed there is blocked.
+To test packet filtering rules, UDP packets are sent from malicious sidecar to \texttt{localhost:8125} with netcat (\texttt{nc -u localhost 8125}).
 
-The IPTables rules in the first solution reject the packets, since the malicious-sidecar is deployed with different user ID than the main application.
-In similar fashion, the IPTables rules generated from MultiNetworkPolicies in second solution filter the unwanted packets.
+The IPTables rules in the first solution reject the packets due to the fact that the malicious-sidecar is deployed with a different user ID than the main application.
+Similarly, the IPTables rules generated from MultiNetworkPolicies in the second solution filter the unwanted packets.
 
 \subsubsection{Experiment 3: Access to other Pods is blocked}
 
-The third experiment tests that neither of the network solutions infere with NetworkPolicies applied outside the Pod network.
-The experiment environments use a simple NetworkPolicy that blocks all egressing traffic, and only allow ingressing traffic to main application.
-The policies are easily tested by trying to access for example \texttt{google.com} or Kubernetes API server from any container in the Pod.
-From outside the Pod, only the main application's port should be accessible.
+The third experiment verifies that neither of the network solutions interferes with NetworkPolicies applied outside the Pod network.
+The experiment environment uses a basic NetworkPolicy that blocks all outbound traffic and only permits inbound traffic to the main application.
+Policies can be tested by trying to access, for example, \texttt{google.com} or the Kubernetes API server from any container in the Pod.
+From outside the Pod, only the main application port should be reachable.
 
-Both of the solutions function as expected and thus the solutions do not interfere with CNI's policies.
+The two solutions both work as anticipated and do not conflict with CNI's Network Policies.
 
 \subsubsection{Results}
 
@@ -1903,26 +1905,26 @@ Both of the solutions function as expected and thus the solutions do not interfe
 \subsection{Qualitative assessment}
 
 The above experiments verify that the proposed solutions can be used to implement the desired network isolation.
-However, the solutions have a number of limitations and should only serve as a proof-of-concept.
+However, the solutions have a number of limitations and should only serve as a proof of concept.
 These limitations should be mitigated before using the solutions in production environments.
 
 The biggest limitation is that the solutions only function on a specific container runtimes, as demonstrated by the above experiments.
-Since the first solution has only been demonstrated to function on Docker runtime, it logically limits the possible useplaces.
-This also raises the question that the network isolation should probably be implemented in container runtimes.
-On the other hand, the \texttt{multi-network-policy-iptables} in the second solution only supports containerd and CRI-O as runtimes.
-The project also states that it is not stable yet.
+Since the first solution has only been proven to function on the Docker runtime, it logically limits the potential places where it can be used.
+This also raises the question of whether network isolation should probably be implemented in container runtimes.
+Additionally, \texttt{ multi-network-policy-iptables} in the second solution only works with containerd and CRI-O as runtimes.
+It should also be noted that the project explicitly states that it is not stable yet.
 
-From security perspective, the biggest limitations relate to the actual IPTables policies and to the injector daemon.
-In the first solution, the policies distinguish containers based on process user identifiers, which means that the deployment is protected only if the adversary cannot deploy containers with specific user IDs.
-Thus, the solution requires a admission controller that validates the identifiers.
+From a security point of view, the primary drawbacks are associated with the IPTables policies and the injector daemon.
+The first solution relies on distinguishing containers based on process user identifiers, which means that the system is only secure if the attacker cannot deploy containers with specific user IDs.
+Therefore, an admission controller is necessary to validate the identifiers.
 
-Since the injector daemon has privileges for managing the policies, it should be considered as part of critical cluster infrastructure similarly to CNI operators.
-The current container has root privileges and mounts the Node's container runtime socket, which essentially compromises the whole Node if successfully penetrated.
-For future considerations, the daemon's privileges should be reduced to the absolute minimum.
-CNI plugins with operators could serve as a reference for this improvement.
+The injector daemon has the privileges to manage policies, so it should be regarded a vital part of the cluster infrastructure, similar to CNI operators.
+The current container has root privileges and access to the Node's container runtime socket, which could be exploited to compromise the entire Node.
+To prevent this, the daemon's privileges should be reduced to the bare minimum.
+CNI plugins with operators could be used as a model for this enhancement.
 
-In summarison, the solutions are complex and require further improvements before used in production environment.
-An optimal solution would solve the limitations listed above and make installation of the system as easy as any CNI plugin.
+In conclusion, the solutions are intricate and need to be further enhanced before they can be employed in the production environment.
+The ideal solution would address the issues mentioned above and make the system installation as straightforward as any CNI plugin.
 
 \clearpage
 
