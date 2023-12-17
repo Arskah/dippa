@@ -485,27 +485,7 @@
 %% above.
 %% Thesis keywords:
 %% Note! The keywords are separated using the \spc macro
-\keywords{Kubernetes, Container, Docker, Security}
-
-%% The abstract text. This text is included in the metadata of the pdf file as well as the abstract page.
-\thesisabstract{
-The abstract is a short description of the essential contents of the thesis:
-what was studied and how and what were the main findings. For a Finnish thesis,
-the abstract should be written in both Finnish and English; for a Swedish
-thesis, the abstract should be written in both Swedish and English. The abstracts for English theses written by
-Finnish or Swedish speakers should be written in English and either in Finnish
-or in Swedish, depending on the student’s language of basic education. Students
-educated in languages other than Finnish or Swedish write the abstract only in
-English. Students may include a second or third abstract in their native
-language, if they wish.
-The abstract text of this thesis is written on the readable abstract page and in the pdf file's metadata via the thesisabstract macro (see the
-comment in the TeX file). Write in this the text that goes into the metadata. The
-metadata cannot contain special characters, linebreak or paragraph break
-characters, so these must not be used here. If your abstract does not contain
-special characters and does not require paragraphs, you may take advantage of
-the abstracttext macro (see the comment in the TeX file below). Otherwise, the
-metadata abstract text must be identical to the text on the abstract page.
-}
+\keywords{Kubernetes, Container, Sidecar pattern, Network Security}
 
 %% You can prevent LaTeX from writing into the xmpdata file (it contains all the metadata to be written into the pdf file) by setting the writexmpdata switch to 'false'. This allows you to write the metadata in the correct format directly into the file thesistemplate.xmpdata.
 % \setboolean{writexmpdatafile}{false}
@@ -528,7 +508,20 @@ metadata abstract text must be identical to the text on the abstract page.
 
 %% The text in the \thesisabstract macro is stored in the macro \abstractext, so you can use the text metadata abstract directly as follows:
 \begin{abstractpage}[english]
-  \abstracttext{}
+  The widespread adoption of containers has been a driving force behind the shift from monolithic applications to microservices.
+  The modular nature of microservice architecture has allowed the development of distributed system design patterns such as the sidecar pattern, in which peripheral tasks are separated from the application containers as their own distinct containers.
+  The sidecar pattern is often used to implement observability, log, and improve security with service meshes.
+
+  This thesis investigates the security implications surrounding sidecar containers in Kubernetes container orchestration.
+  Focused on Kubernetes networking and Zero Trust security architecture, the research identifies inherent risks associated with sidecar containers that could be exploited by adversaries.
+
+  The thesis introduces two proof-of-concept solutions aimed at establishing network isolation between application and sidecar containers.
+  The first solution utilizes IPTables to enforce isolation, while the second employs Multus to mimic shared network namespace between containers in distinct Pods.
+
+  Despite the demonstrated solutions for network isolation, the complexities of implementation and the need for specialized infrastructure pose challenges that may outweigh the benefits of such architectural modifications.
+  Due to the challenges, the thesis explores the merits of sidecarless service mesh architectures such as Cilium and Istio Ambient Mesh, as an example of avoiding the risks with sidecars altogether.
+
+  Ultimately, while the thesis presents viable proof-of-concept solutions for network isolation between application and sidecar containers, it advocates for a cautious approach, emphasizing the preference for established and well-tested components over custom-made implementations that need to be actively maintained.
 \end{abstractpage}
 
 %% Force a new page so that the possible Finnish or Swedish abstract does not begin on the same page
