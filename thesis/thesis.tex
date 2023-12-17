@@ -479,14 +479,6 @@
 \copyrighttext{\noexpand\textcopyright\ \number\year. This work is licensed under a Creative Commons "Attribution-NonCommercial-ShareAlike 4.0 International" (BY-NC-SA 4.0) license.}{\noindent\textcopyright\ \number \year \ \doclicenseThis}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%% The English abstract:
-%% All the details (name, title, etc.) on the abstract page appear as specified
-%% above.
-%% Thesis keywords:
-%% Note! The keywords are separated using the \spc macro
-\keywords{Kubernetes, Container, Sidecar pattern, Network Security}
-
 %% You can prevent LaTeX from writing into the xmpdata file (it contains all the metadata to be written into the pdf file) by setting the writexmpdata switch to 'false'. This allows you to write the metadata in the correct format directly into the file thesistemplate.xmpdata.
 % \setboolean{writexmpdatafile}{false}
 
@@ -506,7 +498,13 @@
 %% Abstract text
 %% All the details (name, title, etc.) on the abstract page appear as specified above.
 
-%% The text in the \thesisabstract macro is stored in the macro \abstractext, so you can use the text metadata abstract directly as follows:
+%% The English abstract:
+%% All the details (name, title, etc.) on the abstract page appear as specified
+%% above.
+%% Thesis keywords:
+%% Note! The keywords are separated using the \spc macro
+\keywords{Kubernetes, Container, Sidecar pattern, Network Security}
+
 \begin{abstractpage}[english]
   The widespread adoption of containers has been a driving force behind the shift from monolithic applications to microservices.
   The modular nature of microservice architecture has allowed the development of distributed system design patterns such as the sidecar pattern, in which peripheral tasks are separated from the application containers as their own distinct containers.
@@ -537,28 +535,24 @@
 % \major{Sopiva pääaine}
 % \collaborativepartner{Yhtiön tai laitoksen nimi}
 \date{1.6.2023}
-%% The keywords need not be separated by \spc now.
-\keywords{Vastus, resistanssi, lämpötila}
-%% Abstract text
-\begin{abstractpage}[finnish]
-Tiivistelmä on lyhyt kuvaus työn keskeisestä sisällöstä: mitä tutkittiin ja
-miten sekä mitkä olivat tärkeimmät tulokset. Suomenkielisen opinnäytteen
-tiivistelmä kirjoitetaan suomeksi ja englanniksi ja ruotsinkielisen vastaavasti
-ruotsiksi ja englanniksi. Suomen- tai ruotsinkielisten opiskelijoiden, joiden
-opinnäytteen kieli on englanti, tulee kirjoittaa tiivistelmänsä englanniksi ja
-koulusivistyskielellään. Muiden kuin koulusivistyskieleltään suomen- tai
-ruotsinkielisten tulee kirjoittaa tiivistelmänsä vain englanniksi. Opiskelija
-voi halutessaan lisätä opinnäytteeseensä toisen tai kolmannen tiivistelmän
-omalla äidinkielellään.
-Tämän opinnäytteen tiivistelmäteksti kirjoitetaan opinnäytteen luettavan osan
-lomakkeen lisäksi myös pdf-tiedoston metadataan. Kirjoita tähän metadataan
-kirjoitettavaa teksti. Metadatatekstissa ei saa olla erikoismerkkejä,
-rivinvaiho- tai kappaleenjakomerkkiä, joten näitä merkkeja ei saa käyttää tässä.
-Jos tiivistelmäsi ei sisällä erikoimerkkejä eikä kaipaa kappaleenjakoa, voit
-hyödynttää makroa abstracttext luodessasi lomakkeen tiivistelmää (katso
-kommentti tässä TeX-tiedostossa alla). Metadatatiivistelmatekstin on muuten
-oltava sama kuin lomakkeessa oleva teksti.
 
+\keywords{Kubernetes, säiliöinti, sivuvaunumalli, verkkoturvallisuus}
+
+\begin{abstractpage}[finnish]
+  Konttien laaja käyttöönotto on ollut merkittävä tekijä siirryttäessä monoliittisista sovelluksista mikropalveluihin.
+  Mikropalveluarkkitehtuurin modulaarisuus on mahdollistanut hajautettujen järjestelmäsuunnittelumallien kehittämisen, kuten sivuvaunumallin, jossa sivutehtävät erotetaan sovelluskonteista omiksi erillisiksi konteiksi.
+  Sivuvaunumallia käytetään usein havainnointiin, lokien kirjaamiseen ja palveluverkkojen turvallisuuden parantamiseen.
+
+  Tämä opinnäytetyö tutkii sivuvaunukonttien tietoturvavaikutuksia Kubernetes-konttiorkestraatiossa.
+  Kubernetes-verkostoinnin ja nollaluottamuksen tietoturvamallin keskittymisen myötä tutkimus tunnistaa sivuvaunukontteihin liittyviä perinnäisiä riskejä, joita hyökkääjät voisivat hyödyntää.
+
+  Opinnäytetyö esittelee kaksi konseptiin perustuvaa ratkaisua, joiden tarkoituksena on luoda verkkoeristys sovellus- ja sivuvaunukonttien välille.
+  Ensimmäinen ratkaisu käyttää IPTablesia eristyksen toteuttamiseen, kun taas toinen hyödyntää Multusia matkien jaetun verkkotilan luomista erillisissä kubeissa sijaitsevien konttien välille.
+
+  Vaikka verkkoeristyksen ratkaisut on esitetty, toteutuksen monimutkaisuus ja erikoistunut infrastruktuuritarve aiheuttavat haasteita, jotka voivat painaa enemmän kuin tällaisten arkkitehtonisten muutosten hyödyt.
+  Haasteiden vuoksi työ tutkii sivuvaunuttomien palveluverkkorakenteiden, kuten Ciliumin ja Istio Ambient Meshin, ansioita esimerkkinä sivuvaunuihin liittyvien riskien välttämisestä.
+
+  Kaiken kaikkiaan vaikka työ esittää toteuttamiskelpoiset konseptiratkaisut sovellus- ja sivuvaunukonttien verkkoeristykseen, se kannattaa varovaista lähestymistapaa ja korostaa vakiintuneiden ja hyvin testattujen komponenttien suosimista räätälöityjen toteutusten sijaan, jotka vaativat aktiivista ylläpitoa.
 \end{abstractpage}
 
 %% Force new page so that the Swedish abstract starts from a new page
