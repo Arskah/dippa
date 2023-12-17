@@ -675,13 +675,14 @@ Furthermore, malicious actors can use supply chain attacks and typo-squatting to
 Once malicious attackers gain access to the sidecar, any misconfigurations or permissive security mechanisms put the whole cluster at risk.
 Furthermore, Kubernetes is not secure by default; on a fresh installation, most of the included security mechanisms are in permissive settings or outright disabled.
 
-In Kubernetes, there is limited amount of security features available on container-level.
-Most of the security-related policies and capabilities are defined for the Pod, which essentially means that any capability required by the main application is inherited in the sidecar.
+Kubernetes offers limited security features at the container level.
+Although containers have their own distinct security context definitions, all security-related policies and features are defined for Pods or Namespaces.
+This means that sidecars, even if not required, inherit any capability and privileges from the main application.
 Thus, any privileged workload, even in another container in the Pod, risks privilege escalation from the sidecar.
-In addition, Kubernetes' firewalling solution, Network Policies, are granted for the whole Pod instead of individual containers.
-Both of the aforementioned issues allow for lateral movement and further escalation for the attackers.
-Thus, any exploitable security issue in a sidecar container makes an optimal launchpad for attack against the whole cluster.
-\jb{Statements are too weak. Here, the reader should understand that sidecars may contain vulnerable (or potentially vulnerable) code, and there are NO mechanisms to protect containers running in the same Pod.}
+Additionally, Kubernetes' firewalling solution, Network Policies, is applied to the entire Pod instead of individual containers.
+This means that there are no built-in mechanisms in Kubernetes for protecting and isolating containers running in the same Pod from one another, which goes against the principle of least privilege.
+Consequently, any exploitable security issue in a sidecar container could allow the attacker to move laterally to other containers in the Pod and to escalate privileges.
+This makes the sidecar an ideal starting point for attacks.
 
 Zero trust architecture and the principle of least privilege are common security paradigms for limiting lateral movement and further escalation in a system if any component within has been compromised.
 In both paradigms, the capabilities of an individual component are limited to only those that are required for the component to function.
@@ -850,7 +851,7 @@ Meanwhile, the \texttt{type} field determines how the Service is exposed.
 There are four different \texttt{ServiceTypes}: i) the default \texttt{ClusterIP} which exposes the Service inside the cluster with its own IP address, ii) \texttt{NodePort} which exposes the service in each Node's IP address on static port (by default within a range of 30000-32767), iii) \texttt{LoadBalancer} which exposes the Service externally using cloud provider's load balancer, and iv) \texttt{ExternalName} which is used to map Service to DNS name instead of a group of Pods.
 The field is designed as a nested functionality; each \texttt{ServiceType} level adds up to the previous one.
 
-\jb{Usually services are proxies that route requests to the different Pods. There are also Headless services that only add DNS entries for the Pods.}
+% \jb{Usually services are proxies that route requests to the different Pods. There are also Headless services that only add DNS entries for the Pods.}
 
 \textbf{Namespaces} allow logical grouping of resources under a single name.
 New Kubernetes cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}.
@@ -1120,7 +1121,7 @@ Compared to the built-in policy, the Calico policy includes features such as pol
 The policy can also match other Calico CRDs such as \textbf{HostEndpoints} and \textbf{NetworkSets}, which allows implementing rules on host interfaces and non-Kubernetes resources.
 If Calico is installed along the Istio service mesh, the Calico Network Policy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \texttt{GlobalNetworkPolicy} CRD.
 
-\jb{Now that Calico uses eBPF there is little difference between them and both can reduce the amount of sidecars to one per node.}
+% \jb{Now that Calico uses eBPF there is little difference between them and both can reduce the amount of sidecars to one per node.}
 
 \subsubsection{Cilium}
 
@@ -1153,7 +1154,7 @@ The service mesh performs a variety of features directly in eBPF, thus functioni
 Since all features are not available as eBPF programs or on all kernel versions,  Cilium automatically probes the underlying kernel and automatically reverts to the Envoy proxy when needed.
 For capabilities beyond the built-in mesh, Cilium also provides integration with Istio.
 
-\jb{Have you thought about how your solution is impacted by eBPF?}
+% \jb{Have you thought about how your solution is impacted by eBPF?}
 % \begin{itemize}
   % \item More on network rules (probes and uses most recent features from Kernel)
   % \item Transparent encryption https://docs.cilium.io/en/v1.13/security/threat-model/
@@ -1230,7 +1231,7 @@ On egress the stack is traversed in reverse; thus, the hook executes after most 
 TC programs can read and write directly to a packet in memory.
 Similarly to XDP programs, the return value of the program determines the further processing of the packet.
 The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped with \texttt{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \texttt{TC\_ACT\_RECLASSIFY}, among others.
-\jb{Do we need this level of detail to understand your solution?}
+% \jb{Do we need this level of detail to understand your solution?}
 
 \clearpage
 
