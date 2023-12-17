@@ -705,7 +705,6 @@ Finally, Chapter~\ref{sec:discussion} discusses future research and concludes th
 
 \section{Background} \label{sec:bg}
 
-% TODO: Maybe move this after Kubernetes?
 \subsection{Zero trust architecture}
 
 Conventional network security has historically focused on perimeter defense \cite{kerman2020implementing}.
@@ -1088,16 +1087,9 @@ Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespa
 The policies are additive; when multiple rules are defined for a Pod, traffic is restricted to what is allowed by the union of the policies.
 Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
-% TODO: Not everything listed above is requirements
-Although all CNI plugins meet the requirements listed above, they may differ in architecture significantly.
+Although all CNI plugins meet the above specification, they may differ in architecture significantly.
 The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
 In this thesis, we focus on three different CNI plugins: Calico, Cilium, and Multus.
-
-% TODO: CNI plugins, daemons and binary \cite{qi2020understanding}.
-
-% Src: https://www.youtube.com/watch?v=0jJBUdYOmRU
-% Configurations in /etc/cni/net.d on nodes
-% Kubelet monitors the directory, no need to restart it when installing CNI
 
 \subsubsection{Calico}
 
@@ -1138,7 +1130,6 @@ The tool should not be confused with the Cilium management CLI tool, also incide
 The operator is responsible for all management operations that should be handled once for the entire cluster, rather than once for each Node.
 This includes, for example, the registration of CRDs.
 
-% TODO: Move OSI layer to somewhere else
 Although default Kubernetes NetworkPolicies provides security on OSI layers L3 and L4, Cilium provides CRDs that also support L7 policies \cite{cilium-policy-language}.
 If L7 policies exist, traffic is directed to Envoy instance bundled into the agent Pod which filters traffic.
 Unlike on layers 3 and 4, policy violation does not result in dropped packet but an application protocol specific denied message.
@@ -1285,7 +1276,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
     Privileged containers & If containers are given privileges, malicious actor can breakout from the container and escalate the attack on cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
-    Writing to the host file system & TODO. & Do not allow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
+    Writing to the host file system & If allowed, malicious actor can try to tamper with the application or write executables to a disk. & Do not allow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
     Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
     There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
   \end{tabularx}
@@ -1307,7 +1298,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
     Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
-    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. For intra-Pod traffic, the only feasible solution is to limit the container permissions. (TODO: TLS traffic over loopback device? Can be switched off by attacker?) \\ \hline
+    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. These are often implemented with sidecars, which is not feasible in this scenario. For intra-Pod traffic containers would need to implement this as part of the containers. \\ \hline
   \end{tabularx}
 \end{minipage}
 \end{table}
@@ -1608,7 +1599,6 @@ Thus, re-introducing these characteristics to the containers is also part of the
 % class n1,n2,n3,n4 k8s;
 % class kube-system,app-ns,cluster-external cluster;
 
-% TODO: Create image with clear firewall locations and rules, not relying on IPtables
 \begin{figure}[h!]
   \centering
   \includegraphics[width=\linewidth]{files/iptables.png}
