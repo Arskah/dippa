@@ -380,7 +380,7 @@
 %% * Remember, the title should not be hyphenated!
 %% * A possible 'and' in the title should not be the last word in the line; it begins the next line.
 %% * Specify the title (and/or subtitle) again without the linebreak characters in the optional argument in box brackets. This is done because the title is part of the metadata in the pdf/a file, and the metadata cannot contain linebreaks.
-\thesistitle{Kubernetes inter-pod container isolation}
+\thesistitle{Kubernetes inter-Pod container isolation}
 % \thesistitle[Title of the thesis]{Title of\\ the thesis}
 %% Either remove or leave \thesissubtitle{} empty if you don't use it \thesissubtitle{A possible subtitle}
 % \thesissubtitle{}
@@ -733,7 +733,7 @@ Fortunately, Kubernetes can be extended with Service meshes such as \emph{Istio}
 Service meshes provide a dedicated infrastructure layer in the application that allows the addition of features such as observability, traffic management, and security without having to modify the application code \cite{istio}.
 Istio consists of two components: the data plane, which is composed of Envoy proxies that are deployed along with each service in the cluster, and the control plane.
 The proxies intercept all network traffic of the parent service and implement all the features such as mTLS and traffic management, while also sending logs and other telemetry data to the control plane.
-When the \texttt{istio-injection=enabled} label is applied to a Namespace, any new pods created in that Namespace will have a sidecar automatically injected into them.
+When the \texttt{istio-injection=enabled} label is applied to a Namespace, any new Pods created in that Namespace will have a sidecar automatically injected into them.
 
 \subsection{Containerization and Docker}
 
@@ -1816,21 +1816,21 @@ Because of the complexity and the amount of work required to implement co-schedu
 \section{Solution Evaluation} \label{sec:solution}
 
 This chapter demonstrates with experiments that the solutions presented in Chapters \ref{sec:pod-hardening} and \ref{sec:network-solution} effectively isolate containers within the same Pod from one another.
-The evaluation not only verifies that the solutions meet the requirements, but also examines its potential and any weaknesses that can be improved.
+The evaluation not only verifies that the solutions meet the requirements, but also examines their potential and any weaknesses that can be improved.
 
 The experiments in the first section involve assessing security admission by deploying privileged Pods to the cluster, as well as enforcing network isolation by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
 The \emph{malicious-sidecar} container (outlined in Appendix \ref{app:malicious-sidecar}) is added to the application containers as an extra sidecar and serves as an entry point for attacks in the experiments.
-This container has the necessary tools installed.
+The container has all the necessary tools installed.
 
 \lstinputlisting[
   language={yaml},
-  label={lst:attacker}
-  caption={Attacker container config concated to deployments}
+  label={lst:attacker},
+  caption={Configuration of the third, malicious container added to the deployments}
 ]{code/attacker.yml}
 
 Both network isolation solutions should only permit UDP traffic from the webserver container to the StatsD client.
 Any other successful request is deemed a failure in isolation.
-The second section examines the qualitative characteristics of the solutions, such as scalability and simplicity of deployment.
+The second section examines the qualitative characteristics of the solutions, such as any observed limitations in security or usability when the solutions are used in production environments.
 
 \subsection{Security Evaluation}
 
@@ -1840,11 +1840,13 @@ To verify this, the first step in the evaluation is to deploy a Pod that is over
 The Deployment used to test this is shown in Listing~\ref{lst:privileged-container}.
 The definition namespace metadata fields were altered to match the namespace being tested, for example, \texttt{app} in our case.
 
-When adding the Deployment to the test cluster, there is a warning, displayed in the Listing~\ref{lst:psa-warning}, indicating that the Pod Security Admissions function correctly in the test environment. This allows the evaluation to move forward to testing network isolation.
+When trying to deploy the Pod to the test cluster, a warning (illustrated in Listing~\ref{lst:psa-warning}) is displayed, which prevents deployment.
+This shows that Pod Security Admissions is functioning properly in the test environment, confirming the prerequisite, and allowing the evaluation to progress to testing network isolation.
 
 \lstinputlisting[
   language={bash},
-  label={lst:psa-warning}
+  label={lst:psa-warning},
+  caption={Warnings printed to terminal by Pod Security Admission}
 ]{code/psa-warning.sh}
 
 Experiments were conducted for both proposed solutions.
@@ -1877,13 +1879,11 @@ Similarly, the IPTables rules generated from MultiNetworkPolicies in the second 
 \subsubsection{Experiment 3: Access to other Pods is blocked}
 
 The third experiment verifies that neither of the network solutions interferes with NetworkPolicies applied outside the Pod network.
-The experiment environment uses a basic NetworkPolicy that blocks all outbound traffic and only permits inbound traffic to the main application.
+The experiment environment uses a basic NetworkPolicy that blocks all outbound traffic and only allows inbound traffic to the main application.
 Policies can be tested by trying to access, for example, \texttt{google.com} or the Kubernetes API server from any container in the Pod.
 From outside the Pod, only the main application port should be reachable.
 
 The two solutions both work as anticipated and do not conflict with CNI's Network Policies.
-
-\subsubsection{Results}
 
 \begin{table}[H]
   \sffamily
@@ -1908,23 +1908,26 @@ The above experiments verify that the proposed solutions can be used to implemen
 However, the solutions have a number of limitations and should only serve as a proof of concept.
 These limitations should be mitigated before using the solutions in production environments.
 
-The biggest limitation is that the solutions only function on a specific container runtimes, as demonstrated by the above experiments.
+The biggest limitation is that the solutions only function on specific container runtimes.
 Since the first solution has only been proven to function on the Docker runtime, it logically limits the potential places where it can be used.
-This also raises the question of whether network isolation should probably be implemented in container runtimes.
-Additionally, \texttt{ multi-network-policy-iptables} in the second solution only works with containerd and CRI-O as runtimes.
-It should also be noted that the project explicitly states that it is not stable yet.
+The limitation also raises the question whether container runtimes should implement network isolation of sidecars.
+Since the runtimes are responsible for creating the loopback device and they appear to have varying implementations of it, it may be impossible to create a tool at the orchestrator level that is not dependent on the runtime.
+Additionally, the documentation of \texttt{multi-network-policy-iptables} used in the second solution explicitly states that it only functions with containerd and CRI-O as runtimes and is not yet released as a stable version.
 
 From a security point of view, the primary drawbacks are associated with the IPTables policies and the injector daemon.
-The first solution relies on distinguishing containers based on process user identifiers, which means that the system is only secure if the attacker cannot deploy containers with specific user IDs.
-Therefore, an admission controller is necessary to validate the identifiers.
+The first solution relies on distinguishing containers based on process user identifiers, which means that the system is only secure if the adversary cannot deploy containers with specific user IDs.
+The current implementation does allow the adversary to deploy a container with arbitrary user identifier, which means that an adversary with permissions to create containers can bypass isolation.
+Therefore, an admission controller is necessary to limit the allowed identifiers in production.
 
 The injector daemon has the privileges to manage policies, so it should be regarded a vital part of the cluster infrastructure, similar to CNI operators.
 The current container has root privileges and access to the Node's container runtime socket, which could be exploited to compromise the entire Node.
 To prevent this, the daemon's privileges should be reduced to the bare minimum.
 CNI plugins with operators could be used as a model for this enhancement.
+Furthermore, since the deamon does not function as a controller, the daemon needs to execute after application Pods are created to inject the IPTables rules.
+As such, the solutions cannot handle normal container lifecycle events.
 
 In conclusion, the solutions are intricate and need to be further enhanced before they can be employed in the production environment.
-The ideal solution would address the issues mentioned above and make the system installation as straightforward as any CNI plugin.
+The ideal solution would address the security issues mentioned above and implement a functioning controller loop to support container lifecycle events.
 
 \clearpage
 
@@ -1945,7 +1948,7 @@ However, it is important to ensure that the selected container runtime does not 
 \subsection{Future of sidecars and service mesh}
 
 The release of Kubernetes version 1.28 in August 2023 brought with it the new "SidecarContainers" feature gate.
-This alpha-stage feature is designed to address the lifecycle and pod termination issues that are currently experienced with sidecar containers \cite{k8s-v1-28-changelog}.
+This alpha-stage feature is designed to address the lifecycle and Pod termination issues that are currently experienced with sidecar containers \cite{k8s-v1-28-changelog}.
 Although existing Kubernetes primitives are capable of adequately managing sidecars, they are not sufficient for certain use cases \cite{k8s-sidecar-kep}.
 For instance, service mesh sidecars must be running and ready before other containers to ensure that all traffic is routed through the mesh.
 Similarly, if the sidecar terminates before other containers during shutdown, traffic from other applications may be lost.
@@ -1955,7 +1958,7 @@ This can render the application unreachable, as is the case with service meshes,
 
 The introduction of sidecar containers as a new type of initContainer has made it easier to initiate and combine initContainers and sidecars in the startup sequence.
 However, the proposal explicitly states as a non-goal that it does not allow the enforcement of different security regulations for sidecars compared to other containers.
-Therefore, it does not appear that the lowest security boundary will change from pod to container in the near future.
+Therefore, it does not appear that the lowest security boundary will change from Pod to container in the near future.
 Nevertheless, the new distinction between sidecars and other containers could allow this development in the future.
 
 From a security standpoint, the safest option is to avoid sidecars altogether.
@@ -1985,7 +1988,7 @@ In fact, the first service mesh, Linkerd, used the per-host proxy model in its v
 \subsection{Conclusion}
 
 This thesis provided an overview on containers, Kubernetes networking, sidecar design pattern, and Zero Trust security architecture.
-It identified the security risks associated with sidecar containers in Kubernetes and showed how an attacker could exploit them.
+It identified the security risks associated with sidecar containers in Kubernetes and showed how an adversary could exploit them.
 For issues that could not be resolved with existing tools, the thesis proposed two proof-of-concept solutions for creating network isolation between the application and sidecar containers.
 Although following best practices in hardening Kubernetes clusters can help, the architecture of Pods in Kubernetes makes it difficult to isolate sidecars.
 The first proposed solution implements network isolation within the Pod's network namespace using IPTables, while the second solution creates a network that mimics the shared network namespace of sidecars.
