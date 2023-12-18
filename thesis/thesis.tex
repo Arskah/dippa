@@ -510,8 +510,9 @@
   The modular nature of microservice architecture has allowed the development of distributed system design patterns such as the sidecar pattern, in which peripheral tasks are separated from the application containers as their own distinct containers.
   The sidecar pattern is often used to implement observability, log, and improve security with service meshes.
 
-  This thesis investigates the security implications surrounding sidecar containers in Kubernetes container orchestration.
-  Focused on Kubernetes networking and Zero Trust security architecture, the research identifies inherent risks associated with sidecar containers that could be exploited by adversaries.
+  This thesis examines the security risks associated with sidecar containers in Kubernetes container orchestration.
+  It focuses on Kubernetes networking and Zero Trust security architecture to identify potential vulnerabilities that adversaries could exploit.
+  The research reveals that Kubernetes only offers built-in security measures on a Pod-level, which can leave sidecar containers exposed to attack.
 
   The thesis introduces two proof-of-concept solutions aimed at establishing network isolation between application and sidecar containers.
   The first solution utilizes IPTables to enforce isolation, while the second employs Multus to mimic shared network namespace between containers in distinct Pods.
@@ -536,23 +537,25 @@
 % \collaborativepartner{Yhtiön tai laitoksen nimi}
 \date{1.6.2023}
 
-\keywords{Kubernetes, säiliöinti, sivuvaunumalli, verkkoturvallisuus}
+\keywords{Kubernetes, konttiteknologia, sivuvaunumalli, verkkoturvallisuus}
 
 \begin{abstractpage}[finnish]
-  Konttien laaja käyttöönotto on ollut merkittävä tekijä siirryttäessä monoliittisista sovelluksista mikropalveluihin.
-  Mikropalveluarkkitehtuurin modulaarisuus on mahdollistanut hajautettujen järjestelmäsuunnittelumallien kehittämisen, kuten sivuvaunumallin, jossa sivutehtävät erotetaan sovelluskonteista omiksi erillisiksi konteiksi.
-  Sivuvaunumallia käytetään usein havainnointiin, lokien kirjaamiseen ja palveluverkkojen turvallisuuden parantamiseen.
+  Konttiteknologian yleistyminen on ollut merkittävä tekijä siirryttäessä monoliittisista sovelluksista mikropalveluihin.
+  Mikropalveluarkkitehtuurin modulaarisuus on mahdollistanut hajautettujen järjestelmäsuunnittelumallien, kuten sivuvaunumallin, kehittymisen.
+  Sivuvaunumallissa sovelluksesta erilliset sivutehtävät kuten havainnointi, lokien kirjoittaminen tai palveluverkkojen välityspalvelimet voidaan toteuttaa omina erillisinä kontteinaan pääsovelluksen rinnalla.
 
-  Tämä opinnäytetyö tutkii sivuvaunukonttien tietoturvavaikutuksia Kubernetes-konttiorkestraatiossa.
-  Kubernetes-verkostoinnin ja nollaluottamuksen tietoturvamallin keskittymisen myötä tutkimus tunnistaa sivuvaunukontteihin liittyviä perinnäisiä riskejä, joita hyökkääjät voisivat hyödyntää.
+  Tämä diplomityö tutkii turvallisuusriskejä, jotka liittyvät sivuvaunukontteihin Kubernetes-orkestraatiossa.
+  Työ keskittyy Kuberneteksen verkkototeutukseen ja nollaluottamuksen tietoturva-arkkitehtuuriin ja tutkii sivuvaunukontteihin liittyviä tietoturvariskejä, joita hyökkääjät voisivat hyödyntää.
+  Kubernetes tarjoaa valmiita tietoturvaominaisuuksia vain Pod-tasolla, mikä altistaa sivuvaunukontteja hyökkäyksille.
 
-  Opinnäytetyö esittelee kaksi konseptiin perustuvaa ratkaisua, joiden tarkoituksena on luoda verkkoeristys sovellus- ja sivuvaunukonttien välille.
-  Ensimmäinen ratkaisu käyttää IPTablesia eristyksen toteuttamiseen, kun taas toinen hyödyntää Multusia matkien jaetun verkkotilan luomista erillisissä kubeissa sijaitsevien konttien välille.
+  Työ esittelee kaksi alustavaa ratkaisua, joiden avulla voidaan eristää sovellus- ja sivuvaunukonttien verkot toisistaan.
+  Ensimmäinen ratkaisu perustuu IPTables-sääntöhin, kun taas toinen luo Multus-konttiverkkoliitännäisen avulla sivuvaunumallia imitoivan verkon kahden eristetyn kontin välille.
 
-  Vaikka verkkoeristyksen ratkaisut on esitetty, toteutuksen monimutkaisuus ja erikoistunut infrastruktuuritarve aiheuttavat haasteita, jotka voivat painaa enemmän kuin tällaisten arkkitehtonisten muutosten hyödyt.
-  Haasteiden vuoksi työ tutkii sivuvaunuttomien palveluverkkorakenteiden, kuten Ciliumin ja Istio Ambient Meshin, ansioita esimerkkinä sivuvaunuihin liittyvien riskien välttämisestä.
+  Vaikka molemmat toteutukset ratkaisevat ongelman, toteutusten monimutkaisuus ja tarve erikoistuneelle intrastruktuurille voi merkittävästi hankaloittaa ratkaisujen käyttöönottoa ja hyödyllisyyttä tuotantoympäristöissä.
+  Haasteiden vuoksi työ tutkii myös sivuvaunuttomia palveluverkkoja, kuten Cilium ja Istio Ambient Mesh, esimerkkinä sivuvaunuihin liittyvien riskien välttämisestä.
 
-  Kaiken kaikkiaan vaikka työ esittää toteuttamiskelpoiset konseptiratkaisut sovellus- ja sivuvaunukonttien verkkoeristykseen, se kannattaa varovaista lähestymistapaa ja korostaa vakiintuneiden ja hyvin testattujen komponenttien suosimista räätälöityjen toteutusten sijaan, jotka vaativat aktiivista ylläpitoa.
+  Kaiken kaikkiaan vaikka työssä esitellään toimivat ratkaisut sivuvaunukonttien verkkoeristykseen,
+  on välttämätöntä korostaa vakiintuneiden ja hyvin testattujen komponenttien suosimista räätälöityjen ja aktiivista ylläpitoa vaativien toteutusten sijaan.
 \end{abstractpage}
 
 %% Force new page so that the Swedish abstract starts from a new page
