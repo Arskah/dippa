@@ -1697,7 +1697,7 @@ The second section examines the qualitative characteristics of the solutions, su
 
 \subsection{Security Evaluation}
 
-The experiments in this section verify that network isolation works correctly in solutions.
+The experiments in this section verify that network isolation works correctly in both solutions.
 As a prerequisite for the experiments, the built-in Pod Security Admission rules should be enabled for the environments.
 To verify this, the first step in the evaluation is to deploy a Pod that is overly permissive into the cluster.
 The Deployment used to test this is shown in Listing~\ref{lst:privileged-container}.
@@ -1775,7 +1775,11 @@ The biggest limitation is that the solutions only function on specific container
 Since the first solution has only been proven to function on the Docker runtime, it logically limits the potential places where it can be used.
 The limitation also raises the question of whether container runtimes should implement network isolation of sidecars.
 Since the runtimes are responsible for creating the loopback device and they appear to have varying implementations of it, it may be impossible to create a tool at the orchestrator level that is not dependent on the runtime.
-Additionally, the documentation of \emph{multi-network-policy-iptables} used in the second solution explicitly states that it only functions with containerd and CRI-O as runtimes and is not yet released as a stable version.
+
+Additionally, \emph{multi-network-policy-iptables} does not function with Docker runtime.
+The issue for this is vaguely documented in the project's GitHub issues \cite{multi-network-policy-iptables-bug}, but the issue was closed when Kubernetes dropped the explicit support for \emph{dockershim} in version 1.24.
+Based on the experiments, the issue still exists on \emph{cri-dockerd} setups.
+Furthermore, the documentation of \emph{multi-network-policy-iptables} explicitly states that it has not yet been released as a stable version.
 
 From a security point of view, the primary drawbacks are associated with the IPTables policies and the injector daemon.
 The first solution relies on distinguishing containers based on process user identifiers, which means that the system is only secure if the adversary cannot deploy containers with specific user IDs.
