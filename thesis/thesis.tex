@@ -399,7 +399,7 @@
 \advisor{M.Sc.\ (Tech.)\ José\ Luis\ Martin\ Navarro}
 \advisor{M.Sc.\ (Tech.)\ Jacopo\ Bufalino}
 
-%% If you do your thesis work in a company of other institute, give the name of the company or instution here. Otherwise, leave the macro empty, comment it out, or remove it. This will remove this field from the abstract page.
+%% If you do your thesis work in a company or another institute, give the name of the company or institution here. Otherwise, leave the macro empty, comment it out, or remove it. This will remove this field from the abstract page.
 % \collaborativepartner{Company or institute name}
 
 %% Aaltologo: syntax:
@@ -567,8 +567,8 @@
 %% This section is optional. Remove it if you do not want a preface.
 \mysection{Preface}
 
-I want to thank my advisors Jacopo Bufalino and José Luis Martin Navarro for their valuable advice and guidance for this thesis.
-I also want to thank my supervisor Mario Di Francesco for all his professional comments and support during the thesis process and earlier in my Master's studies.
+I want to thank my advisors, Jacopo Bufalino and José Luis Martin Navarro, for their valuable advice and guidance for this thesis.
+I also want to thank my supervisor Mario Di Francesco for all his professional comments and support during the thesis process and earlier in my master's studies.
 
 I would also like to thank all my friends, Radiodiodi and Sähköinsinöörikilta for all the memorable moments during my (many) years of studies.
 Last but not least, I want to thank my family for their support and encouragement during my studies and this thesis.
@@ -653,7 +653,7 @@ Similarly to how design patterns emerged from the birth of object-oriented softw
 The most common of these patterns is the sidecar pattern, in which peripheral tasks like logging and observability are split away as their own containers from the main application container.
 The pattern allows easier installation of these nonfunctional features, while also keeping them away from the main container's source code.
 Basically, the sidecar pattern is an extension of the modularity of the microservices architecture inside the microservice itself.
-The benefits of the sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services and providing a failure containment boundary, for example.
+The benefits of the sidecar pattern are similar to microservices, allowing better resource allocation, re-use of components in other services, and providing a failure containment boundary, for example.
 In Kubernetes, the basic unit of deployment is called a Pod, which may include one or more co-scheduled containers.
 The Pod is analogous to a microservice, while it contains one main container and all its sidecars bundled into one deployable unit.
 
@@ -808,7 +808,7 @@ This automation provides resilience and efficient resource utilization for workl
 \textbf{Pods} are the basic atomic scheduling unit in Kubernetes.
 Pods consist of one or more tightly coupled containers with shared storage volume and networking \cite{k8s-docs-pods}.
 Containers in a Pod are always co-located and co-scheduled and run in a shared context, i.e. a set of Linux namespaces.
-The network, UTS and IPC namespaces are shared by default, and the process namespace can be shared with \lstinline{v1.PodSpec.shareProcessNamespace}.
+The network, UTS, and IPC namespaces are shared by default, and the process namespace can be shared with \lstinline{v1.PodSpec.shareProcessNamespace}.
 The common network namespace means that containers in a Pod can communicate with each other via localhost, have a common IP address, and cannot reuse the same port numbers.
 In addition to the normal application container, Pods can include special \lstinline{initContainers} that are run only on Pod startup.
 These Pods are used to modify the Pod context before the actual workload starts.
@@ -842,7 +842,7 @@ The field is designed as a nested functionality; each \textbf{ServiceType} level
 
 \textbf{Namespaces} allow logical grouping of resources under a single name.
 New Kubernetes cluster starts with four namespaces: \emph{default}, \emph{kube-node-lease}, \emph{kube-public} and \emph{kube-system}.
-Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \emph{default} if not explicitly defined.
+Namespaced objects like Deployments, Services, and Pods are always deployed under a namespace which is \emph{default} if not explicitly defined.
 \emph{kube-system} is the namespace for all objects created by the Kubernetes system which is discussed in more detail in the next Chapter~\ref{control-plane}.
 Namespaces also provide a scope for naming; names of resources must be unique within a namespace, but not across namespaces.
 Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example, in multitenancy setups.
@@ -901,7 +901,7 @@ All the built-in controllers are compiled into a single binary, even though the 
 
 Each Node also has components that are essential for Kubernetes to work properly.
 \textbf{Kubelet} is an agent that ensures that containers are running in a Pod \cite{k8s-docs-control-plane}.
-It receives a set of Pod specifications from the API server and ensures that containers are running on the Node, follow the Pod specifications and are healthy.
+It receives a set of Pod specifications from the API server and ensures that containers are running on the Node, follow the Pod specifications, and are healthy.
 \textbf{Kubelet} only manages containers created by Kubernetes.
 \textbf{Kube-proxy} maintains network rules on Nodes.
 Part of the Service objects' networking is implemented by \textbf{kube-proxy}; the proxy writes IPTables rules that route traffic \cite{cilium-proxy-free}.
@@ -1012,12 +1012,12 @@ The second policy allows traffic to the default HTTP port, and the third policy 
 ]{code/example-network-policy.yml}
 
 The NetworkPolicy specification consists of a \lstinline{podSelector} that specifies Pods that are subject to the policy and \lstinline{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
-Each rule includes \lstinline{to} or \lstinline{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \lstinline{ports} field for explicitly specifying which ports and protocols are part of the rule.
+Each rule includes \lstinline{to} or \lstinline{from} field for selecting Pod, Namespace, or IP address block in CIDR notation on the other side of the connection, and \lstinline{ports} field for explicitly specifying which ports and protocols are part of the rule.
 The policies are additive; when multiple rules are defined for a Pod, traffic is restricted to what is allowed by the union of the policies.
 Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
 Although all CNI plugins meet the above specifications, they may differ in architecture significantly.
-The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
+The plugins can be classified based on which OSI model network layers they operate on, which Linux kernel features they use for packet filtering, and which encapsulation and routing model they support for inter-host and intra-host communication between Pods.
 In this thesis, we focus on three different CNI plugins: Calico, Cilium, and Multus.
 
 \subsubsection{Calico}
@@ -1042,7 +1042,7 @@ Compared to the built-in policy, the Calico policy includes features such as pol
 The policy can also match other Calico CRDs such as \textbf{HostEndpoints} and \textbf{NetworkSets}, which allows implementing rules on host interfaces and non-Kubernetes resources.
 If Calico is installed along the Istio service mesh, the Calico Network Policy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \textbf{GlobalNetworkPolicy} CRD.
 
-% \jb{Now that Calico uses eBPF there is little difference between them and both can reduce the amount of sidecars to one per node.}
+% \jb{Now that Calico uses eBPF there is little difference between them and both can reduce the number of sidecars to one per node.}
 
 \subsubsection{Cilium}
 
@@ -1101,12 +1101,12 @@ The \lstinline{clusterNetwork} specifies the main network of the cluster, which 
 The \lstinline{defaultNetworks} is an optional array of networks that should be added for any Pods by default.
 The values can be names of the \textbf{NetworkAttachmentDefinition} objects or paths to the CNI plugin's JSON configuration files.
 Optionally, the \lstinline{delegates} attribute can be used; it supports a similar format of values.
-In this scenario, the first element of the array functions as \lstinline{clusterNetwork} and the rest are inferred as \lstinline{defaultNetworks}.
+In this scenario, the first element of the array functions as \lstinline{clusterNetwork}, and the rest are inferred as \lstinline{defaultNetworks}.
 
 Attaching additional interfaces to workloads is most often configured by adding a special annotations field \lstinline{k8s.v1.cni.cncf.io/networks} to workload resource definitions.
 In the simplest configuration, the field takes a comma-separated list of the \textbf{NetworkAttachmentDefinition} names as input.
 The network interface identifiers can be modified by providing the attachment input in \lstinline{name@interface-identifier} format.
-Otherwise, Multus names the interfaces \emph{net0}, \emph{net1} and so on.
+Otherwise, Multus names the interfaces \emph{net0}, \emph{net1}, and so on.
 If extra configuration for the networks is needed, the annotation also supports the JSON array format.
 
 \subsubsection{Extended Berkeley Packet Filter}
@@ -1141,7 +1141,7 @@ Since the packets are not parsed into the network stack, the programs have to wo
 The program's return value determines how the packet should be processed further.
 With \lstinline{XDP_DROP} and \lstinline{XDP_PASS} return values, the packet can be dropped or passed further to the networking stack, respectively.
 The packet can also be bounced back to the same NIC on which it arrived with \lstinline{XDP_TX}, usually after modifying the contents of the packet.
-\lstinline{XDP_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
+\lstinline{XDP_REDIRECT} is used for redirecting the packet to a different NIC, CPU, or even to another socket.
 
 TC programs are executed when both incoming and outgoing packets reach the kernel traffic control function within the Linux network stack \cite{vieira2020fast}.
 The ingress hook runs after the packet is parsed to \emph{skbuff} but before most of the network stack.
@@ -1225,14 +1225,14 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
     Sidecar can use the main container's NetworkPolicy to access \emph{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
-    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in a cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. These are often implemented with sidecars, which is not feasible in this scenario. For intra-Pod traffic, containers would need to implement this as part of the containers. \\ \hline
+    Sidecar sniffs the main application traffic & Pod-to-Pod traffic in a cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard, and mutual TLS. These are often implemented with sidecars, which is not feasible in this scenario. For intra-Pod traffic, containers would need to implement this as part of the containers. \\ \hline
   \end{tabularx}
 \end{minipage}
 \end{table}
 
 One of the worst-case scenarios is that the attacker has access to a privileged sidecar container.
 A privileged container has all the capabilities of the host machine, so basically a root user inside a privileged container means that the attacker has root privileges on the host Node.
-Furthermore, the container lacks restrictions from Seccomp, AppArmor and Linux capabilities.
+Furthermore, the container lacks restrictions from Seccomp, AppArmor, and Linux capabilities.
 The Listing~\ref{lst:privileged-container} describes a Deployment with a privileged container with extremely insecure specifications.
 
 \lstinputlisting[
@@ -1258,9 +1258,9 @@ In addition, the attacker can try to breach or DoS any control plane component o
 Furthermore, any unpatched vulnerability in the underlying kernel, container engine or Kubernetes can exploited.
 
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
-The image also installs \lstinline{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default Minikube installation.
+The image also installs \lstinline{kubectl} and sets environment variables so that the CLI tool works out of the box with the default Minikube installation.
 Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}.
-If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} to enumerate attack options even further.
+If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges, and Container Escapes (DEEPCE) \cite{deepce} to enumerate attack options even further.
 
 \clearpage
 
@@ -1294,7 +1294,7 @@ The complete setup is hosted on GitHub (https://github.com/Arskah/k8s-sidecar-se
 Both Calico and Cilium are used as CNI plugins since the selection of CNI plugins has minor implications on the actual networking solution. %TODO:
 The implications are discussed in detail in Chapter~\ref{sec:network-solution}.
 
-A simple Node.js webserver with StatsD sidecar is used as the application workload.
+A simple Node.js webserver with a StatsD sidecar is used as the application workload.
 The source code can be found in Appendix~\ref{app:node-webapp}.
 The webserver serves "Hello world" on port \lstinline{8888} and writes response times to the StatsD sidecar via the loopback device on port \lstinline{8125}, which is the default for StatsD.
 
@@ -1341,7 +1341,7 @@ Therefore, the network modifications must be implemented outside the Pod's conte
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
-    \lstinline{hostPID}, \lstinline{hostIPC}, \lstinline{hostNetwork} & Controls whether the container uses the host's PID, IPC and network namespace. & \lstinline{false} \\ \hline
+    \lstinline{hostPID}, \lstinline{hostIPC}, \lstinline{hostNetwork} & Controls whether the container uses the host's PID, IPC, and network namespace. & \lstinline{false} \\ \hline
     \lstinline{privileged} & Controls whether Pod can run privileged containers. & \lstinline{false} \\ \hline
     \lstinline{capabilities.add} / \lstinline{drop} & Defines Linux capabilities for the container. & Add \lstinline{NET_BIND_SERVICE} allowed, drop \lstinline{ALL} required \\ \hline
     \lstinline{volumes[*]} & All volume types are not allowed. For example, hostPath, which maps host directories, is not allowed. & \lstinline{configMap}, \lstinline{csi}, \lstinline{downwardAPI}, \lstinline{emptyDir}, \lstinline{ephemeral}, \lstinline{persistentVolumeClaim}, \lstinline{projected}, \lstinline{secret} \\ \hline
@@ -1365,9 +1365,9 @@ The \lstinline{restricted} Security Standard hardens the Pod against most of the
 However, it still does not enforce specific resource limits and allows automatic mounting of Service Accounts for the Pod containers.
 
 Adding resource limits to containers is straightforward: just add values to both \lstinline{resources.limits.cpu} and \lstinline{resources.limits.memory} fields for all of the containers, similarly to Listing~\ref{lst:service-account-mount}.
-The CPU usage is measured in CPU units and can also be expressed in millicpus, ie. both "1000m" and integer value of 1 are equivalent to 1 physical or virtual core \cite{k8s-docs-resources}.
+The CPU usage is measured in CPU units and can also be expressed in millicpus, ie. both an integer value of 1 and "1000m" are equivalent to 1 physical or virtual core \cite{k8s-docs-resources}.
 For memory, the base unit is bytes, but it also supports quantity suffixes such as "M", "Mi", and "Gi" for megabytes, mebibytes, and gigibytes, respectively.
-The resource limits are registered to the container's cgroup by the Kubelet.
+The resource limits are registered to the container's cgroups by the Kubelet.
 The limits are hard, which means that if a container exceeds its CPU limit, the execution is blocked until more CPU capacity is available.
 Exceeding the memory limit causes termination with an out-of-memory (OOM) error.
 
@@ -1424,7 +1424,7 @@ Because of the effort needed to include production-ready webhooks in the demonst
 
 \section{Network Isolation} \label{sec:network-solution}
 
-Implementing a zero-trust network architecture in Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
+Implementing a zero-trust network architecture in a Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
 The root cause for this is that the lowest level of networking abstraction in Kubernetes is the Pod, and that by definition, all containers in a Pod share network namespace.
 Thus, all traffic outside the Pod, from any of the containers, passes through the same \emph{eth0} NIC and shares a common source IP address.
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
