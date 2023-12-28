@@ -360,7 +360,7 @@ Kubernetes offers limited security features at the container level.
 Although containers have their distinct security context definitions, all security-related policies and features are defined for Pods or Namespaces.
 This means that sidecars, even if not required, inherit any capability and privileges from the main application.
 Thus, any privileged workload, even in another container in the Pod, risks privilege escalation from the sidecar.
-Additionally, Kubernetes' firewalling solution, Network Policies, is applied to the entire Pod instead of individual containers.
+Additionally, Kubernetes' firewalling solution, NetworkPolicies, is applied to the entire Pod instead of individual containers.
 This means that there are no built-in mechanisms in Kubernetes for protecting and isolating containers running in the same Pod from one another, which goes against the principle of least privilege.
 Consequently, any exploitable security issue in a sidecar container could allow the attacker to move laterally to other containers in the Pod and escalate privileges.
 This makes the sidecar an ideal starting point for attacks.
@@ -691,17 +691,17 @@ The end-to-end reachability between different Node \lstinline{PodCIDR}s is estab
 Since Kubernetes does not provide networking between Pods, it has no capabilities to enforce network isolation between workloads.
 Thus, another key feature of some CNI plugins is the enforcement of network traffic rules.
 For this purpose, Kubernetes provides a common built-in resource called \textbf{NetworkPolicy} for the CNI plugins to consume.
-The Listing~\ref{lst:example-np} is an example of network policies for a web application front-end.
+The Listing~\ref{lst:example-np} is an example of NetworkPolicies for a web application front-end.
 The first policy functions as a default rule that denies all implicit egress and ingress traffic.
 The second policy allows traffic to the default HTTP port, and the third policy allows the front-end application to send traffic to any Pod in the \emph{backend} namespace.
 
 \lstinputlisting[
-  caption={Example NetworkPolicies for a frontend web application},
+  caption={Example policies for a frontend web application},
   label={lst:example-np},
   language=yaml
 ]{code/example-network-policy.yml}
 
-The NetworkPolicy specification consists of a \lstinline{podSelector} that specifies Pods that are subject to the policy and \lstinline{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
+The \textbf{NetworkPolicy} specification consists of a \lstinline{podSelector} that specifies Pods that are subject to the policy and \lstinline{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
 Each rule includes \lstinline{to} or \lstinline{from} field for selecting Pod, Namespace, or IP address block in CIDR notation on the other side of the connection, and \lstinline{ports} field for explicitly specifying which ports and protocols are part of the rule.
 The policies are additive; when multiple rules are defined for a Pod, traffic is restricted to what is allowed by the union of the policies.
 Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
@@ -730,7 +730,7 @@ Calico supports Kubernetes NetworkPolicies as well as its own namespaced \lstinl
 Both of the policies work on OSI layers L3 (identity, e.g. IP address) and L4 (ports).
 Compared to the built-in policy, the Calico policy includes features such as policy ordering, log action in rules, and more flexible matching criteria (e.g., matching on ServiceAccounts) \cite{calico-network-policy}.
 The policy can also match other Calico CRDs such as \textbf{HostEndpoints} and \textbf{NetworkSets}, which allows implementing rules on host interfaces and non-Kubernetes resources.
-If Calico is installed along the Istio service mesh, the Calico Network Policy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \textbf{GlobalNetworkPolicy} CRD.
+If Calico is installed along the Istio service mesh, the Calico NetworkPolicy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \textbf{GlobalNetworkPolicy} CRD.
 
 % \jb{Now that Calico uses eBPF there is little difference between them and both can reduce the number of sidecars to one per node.}
 
@@ -886,7 +886,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
     Privileged containers & If containers are given privileges, malicious actors can break out from the container and escalate the attack on the cluster. & Use \lstinline{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
     Writing to the host file system & If allowed, malicious actors can try to tamper with the application or write executables to a disk. & Do not allow unnecessary mounts. Use \lstinline{readOnlyRootFilesystem: true} whenever possible. \\ \hline
-    Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\lstinline{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \lstinline{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
+    Permissive RBAC on ServiceAccounts & Containers in a Pod share ServiceAccounts\footnote{\lstinline{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the ServiceAccount to all containers. & Disable automatic mounting of ServiceAccounts\footnote{Set \lstinline{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
     There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \lstinline{spec.containers[*].resources}}. \\ \hline
   \end{tabularx}
   \end{minipage}
@@ -934,7 +934,7 @@ The attacker can use this technique to find any credentials stored on the host m
 Important credentials include for example \lstinline{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \lstinline{/etc/shadows}.
 
 The biggest risks considering a non-privileged container with all the isolations intact relate to lateral movement and the discovery of secrets.
-Kubernetes automatically mounts each container in a Pod with a Service Account token, which can be used to attack the control plane if it is over-permissive.
+Kubernetes automatically mounts each container in a Pod with a ServiceAccount token, which can be used to attack the control plane if it is over-permissive.
 Since the cluster has no NetworkPolicies in place by default, any misconfigured control plane component, like Kubelet or API server with \lstinline{anonymous-auth} set to true, could be exploited.
 In addition, the attacker can try to breach or DoS any control plane component or workload in the cluster, or other connected services like those in a cloud-hosted system.
 Furthermore, any unpatched vulnerability in the underlying kernel, container engine or Kubernetes can exploited.
@@ -1044,7 +1044,7 @@ Therefore, the network modifications must be implemented outside the Pod's conte
 \subsection{Enforcing other best practices}
 
 The \lstinline{restricted} Security Standard hardens the Pod against most of the identified security threats.
-However, it still does not enforce specific resource limits and allows automatic mounting of Service Accounts for the Pod containers.
+However, it still does not enforce specific resource limits and allows automatic mounting of ServiceAccounts for the Pod containers.
 
 Adding resource limits to containers is straightforward: just add values to both \lstinline{resources.limits.cpu} and \lstinline{resources.limits.memory} fields for all of the containers, similarly to Listing~\ref{lst:service-account-mount}.
 The CPU usage is measured in CPU units and can also be expressed in millicpus, ie. both an integer value of 1 and "1000m" are equivalent to 1 physical or virtual core \cite{k8s-docs-resources}.
@@ -1053,11 +1053,11 @@ The resource limits are registered to the container's cgroups by the Kubelet.
 The limits are hard, which means that if a container exceeds its CPU limit, the execution is blocked until more CPU capacity is available.
 Exceeding the memory limit causes termination with an out-of-memory (OOM) error.
 
-\subsubsection{Manual service account mounting}
+\subsubsection{Manual ServiceAccount mounting}
 
-By default, the Service Account tokens are mounted in the \lstinline{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container.
-This feature can be disabled by setting \lstinline{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token in some other way.
-Since volume mounts are defined per container and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
+By default, the ServiceAccount tokens are mounted in the \lstinline{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container.
+This feature can be disabled by setting \lstinline{automountServiceAccountToken: false}, but then any container that actually uses the ServiceAccount must receive the token in some other way.
+Since volume mounts are defined per container and ServiceAccount tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
 
 \lstinputlisting[
   caption={ServiceAccount with permissions for fetching Pod resources},
@@ -1065,8 +1065,8 @@ Since volume mounts are defined per container and service account tokens can be 
   language={yaml}
 ]{code/SA.yml}
 
-Listing~\ref{lst:service-account} shows how to create a Service Account token with permission to read the status of Pods in the cluster.
-While Role, RoleBinding, and ServiceAccount resources are used to create and define RBAC rules for the Service Account, the Secret resource creates a similar authorization token as Pod with auto-mounting of service account tokens would create and mount on the containers.
+Listing~\ref{lst:service-account} shows how to create a ServiceAccount token with permission to read the status of Pods in the cluster.
+While Role, RoleBinding, and ServiceAccount resources are used to create and define RBAC rules for the ServiceAccount, the Secret resource creates a similar authorization token as Pod with auto-mounting of ServiceAccount tokens would create and mount on the containers.
 When the token created by the Secret resource is mounted to the same path as the automatic mounting, as in Listing~\ref{lst:service-account-mount}, the token is only mounted to the container that needs it.
 With this approach, the account tokens are only mounted into containers that actually need them, and the tokens cannot be used for privilege escalation from other containers of the Pod.
 
@@ -1079,7 +1079,7 @@ With this approach, the account tokens are only mounted into containers that act
 \subsubsection{Enforcing the fields}
 
 Kubernetes' Admission controller is the go-to tool for preventing undesired configurations from entering the cluster.
-Unfortunately, the existing built-in hooks do not provide the option to enforce resource limits or manual Service Account mounting.
+Unfortunately, the existing built-in hooks do not provide the option to enforce resource limits or manual ServiceAccount mounting.
 As there is no existing community solution, a custom-made ValidatingAdmissionWebhook needs to be created.
 
 The GitHub development setup includes an example admission controller based on Slack's \emph{simple-kubernetes-webhook} \cite{simple-kubernetes-webhook}.
@@ -1093,7 +1093,7 @@ The function can be trivially extended to allow CPU and memory values only in a 
   language={Golang}
 ]{code/resourceValidator.go}
 
-The validator for automatic mounting of Service Accounts could be implemented similarly.
+The validator for automatic mounting of ServiceAccounts could be implemented similarly.
 Instead of verifying resource limits, the function should verify that \lstinline{PodSpec.AutomountServiceAccountToken} is set to false.
 
 Custom Admission controller webhooks require a Deployment and a Service resource, as well as TLS certificates stored as a Secret resource.
@@ -1106,7 +1106,7 @@ Because of the effort needed to include production-ready webhooks in the demonst
 
 \section{Network Isolation} \label{sec:network-solution}
 
-Implementing a zero-trust network architecture in a Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
+Implementing a zero-trust network architecture in a Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and NetworkPolicies.
 The root cause for this is that the lowest level of networking abstraction in Kubernetes is the Pod and that by definition, all containers in a Pod share network namespace.
 Thus, all traffic outside the Pod, from any of the containers, passes through the same \emph{eth0} NIC and shares a common source IP address.
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or the main container.
@@ -1140,7 +1140,7 @@ The ingress and egress rules in the first scenario are more easily enforced with
 The policies allow cluster and external traffic to the main application port \lstinline{8888} while denying all other traffic into and out of the Pod.
 
 \lstinputlisting[
-  caption={Network Policy handling traffic between Pod and external components},
+  caption={NetworkPolicy handling traffic between Pod and external components},
   label={lst:network-policy},
   language={yaml}
 ]{code/zero-trust-policy.yml}
@@ -1198,7 +1198,7 @@ Due to the above reasons, the solution only relies on IPTables rules for packet 
 The commands for creating the IPTables rules could be applied to the Pod with an initContainer or postStart lifecycle handler.
 However, the commands require root user permissions with \lstinline{NET_ADMIN} and \lstinline{NET_RAW} capabilities and would require changing Pod's security admission level to privileged.
 Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example, by using a controller in an operator pattern.
-The same capabilities are paramount to any CNI plugin controllers that enforce Network Policies using IPTables or eBPF.
+The same capabilities are paramount to any CNI plugin controllers that enforce NetworkPolicies using IPTables or eBPF.
 
 For demonstration purposes, a custom container is used and installed with IPTables and \lstinline{crictl} CLI.
 The container uses \lstinline{crictl} to find the PID of a container in the Pod and uses \lstinline{nsenter} to apply the IPTables rules inside the container's network namespace.
@@ -1225,7 +1225,7 @@ Additionally, DaemonSet requires extensive privileges: the \lstinline{crictl} th
 \end{figure}
 
 The network architecture for the solution, where containers are deployed in separate Pods, is shown in Figure~\ref{fig:multi-pod-net-solution}.
-The idea behind this approach is to utilize custom resources to regulate traffic between the containers, similar to Network Policies.
+The idea behind this approach is to utilize custom resources to regulate traffic between the containers, similar to NetworkPolicies.
 As containers are no longer considered sidecars, the solution must establish communication using the \lstinline{localhost} address.
 
 Although it is possible to use the default network created by the CNI plugin for sidecar traffic, the proposed solution creates a new isolated network for traffic with Multus.
@@ -1234,7 +1234,7 @@ The isolation allows the use of a separate IP address pool for the traffic, simp
 \subsubsection{Creating an isolated network for sidecar traffic}
 
 It is completely possible to use the default Pod network created by the CNI plugin for traffic between sidecars.
-With this setup, the network rules are simply Network Policies on top of the policy that implicitly denies all other traffic.
+With this setup, the network rules are simply NetworkPolicies on top of the policy that implicitly denies all other traffic.
 
 It is also possible to build new network interfaces for sidecar traffic with Multus.
 
@@ -1370,7 +1370,7 @@ The experiment environment uses a basic NetworkPolicy that blocks all outbound t
 Policies can be tested by trying to access, for example, \lstinline{google.com} or the Kubernetes API server from any container in the Pod.
 From outside the Pod, only the main application port should be reachable.
 
-The two solutions both work as anticipated and do not conflict with CNI's Network Policies.
+The two solutions both work as anticipated and do not conflict with CNI's NetworkPolicies.
 
 \begin{table}[H]
   \sffamily
