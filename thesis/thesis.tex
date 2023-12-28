@@ -329,7 +329,7 @@
     ndkeywordstyle=\color{blue},
     numberstyle=\tiny\color{gray},
     stringstyle=\color{codered},
-    basicstyle=\footnotesize,
+    basicstyle=\ttfamily\footnotesize,
     breakatwhitespace=false,
     breaklines=true,
     captionpos=b,
@@ -721,7 +721,7 @@ Fortunately, Kubernetes can be extended with Service meshes such as \emph{Istio}
 Service meshes provide a dedicated infrastructure layer in the application that allows the addition of features such as observability, traffic management, and security without having to modify the application code \cite{istio}.
 Istio consists of two components: the data plane, which is composed of Envoy proxies that are deployed along with each service in the cluster, and the control plane.
 The proxies intercept all network traffic of the parent service and implement all the features such as mTLS and traffic management, while also sending logs and other telemetry data to the control plane.
-When the \texttt{istio-injection=enabled} label is applied to a Namespace, any new Pods created in that Namespace will have a sidecar automatically injected into them.
+When the \lstinline{istio-injection=enabled} label is applied to a Namespace, any new Pods created in that Namespace will have a sidecar automatically injected into them.
 
 \subsection{Containerization and Docker}
 
@@ -749,18 +749,18 @@ However, in this thesis, we focus only on the Linux implementation.
 The Linux containers technology implements container isolation and containment using a Linux kernel feature called namespaces \cite{lin2018measurement}.
 Namespaces \cite{manpages-namespace} is a construct that wraps a global system resource in an abstraction that makes it appear to the processes in the namespace that they have their own isolated instance of the global resource.
 There are a total of eight namespaces: i) \emph{Cgroup} which is used for resource management, ii) \emph{Inter-process communication} (IPC) that isolates POSIX message queues, etc., iii) \emph{Network} which isolates network devices, stack ports, etc., iv) \emph{Mount} for file system isolation, v) \emph{Process ID} (PID), vi) \emph{Time}, vii) \emph{User} for isolating user and group identifiers, and viii) \emph{UTS} which isolates hostnames and NIS domain names.
-For example, the \emph{network} namespace provides each container with its own loopback device and even \texttt{iptables} rules.
+For example, the \emph{network} namespace provides each container with its own loopback device and even IPTables rules.
 In another example, \emph{mount} namespace ensures that the container has no visibility or access to the host's or other container's file system.
 Compared to other namespaces that concern the isolation of kernel data, \emph{cgroups} focuses on limiting available system resources per namespace \cite{lin2018measurement}.
 Each namespace can be configured with its own limits on CPU and memory usage and available devices.
-Using Docker as an example, setting \texttt{--cpu}, \texttt{--memory} and \texttt{--devices} options will limit available resources for the container.
+Using Docker as an example, setting \lstinline{--cpu}, \lstinline{--memory} and \lstinline{--devices} options will limit available resources for the container.
 
 Since all containers and the host machine run on the same kernel, any container that manages to break out from isolation may compromise other containers, the host, and the whole kernel.
 To combat this container breakout, several security mechanisms are adopted from the Linux kernel to restrict the capabilities of containers \cite{lin2018measurement}.
 The mechanisms include Discretionary Access Control (DAC) mechanisms like Capability \cite{manpages-capabilities} and Secure computing mode (Seccomp) \cite{manpages-seccomp}, and Mandatory Access Control (MAC) mechanisms such as Security-Enhanced Linux (SELinux) and AppArmor \cite{apparmor}.
 With Capability, the superuser (i.e. the root user) privilege is divided into distinct units, each of which represents permission to process some specific kernel resources.
 The feature turns the binary "root/non-root" security mechanism into a fine-grained access control system, which makes it easier to follow the principle of least privilege.
-For example, processes like web servers that simply need to bind on an Internet domain privileged port (numbers below 1024) do not need to run as root; they can be granted with \texttt{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}.
+For example, processes like web servers that simply need to bind on an Internet domain privileged port (numbers below 1024) do not need to run as root; they can be granted with \lstinline{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}.
 The Seccomp mechanism constrains which system calls a process can invoke.
 The available system calls are defined for a container through the Seccomp profile which is defined as a JSON file.
 The default Docker Seccomp profile \cite{docker-default-seccomp} includes more than 300 system calls.
@@ -785,7 +785,7 @@ By exposing the API outside the host machine, the architecture enables remote co
 Remote communication with the API should be carried out over TLS for security reasons.
 
 Docker image is a read-only template with instructions for creating a Docker container \cite{docker-overview}.
-Images are often based on another image, such as OS images \texttt{ubuntu} and \texttt{alpine}, with some additional customizations, such as the installation of web server binaries.
+Images are often based on another image, such as OS images \textbf{ubuntu} and \textbf{alpine}, with some additional customizations, such as the installation of web server binaries.
 Customizations are added to the image as a series of data layers so that each new command creates a new layer.
 This process makes image distribution more efficient since only the changes between layers must be distributed \cite{bui2015analysis}.
 Layering is achieved with a special file system inspired by UnionFS that allows files and directories in different file systems to be combined into a single consistent file system.
@@ -807,11 +807,11 @@ This automation provides resilience and efficient resource utilization for workl
 \textbf{Pods} are the basic atomic scheduling unit in Kubernetes.
 Pods consist of one or more tightly coupled containers with shared storage volume and networking \cite{k8s-docs-pods}.
 Containers in a Pod are always co-located and co-scheduled and run in a shared context, i.e. a set of Linux namespaces.
-The network, UTS and IPC namespaces are shared by default, and the process namespace can be shared with \texttt{v1.PodSpec.shareProcessNamespace}.
+The network, UTS and IPC namespaces are shared by default, and the process namespace can be shared with \lstinline{v1.PodSpec.shareProcessNamespace}.
 The common network namespace means that containers in a Pod can communicate with each other via localhost, have a common IP address, and cannot reuse the same port numbers.
-In addition to the normal application container, Pods can include special \texttt{initContainers} that are run only on Pod startup.
+In addition to the normal application container, Pods can include special \lstinline{initContainers} that are run only on Pod startup.
 These Pods are used to modify the Pod context before the actual workload starts.
-Multiple \texttt{initContainers} are run sequentially, and a failing container blocks the execution of the following initialization and normal workloads.
+Multiple \lstinline{initContainers} are run sequentially, and a failing container blocks the execution of the following initialization and normal workloads.
 
 If a Pod fails, a replacement Pod is not automatically created.
 Quite often, developers want to have more control over the compute resources and specify a target state for them.
@@ -832,24 +832,24 @@ This leads to a problem: how do the clients using the system find and keep track
 
 \textbf{Services} are an object for exposing groups of Pods over a network \cite{k8s-docs-services}.
 The object defines a set of endpoints, that is, the targeted Pods, along with a policy about how to make the Pods accessible.
-The targeted Pods are determined with a \texttt{selector} field in the object specification.
-Meanwhile, the \texttt{type} field determines how the Service is exposed.
-There are four different \texttt{ServiceTypes}: i) the default \texttt{ClusterIP} which exposes the Service inside the cluster with its own IP address, ii) \texttt{NodePort} which exposes the service in each Node's IP address on static port (by default within a range of 30000-32767), iii) \texttt{LoadBalancer} which exposes the Service externally using cloud provider's load balancer, and iv) \texttt{ExternalName} which is used to map Service to DNS name instead of a group of Pods.
-The field is designed as a nested functionality; each \texttt{ServiceType} level adds up to the previous one.
+The targeted Pods are determined with a \lstinline{selector} field in the object specification.
+Meanwhile, the \lstinline{type} field determines how the Service is exposed.
+There are four different \textbf{ServiceTypes}: i) the default \textbf{ClusterIP} which exposes the Service inside the cluster with its own IP address, ii) \textbf{NodePort} which exposes the service in each Node's IP address on static port (by default within a range of 30000-32767), iii) \textbf{LoadBalancer} which exposes the Service externally using cloud provider's load balancer, and iv) \textbf{ExternalName} which is used to map Service to DNS name instead of a group of Pods.
+The field is designed as a nested functionality; each \textbf{ServiceType} level adds up to the previous one.
 
 % \jb{Usually services are proxies that route requests to the different Pods. There are also Headless services that only add DNS entries for the Pods.}
 
 \textbf{Namespaces} allow logical grouping of resources under a single name.
-New Kubernetes cluster starts with four namespaces: \texttt{default}, \texttt{kube-node-lease}, \texttt{kube-public} and \texttt{kube-system}.
-Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \texttt{default} if not explicitly defined.
-\texttt{kube-system} is the namespace for all objects created by the Kubernetes system which is discussed in more detail in the next Chapter~\ref{control-plane}.
+New Kubernetes cluster starts with four namespaces: \emph{default}, \emph{kube-node-lease}, \emph{kube-public} and \emph{kube-system}.
+Namespaced objects like Deployments, Services and Pods are always deployed under a namespace which is \emph{default} if not explicitly defined.
+\emph{kube-system} is the namespace for all objects created by the Kubernetes system which is discussed in more detail in the next Chapter~\ref{control-plane}.
 Namespaces also provide a scope for naming; names of resources must be unique within a namespace, but not across namespaces.
 Namespaces are also used to enforce resource quotas, access control, and isolation for cluster users, for example, in multitenancy setups.
 Pod Security Standards \cite{k8s-docs-pss}, which are used by the Pod Security admission controller, are also defined at the namespace level.
 Admission controllers are discussed in Chapter~\ref{admission-controllers}.
 
 \textbf{Custom Resource Definitions} (CRD) are used to define new resources that are not available in a default Kubernetes installation \cite{k8s-docs-crd}.
-Once a custom resource is installed, users can create and access custom resource objects with \texttt{kubectl}, similarly to any other built-in resource.
+Once a custom resource is installed, users can create and access custom resource objects with \lstinline{kubectl}, similarly to any other built-in resource.
 On their own, custom resources can only be used to store and retrieve structured data.
 When combined with a custom controller, custom resources can be used to add new functionality to the cluster.
 In Kubernetes, controllers are constructs that watch the current state of the cluster and keep track of the desired state.
@@ -878,8 +878,8 @@ The control plane consists of these main components:
 It is an HTTP server that is used to send commands to the cluster.
 The server handles the authentication and validation of the commands.
 For valid commands, the server then forwards these to other control plane components that then modify the cluster state.
-The easiest way to send commands to the server is by using the \texttt{kubectl} command-line interface (CLI), which actively sends the commands as HTTP under the hood.
-The main implementation of the server is \texttt{kube-apiserver}.
+The easiest way to send commands to the server is by using the \lstinline{kubectl} command-line interface (CLI), which actively sends the commands as HTTP under the hood.
+The main implementation of the server is \emph{kube-apiserver}.
 The server can be horizontally scaled by running several instances on multiple Nodes and load-balancing traffic between the instances.
 
 \textbf{Etcd} \cite{etcd} is a highly consistent, distributed key-value store.
@@ -901,32 +901,32 @@ All the built-in controllers are compiled into a single binary, even though the 
 Each Node also has components that are essential for Kubernetes to work properly.
 \textbf{Kubelet} is an agent that ensures that containers are running in a Pod \cite{k8s-docs-control-plane}.
 It receives a set of Pod specifications from the API server and ensures that containers are running on the Node, follow the Pod specifications and are healthy.
-\texttt{Kubelet} only manages containers created by Kubernetes.
+\textbf{Kubelet} only manages containers created by Kubernetes.
 \textbf{Kube-proxy} maintains network rules on Nodes.
-Part of the Service objects' networking is implemented by \textbf{kube-proxy}; the proxy writes \texttt{iptables} rules that route traffic \cite{cilium-proxy-free}.
+Part of the Service objects' networking is implemented by \textbf{kube-proxy}; the proxy writes IPTables rules that route traffic \cite{cilium-proxy-free}.
 
 \subsubsection{Admission controllers} \label{admission-controllers}
 
 Admission controllers are a feature of the Kubernetes API server, used to validate and modify requests made to the server \cite{k8s-docs-admission}.
 The controllers execute before the request is executed but after it is authenticated and authorized by the server.
 Several important features of Kubernetes are implemented with admission controllers, and these should be enabled on a properly configured API server.
-In addition to the built-in controllers, Kubernetes provides \texttt{MutatingAdmissionWebhook} and \texttt{ValidatingAdmissionWebhook} controllers for building its own admission logic.
+In addition to the built-in controllers, Kubernetes provides \textbf{MutatingAdmissionWebhook} and \textbf{ValidatingAdmissionWebhook} controllers for building its own admission logic.
 
 Admission controllers can be validating, mutating, or both \cite{k8s-docs-admission}.
 Mutating controllers may modify related objects to the requests they admit while validating controllers either approve or reject the request.
 The control process first executes the mutating controllers so that no mutations occur after the validation.
 If a controller in either phase rejects the request, the request is not processed further, and the error is returned to the end-user.
 
-One notable Admission controller is the \texttt{PodSecurity} controller.
+One notable Admission controller is the \textbf{PodSecurity} controller.
 The controller validates the Pods before they are admitted, making sure that the requested Pod security context and other restrictions are permitted in the namespace to which the Pod is assigned \cite{k8s-docs-admission}.
 The controller is enabled by default and can be taken into use just by configuring Pod Security Admission labels for Namespace objects.
 
-The labels use \texttt{pod-security.kubernetes.io/<MODE>: <LEVEL>} format, where MODE defines the action to be taken when the security level is violated and LEVEL is a predefined level of the Pod Security Standard.
-The three available levels are \texttt{privileged}, \texttt{baseline} and \texttt{restricted} \cite{k8s-docs-pss}.
+The labels use \lstinline{pod-security.kubernetes.io/<MODE>: <LEVEL>} format, where MODE defines the action to be taken when the security level is violated and LEVEL is a predefined level of the Pod Security Standard.
+The three available levels are \lstinline{privileged}, \lstinline{baseline} and \lstinline{restricted} \cite{k8s-docs-pss}.
 
-The available actions are i) \texttt{enforce}, which will reject the Pod on a violation, ii) \texttt{audit}, which triggers an event about the violation in the audit log, and iii) \texttt{warn}, which triggers user-facing warning about the violation \cite{k8s-docs-psa}.
+The available actions are i) \lstinline{enforce}, which will reject the Pod on a violation, ii) \lstinline{audit}, which triggers an event about the violation in the audit log, and iii) \lstinline{warn}, which triggers user-facing warning about the violation \cite{k8s-docs-psa}.
 A namespace can configure any or all three of the available modes and even set a different level for the modes.
-For example, it is possible to warn the user about a violation of security policies without blocking the request by setting the \texttt{warn} mode more restrictive than \texttt{enforce}.
+For example, it is possible to warn the user about a violation of security policies without blocking the request by setting the \lstinline{warn} mode more restrictive than \lstinline{enforce}.
 
 \subsubsection{Sidecar pattern in Kubernetes}
 
@@ -965,7 +965,7 @@ This allows different vendors and operators to use varying networking mechanisms
 \subsubsection{Container Network Interface} \label{cni}
 
 The Container Network Interface \cite{cni} is a networking specification, which has become the de-facto industry standard for container networking and is backed by CNCF \cite{qi2020assessing}.
-The specification was first developed for the container runtime \texttt{rkt} \cite{hausenblas2018container}, but it is now supported by almost all major container runtimes and orchestrators.
+The specification was first developed for the container runtime \emph{rkt} \cite{hausenblas2018container}, but it is now supported by almost all major container runtimes and orchestrators.
 As many runtimes seek to solve the same problem of making the network layer pluggable, the CNI was developed as a common API to promote interchangeability.
 Most container orchestrators have adopted the specification as their networking solution.
 The biggest outlier is Docker Swarm, which instead implements its own proprietary approach to container networking.
@@ -979,8 +979,8 @@ The configuration file is supplied to the plugin via stdin.
 On successful execution, the plugin returns the result via stdout with a return code of 0.
 On errors, the plugin returns a specific JSON structure error message to stderr and a non-zero return code.
 When runtime mutates a container network, it results in a series of ADD, DELETE, or CHECK executions.
-These are then executed in the same order as defined in the \texttt{plugins} list, or in a reversed order for DELETE executions.
-Each plugin then returns either \texttt{Success} or \texttt{Error} JSON object.
+These are then executed in the same order as defined in the \lstinline{plugins} list, or in a reversed order for DELETE executions.
+Each plugin then returns either \emph{Success} or \emph{Error} JSON object.
 The execution of a series of operations ends when it encounters the first error response, or when all the operations have been performed.
 
 The CNI plugin must provide at least connectivity and reachability for the containers \cite{cni-tkng}.
@@ -990,16 +990,16 @@ The NIC must have an IP address that is reachable from the host Node so that clu
 Reachability means that all Pods can be reached from other Nodes directly without NAT.
 Thus, each Pod should receive a unique IP address from an IP pool range designated for the Pods.
 When a cluster is installed, the administrator assigns a CIDR for the whole cluster.
-Then the \texttt{kube-controller-manager} can be configured to assign each node its own CIDR range, defined in the Node's \texttt{spec.podCIDR} field.
+Then the \emph{kube-controller-manager} can be configured to assign each node its own CIDR range, defined in the Node's \lstinline{spec.podCIDR} field.
 The IP addresses are assigned to the Pods by an IP address management (IPAM) plugin.
 IPAM plugins are \emph{delegated plugins} of the CNI, which means that the CNI plugin is responsible for invoking the IPAM plugin when needed.
 Thus, many CNI plugins are installed with their own IPAM plugins for convenience.
-Quite often IPAM plugins assign Pods with an IP address from the Node's \texttt{podCIDR}, but sophisticated IPAMs like those of Calico and Cilium use Custom Resources for more configurable IP pools.
-The end-to-end reachability between different Node \texttt{PodCIDR}s is established by encapsulating in the overlay network, for example, with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
+Quite often IPAM plugins assign Pods with an IP address from the Node's \lstinline{podCIDR}, but sophisticated IPAMs like those of Calico and Cilium use Custom Resources for more configurable IP pools.
+The end-to-end reachability between different Node \lstinline{PodCIDR}s is established by encapsulating in the overlay network, for example, with Virtual Extensible LAN (VXLAN), or orchestrating on the underlay network, e.g. with Border Gateway Protocol (BGP).
 
 Since Kubernetes does not provide networking between Pods, it has no capabilities to enforce network isolation between workloads.
 Thus, another key feature of some CNI plugins is the enforcement of network traffic rules.
-For this purpose, Kubernetes provides a common built-in resource called \texttt{NetworkPolicy} for the CNI plugins to consume.
+For this purpose, Kubernetes provides a common built-in resource called \textbf{NetworkPolicy} for the CNI plugins to consume.
 The Listing~\ref{lst:example-np} is an example of network policies for a web application front-end.
 The first policy functions as a default rule that denies all implicit egress and ingress traffic.
 The second policy allows traffic to the default HTTP port, and the third policy allows the front-end application to send traffic to any Pod in the \emph{backend} namespace.
@@ -1010,8 +1010,8 @@ The second policy allows traffic to the default HTTP port, and the third policy 
   language=yaml
 ]{code/example-network-policy.yml}
 
-The NetworkPolicy specification consists of a \texttt{podSelector} that specifies Pods that are subject to the policy and \texttt{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
-Each rule includes \texttt{to} or \texttt{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \texttt{ports} field for explicitly specifying which ports and protocols are part of the rule.
+The NetworkPolicy specification consists of a \lstinline{podSelector} that specifies Pods that are subject to the policy and \lstinline{policyTypes} to specify the Ingress and Egress rules for traffic \cite{budigiri2021network} to the target Pod.
+Each rule includes \lstinline{to} or \lstinline{from} field for selecting Pod, Namespace or IP address block in CIDR notation on the other side of the connection, and \lstinline{ports} field for explicitly specifying which ports and protocols are part of the rule.
 The policies are additive; when multiple rules are defined for a Pod, traffic is restricted to what is allowed by the union of the policies.
 Many CNI plugins also introduce Custom Resource Definitions for their own, more granular, network policy rules.
 
@@ -1022,24 +1022,24 @@ In this thesis, we focus on three different CNI plugins: Calico, Cilium, and Mul
 \subsubsection{Calico}
 
 Calico \cite{calico} is an open-source CNI plugin with a modular architecture that supports a wide range of deployment options.
-Each Pod created in the Calico network receives one end of a virtual ethernet device link as its default \texttt{eth0} network interface, while the other end is left dangling on the host Node \cite{calico-tkng}.
+Each Pod created in the Calico network receives one end of a virtual ethernet device link as its default \emph{eth0} network interface, while the other end is left dangling on the host Node \cite{calico-tkng}.
 The Pod end of the link receives an IP address from Pod CIDR, but the Node end does not.
-Instead, a \texttt{proxy\_arp} flag is set on the host side of the interface, while containers have a route to link-local address \texttt{169.254.1.1}, thus making the host behave like a gateway router.
+Instead, a \lstinline{proxy\_arp} flag is set on the host side of the interface, while containers have a route to link-local address \lstinline{169.254.1.1}, thus making the host behave like a gateway router.
 For routing packets between Nodes, Calico creates a VXLAN overlay network.
 Optionally, Calico supports IP-in-IP overlay or non-overlay network with BGP protocol.
 
-On each Node, a \texttt{calico-node} daemon sets up the CNI plugin, IPAM, and possible eBPF programs.
+On each Node, a \emph{calico-node} daemon sets up the CNI plugin, IPAM, and possible eBPF programs.
 The daemon subscribes to Kubernetes API for Pod events and manages both container and host networking namespaces.
-Calico also deploys a single-container \texttt{calico-kube-controllers} Pod into the Kubernetes control plane.
+Calico also deploys a single-container \emph{calico-kube-controllers} Pod into the Kubernetes control plane.
 The container executes a binary that consists of controller loops for Namespace, NetworkPolicy, Node, Pod, and ServiceAccount Kubernetes objects.
-The Calico project also introduces its own CLI tool, called \texttt{calicoctl} \cite{calicoctl}, to manage Calico's custom resources.
-The tool provides extra validation for the resources which is not possible with \texttt{kubectl}.
+The Calico project also introduces its own CLI tool, called \lstinline{calicoctl} \cite{calicoctl}, to manage Calico's custom resources.
+The tool provides extra validation for the resources which is not possible with \lstinline{kubectl}.
 
-Calico supports Kubernetes NetworkPolicies as well as its own namespaced \\\texttt{projectcalico.org/v3.NetworkPolicy} Custom Resource Definition.
+Calico supports Kubernetes NetworkPolicies as well as its own namespaced \lstinline{projectcalico.org/v3.NetworkPolicy} Custom Resource Definition.
 Both of the policies work on OSI layers L3 (identity, e.g. IP address) and L4 (ports).
 Compared to the built-in policy, the Calico policy includes features such as policy ordering, log action in rules, and more flexible matching criteria (e.g., matching on ServiceAccounts) \cite{calico-network-policy}.
 The policy can also match other Calico CRDs such as \textbf{HostEndpoints} and \textbf{NetworkSets}, which allows implementing rules on host interfaces and non-Kubernetes resources.
-If Calico is installed along the Istio service mesh, the Calico Network Policy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \texttt{GlobalNetworkPolicy} CRD.
+If Calico is installed along the Istio service mesh, the Calico Network Policy can enforce L7 (e.g. HTTP methods and URL paths) policies on the Envoy proxy. For policies that are not tied to a Kubernetes namespace, Calico provides a \textbf{GlobalNetworkPolicy} CRD.
 
 % \jb{Now that Calico uses eBPF there is little difference between them and both can reduce the amount of sidecars to one per node.}
 
@@ -1047,27 +1047,27 @@ If Calico is installed along the Istio service mesh, the Calico Network Policy c
 
 Cilium \cite{cilium} is one of the most advanced and powerful CNI plugins for Kubernetes.
 Similarly to Calico, it creates a virtual ethernet device for each Pod and sets one side of the link into the Pod's network namespace \cite{cilium-tkng} as the default interface.
-Cilium then attaches extended Berkeley Packet Filter (eBPF) programs to ingress traffic control (\texttt{tc}) hooks of these virtual ethernet devices to intercept all incoming packets from the Pod.
-The packets are intercepted and processed before the network stack, and thus \texttt{iptables}, reducing latency 20\%-30\% and even doubling the throughput of packets in some scenarios \cite{budigiri2021network}.
+Cilium then attaches extended Berkeley Packet Filter (eBPF) programs to ingress traffic control (TC) hooks of these virtual ethernet devices to intercept all incoming packets from the Pod.
+The packets are intercepted and processed before the network stack, and thus IPTables, reducing latency 20\%-30\% and even doubling the throughput of packets in some scenarios \cite{budigiri2021network}.
 The network between Pods running on different hosts is handled by default with VXLAN overlay, but there is support for Geneve interfaces and native routing with the BGP protocol as well \cite{cilium}.
 
-The Cilium system consists of an agent (\texttt{cilium-agent}) daemon running on each Node, one or more operator (\texttt{cilium-operator}) Pods and a CLI client (\texttt{cilium}) \cite{cilium-components}.
+The Cilium system consists of an agent (\emph{cilium-agent}) daemon running on each Node, one or more operator (\emph{cilium-operator}) Pods and a CLI client (\emph{cilium}) \cite{cilium-components}.
 The agent daemons subscribe to events from the Kubernetes API and manage containers' networking and eBPF programs.
 The CLI tool, which is installed on each agent, interacts with the REST API of the agent and allows one to inspect the state and status of the local agent.
-The tool should not be confused with the Cilium management CLI tool, also incidentally named \texttt{cilium}, which is typically installed remotely from the cluster.
+The tool should not be confused with the Cilium management CLI tool, also incidentally named \lstinline{cilium}, which is typically installed remotely from the cluster.
 The operator is responsible for all management operations that should be handled once for the entire cluster, rather than once for each Node.
 This includes, for example, the registration of CRDs.
 
 Although default Kubernetes NetworkPolicies provides security on OSI layers L3 and L4, Cilium provides CRDs that also support L7 policies \cite{cilium-policy-language}.
 If L7 policies exist, traffic is directed to the Envoy instance bundled into the agent Pod which filters traffic.
 Unlike in layers 3 and 4, policy violation does not result in a dropped packet but an application protocol-specific denied message.
-For example, HTTP traffic is denied with \texttt{HTTP 403 Forbidden} and DNS requests with \texttt{DNS REFUSED}.
-Cilium provides \texttt{CiliumNetworkPolicy} CRD that supports all L3, L4, and L7 policies.
-Cilium also provides \texttt{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to all namespaces in the cluster or even to nodes when using \texttt{nodeSelector}.
+For example, HTTP traffic is denied with \emph{HTTP 403 Forbidden} and DNS requests with \emph{DNS REFUSED}.
+Cilium provides \textbf{CiliumNetworkPolicy} CRD that supports all L3, L4, and L7 policies.
+Cilium also provides \textbf{CiliumClusterwideNetworkPolicy} custom resource which is used to apply network rules to all namespaces in the cluster or even to nodes when using \lstinline{nodeSelector}.
 
-As even more advanced features, Cilium also includes native \texttt{kube-proxy} replacement, encryption for Cilium-managed traffic, and Service Mesh, among others.
-By default, \texttt{kube-proxy} uses \texttt{iptables} to route the Service traffic \cite{cilium-proxy-free}.
-With \texttt{kubeProxyReplacement} installation option, Cilium implements Service load-balancing as XDP and TC programs on the Node network stack.
+As even more advanced features, Cilium also includes native \emph{kube-proxy} replacement, encryption for Cilium-managed traffic, and Service Mesh, among others.
+By default, \emph{kube-proxy} uses IPTables to route the Service traffic \cite{cilium-proxy-free}.
+With \lstinline{kubeProxyReplacement} installation option, Cilium implements Service load-balancing as XDP and TC programs on the Node network stack.
 For encryption, Cilium supports IPsec and WireGuard implementations \cite{cilium-encryption}.
 The service mesh performs a variety of features directly in eBPF, thus functioning without sidecar containers or proxying requests through the agent Pod's Envoy \cite{cilium-service-mesh}.
 Since all features are not available as eBPF programs or on all kernel versions,  Cilium automatically probes the underlying kernel and automatically reverts to the Envoy proxy when needed.
@@ -1092,39 +1092,39 @@ Instead, it is installed as the first plugin in the CNI plugin chain.
 When executed, the plugin delegates the creation of the interface to other installed plugins.
 Since Multus does not provide any networking and thus does not independently, it is often called \emph{meta plugin} to distinguish it from common CNI plugins like the previous Calico and Cilium.
 
-Multus system includes a binary, a CNI configuration file, and a namespaced \texttt{NetworkAttachmentDefinition} CRD that is used to define network interfaces used in Pods.
+Multus system includes a binary, a CNI configuration file, and a namespaced \textbf{NetworkAttachmentDefinition} CRD that is used to define network interfaces used in Pods.
 The binary and the configuration file are often installed on cluster nodes via a DaemonSet.
-The daemon consists of an \emph{initContainer} that copies the binary into the \texttt{/opt/cni/bin} directory, and a daemon container that configures the configuration file and optionally spawns an HTTP server for additional features such as metrics \cite{multus-cni}.
-The configuration file satisfies the CNI specification with few additional attributes of which the combination of \texttt{clusterNetwork} and \texttt{defaultNetworks} or \texttt{delegates} are imperative for the CNI plugin to function \cite{multus-cni-config}.
-The \texttt{clusterNetwork} specifies the main network of the cluster, which implements the \texttt{eth0} interface and the Pod IP address.
-The \texttt{defaultNetworks} is an optional array of networks that should be added for any Pods by default.
-The values can be names of the \texttt{NetworkAttachmentDefinition} objects or paths to the CNI plugin's JSON configuration files.
-Optionally, the \texttt{delegates} attribute can be used; it supports a similar format of values.
-In this scenario, the first element of the array functions as \texttt{clusterNetwork} and the rest are inferred as \texttt{defaultNetworks}.
+The daemon consists of an \emph{initContainer} that copies the binary into the \lstinline{/opt/cni/bin} directory, and a daemon container that configures the configuration file and optionally spawns an HTTP server for additional features such as metrics \cite{multus-cni}.
+The configuration file satisfies the CNI specification with few additional attributes of which the combination of \lstinline{clusterNetwork} and \lstinline{defaultNetworks} or \lstinline{delegates} are imperative for the CNI plugin to function \cite{multus-cni-config}.
+The \lstinline{clusterNetwork} specifies the main network of the cluster, which implements the \emph{eth0} interface and the Pod IP address.
+The \lstinline{defaultNetworks} is an optional array of networks that should be added for any Pods by default.
+The values can be names of the \textbf{NetworkAttachmentDefinition} objects or paths to the CNI plugin's JSON configuration files.
+Optionally, the \lstinline{delegates} attribute can be used; it supports a similar format of values.
+In this scenario, the first element of the array functions as \lstinline{clusterNetwork} and the rest are inferred as \lstinline{defaultNetworks}.
 
-Attaching additional interfaces to workloads is most often configured by adding a special annotations field \texttt{k8s.v1.cni.cncf.io/networks} to workload resource definitions.
-In the simplest configuration, the field takes a comma-separated list of the \texttt{ NetworkAttachmentDefinition} names as input.
-The network interface identifiers can be modified by providing the attachment input in \texttt{name@interface-identifier} format.
+Attaching additional interfaces to workloads is most often configured by adding a special annotations field \lstinline{k8s.v1.cni.cncf.io/networks} to workload resource definitions.
+In the simplest configuration, the field takes a comma-separated list of the \textbf{NetworkAttachmentDefinition} names as input.
+The network interface identifiers can be modified by providing the attachment input in \lstinline{name@interface-identifier} format.
 Otherwise, Multus names the interfaces \emph{net0}, \emph{net1} and so on.
 If extra configuration for the networks is needed, the annotation also supports the JSON array format.
 
 \subsubsection{Extended Berkeley Packet Filter}
 
 Berkeley Packet Filter (BPF, or nowadays often cBPF) was originally developed in the early 1990s as a high-performance tool for user-space packet capture \cite{mccanne1993bsd}.
-BPF works by deploying the filtering part of the application, \texttt{packet filter}, in the kernel-space as an agent.
-The \texttt{packet filter} is provided with a program (often denoted as BPF program) consisting of BPF instructions, which works as a set of rules for selecting which packets are of interest in the user-space application and should be copied from kernel-space to user-space.
+BPF works by deploying the filtering part of the application, \emph{packet filter}, in the kernel-space as an agent.
+The \emph{packet filter} is provided with a program (often denoted as BPF program) consisting of BPF instructions, which works as a set of rules for selecting which packets are of interest in the user-space application and should be copied from kernel-space to user-space.
 The instructions are executed in a register-based pseudo machine.
 Since network monitors are often interested only in a subset of network traffic, this limits the number of expensive copy operations across the kernel/user-space protection boundary only to packets that are of interest in the user-space application.
-A notable use-case for BPF is \emph{libpcap} library, which is used by a network monitoring tool called \texttt{tcpdump}.
+A notable use-case for BPF is \emph{libpcap} library, which is used by a network monitoring tool called \lstinline{tcpdump}.
 
 Later in the 2010s, the Linux community realized that BPF and its ability to instrument the kernel could benefit other areas than packet filtering as well \cite{vieira2020fast}.
 This reworked version of BPF was first merged into the Linux kernel in 2014 and is publicly called the extended Berkeley Packet Filter (eBPF) to distinguish it from the original cBPF.
 The kernel development community continues to call the newer version BPF, but instead of the original acronym consider it a name of a technology.
 Similarly to the kernel community, the term BPF always refers to the eBPF in this thesis.
 
-The eBPF programs are compiled to bytecode and loaded into the kernel with \texttt{bpf()} system call \cite{miano2021framework}.
+The eBPF programs are compiled to bytecode and loaded into the kernel with \lstinline{bpf()} system call \cite{miano2021framework}.
 Most often, programs are written in restricted C and compiled with the LLVM Clang compiler to bytecode.
-It is also possible to use the eBPF assembly instructions and \texttt{bpf\_asm} utility for converting instructions to bytecode.
+It is also possible to use the eBPF assembly instructions and \lstinline{bpf\_asm} utility for converting instructions to bytecode.
 eBPF programs follow an event-driven architecture: a loaded eBPF program is hooked to a particular type of event and each occurrence of the event triggers the program execution.
 
 There are two different network event interfaces in eBPF: eXpress Data Path (XDP) and Traffic Control (TC) \cite{miano2021framework}.
@@ -1138,16 +1138,16 @@ If the driver does not support XDP, generic XDP is used and the programs run aft
 XDP programs can read and modify the contents of packets \cite{vieira2020fast}.
 Since the packets are not parsed into the network stack, the programs have to work with raw packets and implement their own parsing functionality.
 The program's return value determines how the packet should be processed further.
-With \texttt{XDP\_DROP} and \texttt{XDP\_PASS} return values, the packet can be dropped or passed further to the networking stack, respectively.
-The packet can also be bounced back to the same NIC on which it arrived with \texttt{XDP\_TX}, usually after modifying the contents of the packet.
-\texttt{XDP\_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
+With \lstinline{XDP\_DROP} and \lstinline{XDP\_PASS} return values, the packet can be dropped or passed further to the networking stack, respectively.
+The packet can also be bounced back to the same NIC on which it arrived with \lstinline{XDP\_TX}, usually after modifying the contents of the packet.
+\lstinline{XDP\_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
 
 TC programs are executed when both incoming and outgoing packets reach the kernel traffic control function within the Linux network stack \cite{vieira2020fast}.
 The ingress hook runs after the packet is parsed to \emph{skbuff} but before most of the network stack.
 On egress the stack is traversed in reverse; thus, the hook executes after most of the network stack.
 TC programs can read and write directly to a packet in memory.
 Similarly to XDP programs, the return value of the program determines the further processing of the packet.
-The packet can be passed further in the stack with \texttt{TC\_ACT\_OK}, dropped with \texttt{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \texttt{TC\_ACT\_RECLASSIFY}, among others.
+The packet can be passed further in the stack with \lstinline{TC\_ACT\_OK}, dropped with \lstinline{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \lstinline{TC\_ACT\_RECLASSIFY}, among others.
 % \jb{Do we need this level of detail to understand your solution?}
 
 \clearpage
@@ -1201,10 +1201,10 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
-    Privileged containers & If containers are given privileges, malicious actors can break out from the container and escalate the attack on the cluster. & Use \texttt{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
-    Writing to the host file system & If allowed, malicious actors can try to tamper with the application or write executables to a disk. & Do not allow unnecessary mounts. Use \texttt{readOnlyRootFilesystem: true} whenever possible. \\ \hline
-    Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\texttt{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \texttt{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
-    There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \texttt{spec.containers[*].resources}}. \\ \hline
+    Privileged containers & If containers are given privileges, malicious actors can break out from the container and escalate the attack on the cluster. & Use \lstinline{restricted} Pod Security Admission to enforce security rules. PSAs are defined for namespaces, so isolate privileged containers into their own namespaces to follow the principle of least privilege. \\ \hline
+    Writing to the host file system & If allowed, malicious actors can try to tamper with the application or write executables to a disk. & Do not allow unnecessary mounts. Use \lstinline{readOnlyRootFilesystem: true} whenever possible. \\ \hline
+    Permissive RBAC on service accounts & Containers in a Pod share service accounts\footnote{\lstinline{spec.serviceAccountName} is a Pod-level field}. By default, Pods automatically mount the service account to all containers. & Disable automatic mounting of service accounts\footnote{Set \lstinline{automountServiceAccountToken: false}} and explicitly mount them to containers when needed. Adhere to the principle of least privilege. \\ \hline
+    There are no resource limits for containers & If not set, a single container can hog system resources, causing denial of service (DoS). & Set resource limits to containers\footnote{Use \lstinline{spec.containers[*].resources}}. \\ \hline
   \end{tabularx}
   \end{minipage}
 \end{table}
@@ -1222,7 +1222,7 @@ Tables~\ref{table:threat-model} and \ref{table:threat-model-network} list the id
     \hline
     \textbf{Threat} & \textbf{Description} & \textbf{Mitigation} \\ \hline
     The Pod has network access to the control plane & By default, all traffic inside the cluster is allowed. & Use NetworkPolicies as a firewall. Deny by default and explicitly allow traffic only if needed. \\ \hline
-    Sidecar can use the main container's NetworkPolicy to access \texttt{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
+    Sidecar can use the main container's NetworkPolicy to access \emph{kube-system} or other Pods & NetworkPolicies affect the NIC of the Pod network, which is shared by sidecars. & \textbf{No built-in solution available!} \\ \hline
     Sidecar has network access to the main container & Main container is accessible via loopback device, which cannot be protected with NetworkPolicy. & \textbf{There is no built-in solution available!} \\ \hline
     Sidecar sniffs the main application traffic & Pod-to-Pod traffic in a cluster is unencrypted by default. A privileged sidecar can sniff and hijack traffic. & CNIs and service meshes may provide encryption to inter-Pod traffic with, for example, IPSec, Wireguard and mutual TLS. These are often implemented with sidecars, which is not feasible in this scenario. For intra-Pod traffic, containers would need to implement this as part of the containers. \\ \hline
   \end{tabularx}
@@ -1240,24 +1240,24 @@ The Listing~\ref{lst:privileged-container} describes a Deployment with a privile
   language={yaml}
 ]{code/privileged.yml}
 
-The three first fields in the \texttt{spec} remove namespace isolations from the container and use the corresponding Node namespaces instead.
-With a privileged container and \texttt{hostPID: true}, the attacker can enter Node's namespace with \texttt{nsenter} (easy target PID is the \textbf{init} system running as 1), and execute commands on the host.
+The three first fields in the \lstinline{spec} remove namespace isolations from the container and use the corresponding Node namespaces instead.
+With a privileged container and \lstinline{hostPID: true}, the attacker can enter Node's namespace with \lstinline{nsenter} (easy target PID is the \textbf{init} system running as 1), and execute commands on the host.
 The attacker can also see and enter other containers and processes running on the same Node.
-In a non-privileged container, the \texttt{hostPID} still allows Denial of Service (DoS) attacks by killing the processes on the Node.
+In a non-privileged container, the \lstinline{hostPID} still allows Denial of Service (DoS) attacks by killing the processes on the Node.
 
-Since the container mounts the host filesystem to a volume in \texttt{/host-root}, the attacker in a privileged container can trivially use \texttt{chroot} to execute commands as root user in the host Node context.
-Even without the explicit \texttt{hostPath} mount, the host machine's \texttt{/dev} is accessible from the privileged container, which means that the container can see the disk that contains the host's filesystem and mount the disk.
+Since the container mounts the host filesystem to a volume in \lstinline{/host-root}, the attacker in a privileged container can trivially use \lstinline{chroot} to execute commands as root user in the host Node context.
+Even without the explicit \lstinline{hostPath} mount, the host machine's \lstinline{/dev} is accessible from the privileged container, which means that the container can see the disk that contains the host's filesystem and mount the disk.
 The attacker can use this technique to find any credentials stored on the host machine and escalate the attack.
-Important credentials include for example \texttt{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \texttt{/etc/shadows}.
+Important credentials include for example \lstinline{kubeconfig} files that store access tokens to the Kubernetes API server, ServiceAccount tokens that may have been mounted on any Pod on the host, SSH keys and hashed user passwords in \lstinline{/etc/shadows}.
 
 The biggest risks considering a non-privileged container with all the isolations intact relate to lateral movement and the discovery of secrets.
 Kubernetes automatically mounts each container in a Pod with a Service Account token, which can be used to attack the control plane if it is over-permissive.
-Since the cluster has no NetworkPolicies in place by default, any misconfigured control plane component, like Kubelet or API server with \texttt{anonymous-auth} set to true, could be exploited.
+Since the cluster has no NetworkPolicies in place by default, any misconfigured control plane component, like Kubelet or API server with \lstinline{anonymous-auth} set to true, could be exploited.
 In addition, the attacker can try to breach or DoS any control plane component or workload in the cluster, or other connected services like those in a cloud-hosted system.
 Furthermore, any unpatched vulnerability in the underlying kernel, container engine or Kubernetes can exploited.
 
 The \emph{malicious-sidecar} image is a simple, custom-made container image that includes some basic tools for penetration testing.
-The image also installs \texttt{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default \texttt{minikube} installation.
+The image also installs \lstinline{kubectl} and sets environment variables so that the CLI tool works out-of-the-box with the default Minikube installation.
 Its Dockerfile can be found in Appendix~\ref{app:malicious-sidecar}.
 If the container has public internet access, the attacker could use a tool such as Docker Enumeration, Escalation of Privileges and Container Escapes (DEEPCE) \cite{deepce} to enumerate attack options even further.
 
@@ -1286,7 +1286,7 @@ A few possible solutions for building the Zero Trust network inside the Pod are 
 
 \subsection{Environment}
 
-The solution is tested and developed on a \texttt{Minikube} cluster running on a local machine and using Docker as the driver for Nodes.
+The solution is tested and developed on a Minikube cluster running on a local machine and using Docker as the driver for Nodes.
 The cluster consists of two Nodes, the purpose of which is to deploy control plane components separately from worker ones.
 Furthermore, the setup also allows testing of network between components hosted on different Nodes.
 The complete setup is hosted on GitHub (https://github.com/Arskah/k8s-sidecar-security).
@@ -1295,7 +1295,7 @@ The implications are discussed in detail in Chapter~\ref{sec:network-solution}.
 
 A simple Node.js webserver with StatsD sidecar is used as the application workload.
 The source code can be found in Appendix~\ref{app:node-webapp}.
-The webserver serves "Hello world" on port \texttt{8888} and writes response times to the StatsD sidecar via the loopback device on port \texttt{8125}, which is the default for StatsD.
+The webserver serves "Hello world" on port \lstinline{8888} and writes response times to the StatsD sidecar via the loopback device on port \lstinline{8125}, which is the default for StatsD.
 
 For penetration testing purposes, another sidecar is introduced with common networking and Kubernetes command line tools.
 When deployed instead of the StatsD client, this sidecar can be used to simulate situations where the attacker has managed to get access to the shell inside the sidecar.
@@ -1314,11 +1314,11 @@ However, this chapter also introduces extra security measures that fix a few ove
 
 Since version 1.25, Kubernetes has shipped with the Pod Security Admission controller as a stable feature.
 The controller, as discussed in Chapter~\ref{admission-controllers}, provides three different Pod Security Standards that can be used to warn and enforce against insecure Pod configurations.
-The \texttt{restricted} Pod Security Standard is the strictest of the standards and aims at the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution.
-The Security Standard can be easily enforced by adding \texttt{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
+The \lstinline{restricted} Pod Security Standard is the strictest of the standards and aims at the best Pod hardening practices \cite{k8s-docs-pss}, so it will be the most optimal for our solution.
+The Security Standard can be easily enforced by adding \lstinline{pod-security.kubernetes.io/enforce: restricted} as a label on a Kubernetes namespace resource, as shown in Listing~\ref{lst:pss}.
 
 \lstinputlisting[
-  caption={Namespace resource with \texttt{restricted} Security Standard},
+  caption={Namespace resource with \lstinline{restricted} Security Standard},
   label={lst:pss},
   language=yaml
 ]{code/restricted-ns.yml}
@@ -1326,12 +1326,12 @@ The Security Standard can be easily enforced by adding \texttt{pod-security.kube
 Table~\ref{table:pod-hardening} illustrates the fields that the restricted security standard affects.
 From the table, it can be noted that the standard already blocks 2 out of the 4 identified threats: the deployment of privileged containers and host directory mounts.
 However, it should be noted that the standard restricts the networking solution discussed in the following chapter.
-Since the security standard only allows for the \texttt{NET\_BIND\_SERVICE} capability, any Pod attempting to modify the network stack will not work.
+Since the security standard only allows for the \lstinline{NET\_BIND\_SERVICE} capability, any Pod attempting to modify the network stack will not work.
 Therefore, the network modifications must be implemented outside the Pod's context, which is discussed in greater detail in Section \ref{sec:network-solution:deployment}.
 
 \begin{table}[H]
   \centering
-  \caption{Pod fields enforced by \texttt{restricted} Security Standard}
+  \caption{Pod fields enforced by \lstinline{restricted} Security Standard}
   \label{table:pod-hardening}
   \sffamily% change the font in the table to sans serif
   \small
@@ -1340,31 +1340,31 @@ Therefore, the network modifications must be implemented outside the Pod's conte
   \begin{tabularx}{\textwidth}{CCC}
     \hline
     \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
-    hostPID, hostIPC, hostNetwork & Controls whether the container uses the host's PID, IPC and network namespace. & false \\ \hline
-    privileged & Controls whether Pod can run privileged containers. & false \\ \hline
-    capabilities.add / drop & Defines Linux capabilities for the container. & Add NET\_BIND\_SERVICE allowed, drop ALL required \\ \hline
-    volumes[*] & All volume types are not allowed. For example, hostPath, which maps host directories, is not allowed. & \texttt{configMap}, \texttt{csi}, \texttt{downwardAPI}, \texttt{emptyDir}, \texttt{ephemeral}, \texttt{persistentVolumeClaim}, \texttt{projected}, \texttt{secret} \\ \hline
-    hostPort & Expose the container via the host's network port. & undefined \\ \hline
-    AppArmor annotation\footnote{container.apparmor.security.beta.kubernetes.io/*} & Sets the AppArmor profile used by containers.
-    On supported hosts, the runtime/default AppArmor profile is applied by default. & runtime/default, localhost/* \\ \hline
-    seLinuxOptions & Sets the SELinux context of the container. & Set if supported by the environment. \\ \hline
-    procMount & The default /proc masks are set up to reduce the attack surface and should be required. & Default \\ \hline
-    seccompProfile.type & Sets the seccomp profile used to sandbox containers. & RuntimeDefault or Localhost \\ \hline
-    sysctls[*].name & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & \texttt{kernel.shm\_rmid\_forced}, \texttt{net.ipv4.ip\_local\_port\_range}, \texttt{net.ipv4.ip\_unprivileged\_port\_start}, \texttt{net.ipv4.tcp\_syncookies}, \texttt{net.ipv4.ping\_group\_range} \\ \hline
-    allowPrivilegeEscalation & Controls whether the process can gain more privileges than the parent \footnote{Controls the \texttt{no\_new\_privs} flag} & false \\ \hline
-    runAsNonRoot & Controls whether the container can run as the root user. & true \\ \hline
-    runAsUser, runAsGroup & Controls the user and group used by the container. & Set both to non-zero to run as non-root. \\ \hline
-    windowsOptions.hostProcess & Runs Windows containers as privileged HostProcess. & false \\ \hline
+    \lstinline{hostPID}, \lstinline{hostIPC}, \lstinline{hostNetwork} & Controls whether the container uses the host's PID, IPC and network namespace. & \lstinline{false} \\ \hline
+    \lstinline{privileged} & Controls whether Pod can run privileged containers. & \lstinline{false} \\ \hline
+    \lstinline{capabilities.add} / \lstinline{drop} & Defines Linux capabilities for the container. & Add NET\_BIND\_SERVICE allowed, drop ALL required \\ \hline
+    \lstinline{volumes[*]} & All volume types are not allowed. For example, hostPath, which maps host directories, is not allowed. & \lstinline{configMap}, \lstinline{csi}, \lstinline{downwardAPI}, \lstinline{emptyDir}, \lstinline{ephemeral}, \lstinline{persistentVolumeClaim}, \lstinline{projected}, \lstinline{secret} \\ \hline
+    \lstinline{hostPort} & Expose the container via the host's network port. & Must not be defined \\ \hline
+    AppArmor annotation\footnote{\lstinline{container.apparmor.security.beta.kubernetes.io/*}} & Sets the AppArmor profile used by containers.
+    On supported hosts, the \lstinline{runtime/default} AppArmor profile is applied by default. & \lstinline{runtime/default}, \lstinline{localhost/*} \\ \hline
+    \lstinline{seLinuxOptions} & Sets the SELinux context of the container. & Set if supported by the environment. \\ \hline
+    \lstinline{procMount} & The default /proc masks are set up to reduce the attack surface and should be required. & \lstinline{Default} \\ \hline
+    \lstinline{seccompProfile.type} & Sets the Seccomp profile used to sandbox containers. & \lstinline{RuntimeDefault} or \lstinline{Localhost} \\ \hline
+    \lstinline{sysctls[*].name} & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & \lstinline{kernel.shm\_rmid\_forced}, \lstinline{net.ipv4.ip\_local\_port\_range}, \lstinline{net.ipv4.ip\_unprivileged\_port\_start}, \lstinline{net.ipv4.tcp\_syncookies}, \lstinline{net.ipv4.ping\_group\_range} \\ \hline
+    \lstinline{allowPrivilegeEscalation} & Controls whether the process can gain more privileges than the parent \footnote{Controls the \lstinline{no\_new\_privs} flag} & \lstinline{false} \\ \hline
+    \lstinline{runAsNonRoot} & Controls whether the container can run as the root user. & \\lstinlinelstinline{true} \\ \hline
+    \lstinline{runAsUser}, \lstinline{runAsGroup} & Controls the user and group used by the container. & Set both to non-zero to run as non-root. \\ \hline
+    \lstinline{windowsOptions.hostProcess} & Runs Windows containers as privileged HostProcess. & \lstinline{false} \\ \hline
   \end{tabularx}
   \end{minipage}
 \end{table}
 
 \subsection{Enforcing other best practices}
 
-The \texttt{restricted} Security Standard hardens the Pod against most of the identified security threats.
+The \lstinline{restricted} Security Standard hardens the Pod against most of the identified security threats.
 However, it still does not enforce specific resource limits and allows automatic mounting of Service Accounts for the Pod containers.
 
-Adding resource limits to containers is straightforward: just add values to both \texttt{resources.limits.cpu} and \texttt{resources.limits.memory} fields for all of the containers, similarly to Listing~\ref{lst:service-account-mount}.
+Adding resource limits to containers is straightforward: just add values to both \lstinline{resources.limits.cpu} and \lstinline{resources.limits.memory} fields for all of the containers, similarly to Listing~\ref{lst:service-account-mount}.
 The CPU usage is measured in CPU units and can also be expressed in millicpus, ie. both "1000m" and integer value of 1 are equivalent to 1 physical or virtual core \cite{k8s-docs-resources}.
 For memory, the base unit is bytes, but it also supports quantity suffixes such as "M", "Mi", and "Gi" for megabytes, mebibytes, and gigibytes, respectively.
 The resource limits are registered to the container's cgroup by the Kubelet.
@@ -1373,8 +1373,8 @@ Exceeding the memory limit causes termination with an out-of-memory (OOM) error.
 
 \subsubsection{Manual service account mounting}
 
-By default, the Service Account tokens are mounted in the \texttt{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container.
-This feature can be disabled by setting \texttt{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token in some other way.
+By default, the Service Account tokens are mounted in the \lstinline{/var/run/secrets/kubernetes.io/serviceaccount} directory in every container.
+This feature can be disabled by setting \lstinline{automountServiceAccountToken: false}, but then any container that actually uses the Service Account must receive the token in some other way.
 Since volume mounts are defined per container and service account tokens can be created manually with Secrets, the issue can be circumvented by manually mounting the token to containers that use it.
 
 \lstinputlisting[
@@ -1402,7 +1402,7 @@ As there is no existing community solution, a custom-made ValidatingAdmissionWeb
 
 The GitHub development setup includes an example admission controller based on Slack's \emph{simple-kubernetes-webhook} \cite{simple-kubernetes-webhook}.
 A template is supplemented with a custom validation function, \emph{resource-validator}, which is shown in Listing~\ref{lst:resource-validator}.
-When a Pod specification with no \texttt{resource.limits} definition is validated, the if-statement on line 20 triggers, causing the validation to fail.
+When a Pod specification with no \lstinline{resource.limits} definition is validated, the if-statement on line 20 triggers, causing the validation to fail.
 The function can be trivially extended to allow CPU and memory values only in a given range.
 
 \lstinputlisting[
@@ -1412,7 +1412,7 @@ The function can be trivially extended to allow CPU and memory values only in a 
 ]{code/resourceValidator.go}
 
 The validator for automatic mounting of Service Accounts could be implemented similarly.
-Instead of verifying resource limits, the function should verify that \texttt{PodSpec.AutomountServiceAccountToken} is set to false.
+Instead of verifying resource limits, the function should verify that \lstinline{PodSpec.AutomountServiceAccountToken} is set to false.
 
 Custom Admission controller webhooks require a Deployment and a Service resource, as well as TLS certificates stored as a Secret resource.
 These resources are well-documented in the \emph{simple-kubernetes-webhook} example.
@@ -1426,7 +1426,7 @@ Because of the effort needed to include production-ready webhooks in the demonst
 
 Implementing a zero-trust network architecture in Kubernetes cluster is not trivial, since building network isolation between containers in the same Pod is not possible with common CNI plugins and Network Policies.
 The root cause for this is that the lowest level of networking abstraction in Kubernetes is the Pod, and that by definition, all containers in a Pod share network namespace.
-Thus, all traffic outside the Pod, from any of the containers, passes through the same \texttt{eth0} NIC and shares a common source IP address.
+Thus, all traffic outside the Pod, from any of the containers, passes through the same \emph{eth0} NIC and shares a common source IP address.
 Since NetworkPolicies operate on L3/L4, they cannot distinguish whether traffic originates from the sidecar or from the main container.
 Although ingress traffic can be easily identified with the destination port number, the source port for egress traffic depends on the TCP implementation.
 As a result, NetworkPolicies cannot be used to manage egress traffic from the sidecar independently of the main container.
@@ -1434,13 +1434,13 @@ For intra-Pod communication, traffic passes through the loopback device, which i
 The plugin is not managed by the CNI plugin installed on the Nodes; instead, Kubernetes requires that the underlying container runtime provides the implementation.
 Most runtimes implement the reference CNI plugin \cite{cni-loopback}, but, for example, CRI-O implements its own.
 Due to this, the plugin does not install with a controller that would enforce NetworkPolicies on the loopback device.
-Furthermore, since all intra-Pod traffic has source and destination IP addresses of \texttt{127.0.0.1}, the packets do not have clear identifiers that could be used for traffic filtering.
+Furthermore, since all intra-Pod traffic has source and destination IP addresses of \lstinline{127.0.0.1}, the packets do not have clear identifiers that could be used for traffic filtering.
 This chapter introduces two general approaches to solving the issue.
 
 The first solution enforces firewall rules inside the application Pod's network namespace, while the second approach creates network namespaces for each container by deploying them to their own Pods.
 While deploying containers in their own Pods is an obvious option for creating isolation, the approach breaks the tight integration of sidecar containers to the application container.
 Most importantly, sidecars will have their own independent lifecycle and scheduling, and communication via the loopback device will be broken.
-In the scope of this thesis, we consider sidecars to be scheduled along the application container and accessible via \texttt{127.0.0.1}.
+In the scope of this thesis, we consider sidecars to be scheduled along the application container and accessible via \lstinline{127.0.0.1}.
 Thus, re-introducing these characteristics to the containers is also part of the solution.
 
 \subsection{Applying firewall rules inside Pod network namespace}
@@ -1483,9 +1483,9 @@ Thus, re-introducing these characteristics to the containers is also part of the
 \end{figure}
 
 Figure~\ref{fig:single-net-solution} illustrates the network architecture with all required network rule enforcement points.
-The solution needs to enforce network rules in four scenarios: i) external components and Pod's \texttt{eth0}, ii) main container and \texttt{lo}, iii) sidecar container and \texttt{lo}, and sidecar container and \texttt{eth0}.
-The ingress and egress rules in the first scenario are more easily enforced with \texttt{NetworkPolicies}, as shown in Listing~\ref{lst:network-policy}.
-The policies allow cluster and external traffic to the main application port \texttt{8888} while denying all other traffic into and out of the Pod.
+The solution needs to enforce network rules in four scenarios: i) external components and Pod's \emph{eth0}, ii) main container and \emph{lo}, iii) sidecar container and \emph{lo}, and sidecar container and \emph{eth0}.
+The ingress and egress rules in the first scenario are more easily enforced with \textbf{NetworkPolicies}, as shown in Listing~\ref{lst:network-policy}.
+The policies allow cluster and external traffic to the main application port \lstinline{8888} while denying all other traffic into and out of the Pod.
 
 \lstinputlisting[
   caption={Network Policy handling traffic between Pod and external components},
@@ -1501,8 +1501,8 @@ The rules need to be applied inside the Pod's network namespace with tools such 
 % https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html#OWNERMATCH
 Usually, IPTables rules are applied to packets by their IP addresses and ports.
 However, modern versions of IPTables ship with an owner module, which supports rules based on the process's name and user, group, process and session identifiers \cite{iptables-manpage}.
-For example, \texttt{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user ID.
-While the session identifier is assigned at runtime by the kernel, containers' user and group IDs can be overridden with Pod definition's \texttt{runAsUser} and \texttt{runAsGroup} fields, respectively.
+For example, \lstinline{iptables -A OUTPUT -m owner --uid-owner 1000 -j REJECT} would reject all egress packets from containers with the user ID.
+While the session identifier is assigned at runtime by the kernel, containers' user and group IDs can be overridden with Pod definition's \lstinline{runAsUser} and \lstinline{runAsGroup} fields, respectively.
 Thus, any ingress or egress traffic of a container with a unique user identifier can be filtered with IPTables.
 
 Listing~\ref{lst:iptables-bash} shows IPTables rules that can enforce network rules in other scenarios.
@@ -1523,19 +1523,19 @@ The user ID itself is reserved for the proxy, and it is used to avoid re-routing
 eBPF programs were also considered as an option for IPTables.
 Since XDP programs support only ingress rules, they are not a valid option for solving the problem.
 However, a TC program that could distinguish sidecar container traffic from others could be a possible option.
-TC programs manipulate packets by modifying \texttt{struct \_\_sk\_buff} in the user space.
+TC programs manipulate packets by modifying \lstinline{struct \_\_sk\_buff} in the user space.
 The complete C structure is listed as Listing~\ref{lst:sk-buff}.
 
 \lstinputlisting[
-  caption={\texttt{skbuff} struct in Linux v6.3 \cite{linux-kernel-skbuff}},
+  caption={\lstinline{skbuff} struct in Linux v6.3 \cite{linux-kernel-skbuff}},
   label={lst:sk-buff},
   language={C}
 ]{code/skbuff.c}
 
 As can be seen in the example, the structure has no identifiers that are unique for each container.
-A notable attribute in the structure is the \texttt{mark} field, which can be used as an identifier for the packet in the kernel.
+A notable attribute in the structure is the \lstinline{mark} field, which can be used as an identifier for the packet in the kernel.
 It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack.
-If combined with \texttt{iptables} rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \texttt{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering traffic.
+If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \lstinline{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering traffic.
 However, using eBPF brings an extra layer of complexity in comparison to simply using IPtables for traffic filtering.
 Furthermore, eBPF programs do not provide any performance gains for egressing traffic, since the TC hooks execute after the packet has been processed by IPTables.
 
@@ -1546,8 +1546,8 @@ However, the commands require root user permissions with NET\_ADMIN and NET\_RAW
 Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example, by using a controller in an operator pattern.
 The same capabilities are paramount to any CNI plugin controllers that enforce Network Policies using IPTables or eBPF.
 
-For demonstration purposes, a custom container is used and installed with IPTables and \texttt{crictl} CLI.
-The container uses \texttt{crictl} to find the PID of a container in the Pod and uses \texttt{nsenter} to apply the IPTables rules inside the container's network namespace.
+For demonstration purposes, a custom container is used and installed with IPTables and \lstinline{crictl} CLI.
+The container uses \lstinline{crictl} to find the PID of a container in the Pod and uses \lstinline{nsenter} to apply the IPTables rules inside the container's network namespace.
 The Dockerfile is found in Appendix~\ref{app:iptables-injector}, and the DaemonSet is shown in the following Listing~\ref{lst:iptables-injector}.
 
 \lstinputlisting[
@@ -1559,7 +1559,7 @@ The Dockerfile is found in Appendix~\ref{app:iptables-injector}, and the DaemonS
 The script is not a valid controller, as it does not implement a control loop that reacts to Pod creation.
 Instead, it only works when it is executed after the Pod has been created.
 Therefore, it is only useful for demonstrating the concept and should not be used for purposes other than testing.
-Additionally, DaemonSet requires extensive privileges: the \texttt{crictl} that is used to find the PID must be run on a privileged Pod, and the \texttt{nsenter} command needs access to the host PID namespace.
+Additionally, DaemonSet requires extensive privileges: the \lstinline{crictl} that is used to find the PID must be run on a privileged Pod, and the \lstinline{nsenter} command needs access to the host PID namespace.
 
 \subsection{Own network namespace for sidecar}
 
@@ -1600,7 +1600,7 @@ Additionally, DaemonSet requires extensive privileges: the \texttt{crictl} that 
 
 Figure~\ref{fig:multi-pod-net-solution} illustrates the network architecture for the solution in which containers are deployed in different Pods.
 The idea behind this approach is to use Network Policies for filtering traffic between the containers.
-Since containers are not technically sidecars anymore, the solution must recreate communication via the \texttt{localhost} address.
+Since containers are not technically sidecars anymore, the solution must recreate communication via the \lstinline{localhost} address.
 
 Although it is possible to use the default network created by the CNI plugin for sidecar traffic, the proposed solution creates a new isolated network for traffic with Multus.
 The isolation allows the use of a separate IP address pool, which comes in handy when re-creating the communication via localhost.
@@ -1618,8 +1618,8 @@ It is also possible to build new network interfaces for sidecar traffic with Mul
   language={yaml}
 ]{code/attachment.yml}
 
-The setup requires creating \texttt{NetworkAttachmentDefinition} CRD for the network.
-Each Pod that should be part of the network needs a \texttt{k8s.v1.cni.cncf.io/networks} annotation, as seen in Listing~\ref{lst:pod-with-bridge}.
+The setup requires creating \textbf{NetworkAttachmentDefinition} CRD for the network.
+Each Pod that should be part of the network needs a \lstinline{k8s.v1.cni.cncf.io/networks} annotation, as seen in Listing~\ref{lst:pod-with-bridge}.
 
 \lstinputlisting[
   caption={Deployment with Pod connected to the bridge},
@@ -1628,7 +1628,7 @@ Each Pod that should be part of the network needs a \texttt{k8s.v1.cni.cncf.io/n
 ]{code/minimal-deployment.yml}
 
 The common NetworkPolicies are not applied to the Multus network.
-However, the Multus developers have introduced another CRD, \texttt{MultiNetworkPolicy} \cite{multi-network-policy}, which mimics NetworkPolicies but only works for networks created by Multus.
+However, the Multus developers have introduced another CRD, \textbf{MultiNetworkPolicy} \cite{multi-network-policy}, which mimics NetworkPolicies but only works for networks created by Multus.
 The resource is identical to NetworkPolicies, as seen in the Listing~\ref{lst:policies}.
 
 \lstinputlisting[
@@ -1637,17 +1637,17 @@ The resource is identical to NetworkPolicies, as seen in the Listing~\ref{lst:po
   language={yaml}
 ]{code/multi-network-policies.yml}
 
-However, the Multus CNI does not enforce the \texttt{MultiNetworkPolicy} rules in any way.
-The implementation is left for other DaemonSets such as \texttt{multi-networkpolicy-iptables} \cite{multi-network-policy-iptables} and \texttt{multi-networkpolicy-tc} \cite{multi-network-policy-tc}, both of which are created by the Multus team.
+However, the Multus CNI does not enforce the \textbf{MultiNetworkPolicy} rules in any way.
+The implementation is left for other DaemonSets such as \emph{multi-networkpolicy-iptables} \cite{multi-network-policy-iptables} and \emph{multi-networkpolicy-tc} \cite{multi-network-policy-tc}, both of which are created by the Multus team.
 As the names suggest, the DaemonSets implement the enforcement with IPTables and eBPF TC programs, respectively.
-The \texttt{multi-networkpolicy-iptables} is used for the solution, since \texttt{iptables} implements all other network rules for the cluster.
+The \emph{multi-networkpolicy-iptables} is used for the solution, since IPTables implements all other network rules for the cluster.
 
 % TODO: Check the security of this https://github.com/kubernetes/kubernetes/issues/90259
 % https://security.stackexchange.com/questions/137602/what-are-the-security-implications-of-net-ipv4-conf-eth0-route-localnet-1-rout
 
 With these configurations and dependencies, the containers should have a new network and reach each other via the bridge interface.
 As the next step, the solution must find a way to redirect traffic destined for the localhost to the new network.
-The script in Listing~\ref{lst:dnat} shows how to redirect all egressing traffic with IPTables from the source of \texttt{127.0.0.1:8125} to another network interface with an external IP address, like \texttt{192.168.1.202:8125}.
+The script in Listing~\ref{lst:dnat} shows how to redirect all egressing traffic with IPTables from the source of \lstinline{127.0.0.1:8125} to another network interface with an external IP address, like \lstinline{192.168.1.202:8125}.
 By default, the re-routing of local traffic outside the local machine is denied by the kernel.
 To overrule this default behavior, the script sets a kernel flag with \lstinline{net.ipv4.conf.all.route_localnet=1}.
 
@@ -1698,7 +1698,7 @@ The experiments in this section verify that network isolation works correctly in
 As a prerequisite for the experiments, the built-in Pod Security Admission rules should be enabled for the environments.
 To verify this, the first step in the evaluation is to deploy a Pod that is overly permissive into the cluster.
 The Deployment used to test this is shown in Listing~\ref{lst:privileged-container}.
-The definition namespace metadata fields were altered to match the namespace being tested, for example, \texttt{app} in our case.
+The definition namespace metadata fields were altered to match the namespace being tested, for example, \lstinline{app} in our case.
 
 When trying to deploy the Pod to the test cluster, a warning (illustrated in Listing~\ref{lst:psa-warning}) is displayed, which prevents deployment.
 This shows that Pod Security Admissions is functioning properly in the test environment, confirming the prerequisite, and allowing the evaluation to progress to testing network isolation.
@@ -1711,15 +1711,15 @@ This shows that Pod Security Admissions is functioning properly in the test envi
 
 Experiments were conducted for both proposed solutions.
 The first solution, which uses a single network namespace, was tested with both Docker and containerd runtimes.
-However, since \texttt{multi-network-policy-iptables} does not work with Docker, the Multus solution was only evaluated with containerd runtime.
+However, since \emph{multi-network-policy-iptables} does not work with Docker, the Multus solution was only evaluated with containerd runtime.
 
 \subsubsection{Experiment 1: sidecars cannot access main application}
 
 The first experiment tests the main application's network isolation from sidecar threats.
 As none of the sidecars in the system requires access to the main application container, isolation should block all requests from the sidecar containers.
-This can be tested by sending an HTTP request from the attacking or StatsD sidecar to \texttt{localhost:8888} with \texttt{cURL}.
+This can be tested by sending an HTTP request from the attacking or StatsD sidecar to \lstinline{localhost:8888} with \emph{cURL}.
 If isolation is successful, the request will be rejected.
-This can be observed in the IPTables packet filter counters, which can be seen by using the \texttt{iptables -xvn -L} command.
+This can be observed in the IPTables packet filter counters, which can be seen by using the \lstinline{iptables -xvn -L} command.
 
 The first solution successfully rejected packets when it was used with Docker runtime.
 However, when it was used with containerd, the packets were not rejected, even though the IPTables packet filter counters increased.
@@ -1731,7 +1731,7 @@ Since it also implements the policies with IPTables, and containerd was used, th
 \subsubsection{Experiment 2: only main application can access StatsD sidecar}
 
 The second experiment verifies that only the main application is able to send packets to the StatsD sidecar and that any other traffic directed there is blocked.
-To test packet filtering rules, UDP packets are sent from malicious sidecar to \texttt{localhost:8125} with netcat (\texttt{nc -u localhost 8125}).
+To test packet filtering rules, UDP packets are sent from malicious sidecar to \lstinline{localhost:8125} with netcat (\lstinline{nc -u localhost 8125}).
 
 The IPTables rules in the first solution reject the packets since the malicious-sidecar is deployed with a different user ID than the main application.
 Similarly, the IPTables rules generated from MultiNetworkPolicies in the second solution filter the unwanted packets.
@@ -1740,7 +1740,7 @@ Similarly, the IPTables rules generated from MultiNetworkPolicies in the second 
 
 The third experiment verifies that neither of the network solutions interferes with NetworkPolicies applied outside the Pod network.
 The experiment environment uses a basic NetworkPolicy that blocks all outbound traffic and only allows inbound traffic to the main application.
-Policies can be tested by trying to access, for example, \texttt{google.com} or the Kubernetes API server from any container in the Pod.
+Policies can be tested by trying to access, for example, \lstinline{google.com} or the Kubernetes API server from any container in the Pod.
 From outside the Pod, only the main application port should be reachable.
 
 The two solutions both work as anticipated and do not conflict with CNI's Network Policies.
@@ -1772,7 +1772,7 @@ The biggest limitation is that the solutions only function on specific container
 Since the first solution has only been proven to function on the Docker runtime, it logically limits the potential places where it can be used.
 The limitation also raises the question of whether container runtimes should implement network isolation of sidecars.
 Since the runtimes are responsible for creating the loopback device and they appear to have varying implementations of it, it may be impossible to create a tool at the orchestrator level that is not dependent on the runtime.
-Additionally, the documentation of \texttt{multi-network-policy-iptables} used in the second solution explicitly states that it only functions with containerd and CRI-O as runtimes and is not yet released as a stable version.
+Additionally, the documentation of \emph{multi-network-policy-iptables} used in the second solution explicitly states that it only functions with containerd and CRI-O as runtimes and is not yet released as a stable version.
 
 From a security point of view, the primary drawbacks are associated with the IPTables policies and the injector daemon.
 The first solution relies on distinguishing containers based on process user identifiers, which means that the system is only secure if the adversary cannot deploy containers with specific user IDs.
@@ -1811,7 +1811,7 @@ Although existing Kubernetes primitives are capable of adequately managing sidec
 For instance, service mesh sidecars must be running and ready before other containers to ensure that all traffic is routed through the mesh.
 Similarly, if the sidecar terminates before other containers during shutdown, traffic from other applications may be lost.
 Additionally, lifecycle-related issues can impede log and metric gathering sidecars, forcing applications to resort to unconventional workarounds.
-Furthermore, in the event of an OOM error, the sidecar will not restart for jobs with \texttt{restartPolicy: Never}.
+Furthermore, in the event of an OOM error, the sidecar will not restart for jobs with \lstinline{restartPolicy: Never}.
 This can render the application unreachable, as is the case with service meshes since the sidecar is necessary for application networking.
 
 The introduction of sidecar containers as a new type of initContainer has made it easier to initiate and combine initContainers and sidecars in the startup sequence.
@@ -1876,14 +1876,14 @@ From a security standpoint, tried and tested components are always preferable to
 \section{Example webserver deployed with StatsD sidecar} \label{app:node-webapp}
 
 \lstinputlisting[
-  caption={Node.js server (\texttt{index.js})},
+  caption={Node.js server (\lstinline{index.js})},
   language={javascript}
 ]{code/appendix/app/index.js}
 
 \clearpage
 
 \lstinputlisting[
-  caption={\texttt{package.json}},
+  caption={\lstinline{package.json}},
   language={json}
 ]{code/appendix/app/package.json}
 
