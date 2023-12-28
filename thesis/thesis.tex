@@ -1346,14 +1346,13 @@ Therefore, the network modifications must be implemented outside the Pod's conte
     \lstinline{capabilities.add} / \lstinline{drop} & Defines Linux capabilities for the container. & Add \lstinline{NET_BIND_SERVICE} allowed, drop \lstinline{ALL} required \\ \hline
     \lstinline{volumes[*]} & All volume types are not allowed. For example, hostPath, which maps host directories, is not allowed. & \lstinline{configMap}, \lstinline{csi}, \lstinline{downwardAPI}, \lstinline{emptyDir}, \lstinline{ephemeral}, \lstinline{persistentVolumeClaim}, \lstinline{projected}, \lstinline{secret} \\ \hline
     \lstinline{hostPort} & Expose the container via the host's network port. & Must not be defined \\ \hline
-    AppArmor annotation\footnote{\lstinline{container.apparmor.security.beta.kubernetes.io/*}} & Sets the AppArmor profile used by containers.
-    On supported hosts, the \lstinline{runtime/default} AppArmor profile is applied by default. & \lstinline{runtime/default}, \lstinline{localhost/*} \\ \hline
+    AppArmor annotation\footnote{\lstinline{container.apparmor.security.beta.kubernetes.io/*}} & Sets the AppArmor profile used by containers. & \lstinline{runtime/default}, \lstinline{localhost/*} \\ \hline
     \lstinline{seLinuxOptions} & Sets the SELinux context of the container. & Set if supported by the environment. \\ \hline
-    \lstinline{procMount} & The default \lstinline{/proc} masks are set up to reduce the attack surface and should be required. & \lstinline{Default} \\ \hline
+    \lstinline{procMount} & The default \lstinline{/proc} masks are set up to reduce the attack surface. & \lstinline{Default} \\ \hline
     \lstinline{seccompProfile.type} & Sets the Seccomp profile used to sandbox containers. & \lstinline{RuntimeDefault} or \lstinline{Localhost} \\ \hline
-    \lstinline{sysctls[*].name} & Sysctls can disable security mechanisms or affect all containers on a host and should be disallowed except for an allowed "safe" subset. & \lstinline{kernel.shm_rmid_forced}, \lstinline{net.ipv4.ip_local_port_range}, \lstinline{net.ipv4.ip_unprivileged_port_start}, \lstinline{net.ipv4.tcp_syncookies}, \lstinline{net.ipv4.ping_group_range} \\ \hline
-    \lstinline{allowPrivilegeEscalation} & Controls whether the process can gain more privileges than the parent \footnote{Controls the \lstinline{no_new_privs} flag} & \lstinline{false} \\ \hline
-    \lstinline{runAsNonRoot} & Controls whether the container can run as the root user. & \\lstinlinelstinline{true} \\ \hline
+    \lstinline{sysctls[*].name} & Sysctls can disable security mechanisms or affect all containers on a host. &  and All disallowed except for an allowed "safe" subset \footnote{\lstinline{kernel.shm_rmid_forced, net.ipv4.ip_local_port_range, net.ipv4.ip_unprivileged_port_start, net.ipv4.tcp_syncookies, net.ipv4.ping_group_range}} \\ \hline
+    \lstinline{allowPrivilegeEscalation} & Controls whether the process can gain more privileges than the parent. & \lstinline{false} \\ \hline
+    \lstinline{runAsNonRoot} & Controls whether the container can run as the root user. & \lstinline{true} \\ \hline
     \lstinline{runAsUser}, \lstinline{runAsGroup} & Controls the user and group used by the container. & Set both to non-zero to run as non-root. \\ \hline
     \lstinline{windowsOptions.hostProcess} & Runs Windows containers as privileged HostProcess. & \lstinline{false} \\ \hline
   \end{tabularx}
