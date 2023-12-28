@@ -969,16 +969,17 @@ A few possible solutions for building the Zero Trust network inside the Pod are 
 
 \subsection{Environment}
 
-The solution is tested and developed on a Minikube cluster running on a local machine and using Docker as the driver for Nodes.
+The solution is tested and developed on a Minikube v1.32.0 cluster running on a local machine and using Docker as the driver for Nodes.
 The cluster consists of two Nodes, the purpose of which is to deploy control plane components separately from worker ones.
 Furthermore, the setup also allows testing of network between components hosted on different Nodes.
 The complete setup is hosted on GitHub (https://github.com/Arskah/k8s-sidecar-security).
 Both Calico and Cilium are used as CNI plugins since the selection of CNI plugins has minor implications on the actual networking solution. %TODO:
 The implications are discussed in detail in Chapter~\ref{sec:network-solution}.
 
-A simple Node.js webserver with a StatsD sidecar is used as the application workload.
-The source code can be found in Appendix~\ref{app:node-webapp}.
-The webserver serves "Hello world" on port \lstinline{8888} and writes response times to the StatsD sidecar via the loopback device on port \lstinline{8125}, which is the default for StatsD.
+A simple Node.js webserver with a StatsD metrics aggregation sidecar is used as the application workload.
+The source code for the webserver can be found in Appendix~\ref{app:node-webapp}, while a StatsD debugging container called \lstinline{hypnza/statsd_dumpmessages} is downloaded from Dockerhub \cite{statsd-container}.
+The webserver serves "Hello world" on port \lstinline{8888} and sends response times and other metrics as UDP messages to the StatsD sidecar on default port \lstinline{localhost:8125}.
+The sidecar prints incoming stats verbosely to stdout.
 
 For penetration testing purposes, another sidecar is introduced with common networking and Kubernetes command line tools.
 When deployed instead of the StatsD client, this sidecar can be used to simulate situations where the attacker has managed to get access to the shell inside the sidecar.
