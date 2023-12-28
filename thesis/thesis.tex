@@ -1278,7 +1278,7 @@ Based on the model, the solution should provide answers to these main questions:
   \item How to enforce Zero Trust network that allows traffic filtering on container-level and limits communication on both loopback and Pod network interface devices?
 \end{enumerate}
 
-As for the first question, existing mitigations were already found while threat modeling.
+As for the first question, existing mitigations were already listed in Table~\ref{table:threat-model} while threat modeling.
 A solution in which all mitigations are applied is introduced in Chapter~\ref{sec:pod-hardening}.
 For the second question on building the Zero Trust network, the Pod must be firewalled for both inter-Pod communications on the Pod network NIC and intra-Pod communications on the loopback NIC.
 However, Kubernetes does not provide any built-in solution for creating these firewalls.
