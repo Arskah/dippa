@@ -1398,7 +1398,7 @@ With this approach, the account tokens are only mounted into containers that act
 
 Kubernetes' Admission controller is the go-to tool for preventing undesired configurations from entering the cluster.
 Unfortunately, the existing built-in hooks do not provide the option to enforce resource limits or manual Service Account mounting.
-As there is no existing community solution, a custom-made ValidatingAdmissionWebhook should be created.
+As there is no existing community solution, a custom-made ValidatingAdmissionWebhook needs to be created.
 
 The GitHub development setup includes an example admission controller based on Slack's \emph{simple-kubernetes-webhook} \cite{simple-kubernetes-webhook}.
 A template is supplemented with a custom validation function, \emph{resource-validator}, which is shown in Listing~\ref{lst:resource-validator}.
@@ -1522,7 +1522,7 @@ The user ID itself is reserved for the proxy, and it is used to avoid re-routing
 
 eBPF programs were also considered as an option for IPTables.
 Since XDP programs support only ingress rules, they are not a valid option for solving the problem.
-However, a TC program that could distinguish sidecar container traffic from others could be a possible option.
+However, a traffic control (TC) program that could distinguish sidecar container traffic from others could be a possible option.
 TC programs manipulate packets by modifying \lstinline{struct __sk_buff} in the user space.
 The complete C structure is listed as Listing~\ref{lst:sk-buff}.
 
@@ -1535,9 +1535,11 @@ The complete C structure is listed as Listing~\ref{lst:sk-buff}.
 As can be seen in the example, the structure has no identifiers that are unique for each container.
 A notable attribute in the structure is the \lstinline{mark} field, which can be used as an identifier for the packet in the kernel.
 It does not propagate with the packet, which means that marking can only be used for traffic filtering before the packet leaves the network stack.
-If combined with IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \lstinline{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering traffic.
+When combined with an IPTables rule that uniquely marks the packets egressing from the sidecar, for example by setting the mark as 2 \lstinline{iptables -t mangle -A PREROUTING -m owner --uid-owner 1000 -j MARK --set-mark 2}, a TC eBPF program could be used for filtering traffic.
+
 However, using eBPF brings an extra layer of complexity in comparison to simply using IPtables for traffic filtering.
 Furthermore, eBPF programs do not provide any performance gains for egressing traffic, since the TC hooks execute after the packet has been processed by IPTables.
+Due to the above reasons, the solution only relies on IPTables rules for packet filtering.
 
 \subsubsection{Deployment} \label{sec:network-solution:deployment}
 
@@ -1598,12 +1600,12 @@ Additionally, DaemonSet requires extensive privileges: the \lstinline{crictl} th
   \label{fig:multi-pod-net-solution}
 \end{figure}
 
-Figure~\ref{fig:multi-pod-net-solution} illustrates the network architecture for the solution in which containers are deployed in different Pods.
-The idea behind this approach is to use Network Policies for filtering traffic between the containers.
-Since containers are not technically sidecars anymore, the solution must recreate communication via the \lstinline{localhost} address.
+The network architecture for the solution, where containers are deployed in separate Pods, is shown in Figure~\ref{fig:multi-pod-net-solution}.
+The idea behind this approach is to utilize custom resources to regulate traffic between the containers, similar to Network Policies.
+As containers are no longer considered sidecars, the solution must establish communication using the \lstinline{localhost} address.
 
 Although it is possible to use the default network created by the CNI plugin for sidecar traffic, the proposed solution creates a new isolated network for traffic with Multus.
-The isolation allows the use of a separate IP address pool, which comes in handy when re-creating the communication via localhost.
+The isolation allows the use of a separate IP address pool for the traffic, simplifying the re-implementation of loopback communication with a straightforward redirection rule.
 
 \subsubsection{Creating an isolated network for sidecar traffic}
 
@@ -1640,7 +1642,7 @@ The resource is identical to NetworkPolicies, as seen in the Listing~\ref{lst:po
 However, the Multus CNI does not enforce the \textbf{MultiNetworkPolicy} rules in any way.
 The implementation is left for other DaemonSets such as \emph{multi-networkpolicy-iptables} \cite{multi-network-policy-iptables} and \emph{multi-networkpolicy-tc} \cite{multi-network-policy-tc}, both of which are created by the Multus team.
 As the names suggest, the DaemonSets implement the enforcement with IPTables and eBPF TC programs, respectively.
-The \emph{multi-networkpolicy-iptables} is used for the solution, since IPTables implements all other network rules for the cluster.
+The \emph{multi-networkpolicy-iptables} is used for the solution since IPTables implements all other network rules for the cluster.
 
 % TODO: Check the security of this https://github.com/kubernetes/kubernetes/issues/90259
 % https://security.stackexchange.com/questions/137602/what-are-the-security-implications-of-net-ipv4-conf-eth0-route-localnet-1-rout
@@ -1668,7 +1670,8 @@ MutatingAdmissionWebhooks can be used to modify the Pod \emph{CREATE} and \emph{
 However, MutatingAdmissionWebhooks are designed only to operate on the resources sent to them.
 Kubernetes documentation states that any webhook that makes out-of-band changes or has any other side effects should be accompanied by a controller that periodically determines the actual state of the cluster \cite{k8s-docs-dac}.
 
-A custom controller watching for a specific sidecar annotation could also implement co-scheduling; however, the controller must somehow keep track of which Pod the sidecars are assigned to in order to manage the clean-up process when the Pod is deleted.
+A custom controller watching for a specific sidecar annotation could also implement co-scheduling; however, the controller must somehow keep track of which Pod the sidecars are assigned to.
+With the information, the controller could react to Pod lifecycle events, and fully support scaling, restarting and cleanup of sidecar containers.
 Because of the complexity and the amount of work required to implement co-scheduling, this feature has been left out of the solution and is something to consider in the future.
 
 \clearpage
@@ -1678,7 +1681,7 @@ Because of the complexity and the amount of work required to implement co-schedu
 This chapter demonstrates with experiments that the solutions presented in Chapters \ref{sec:pod-hardening} and \ref{sec:network-solution} effectively isolate containers within the same Pod from one another.
 The evaluation not only verifies that the solutions meet the requirements but also examines their potential and any weaknesses that can be improved.
 
-The experiments in the first section involve assessing security admission by deploying privileged Pods to the cluster, as well as enforcing network isolation by generating intra-Pod and inter-Pod HTTP traffic with client tools such as cURL, wget, kubectl and netcat.
+The experiments in the first section involve assessing security admission by deploying privileged Pods to the cluster, as well as enforcing network isolation by generating intra-Pod and inter-Pod HTTP traffic with client tools such as \lstinline{curl}, \lstinline{wget}, \lstinline{kubectl} and \lstinline{netcat}.
 The \emph{malicious-sidecar} container (outlined in Appendix \ref{app:malicious-sidecar}) is added to the application containers as an extra sidecar and serves as an entry point for attacks in the experiments.
 The container has all the necessary tools installed.
 
@@ -1730,7 +1733,7 @@ Since it also implements the policies with IPTables, and containerd was used, th
 
 \subsubsection{Experiment 2: only main application can access StatsD sidecar}
 
-The second experiment verifies that only the main application is able to send packets to the StatsD sidecar and that any other traffic directed there is blocked.
+The second experiment verifies that only the main application can send packets to the StatsD sidecar and that any other traffic directed there is blocked.
 To test packet filtering rules, UDP packets are sent from malicious sidecar to \lstinline{localhost:8125} with netcat (\lstinline{nc -u localhost 8125}).
 
 The IPTables rules in the first solution reject the packets since the malicious-sidecar is deployed with a different user ID than the main application.
