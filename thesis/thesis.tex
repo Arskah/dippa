@@ -238,12 +238,12 @@
 \expandafter{\language@yaml}
 {
   % assuming a key comes first
-  basicstyle=\YAMLkeystyle,
+  basicstyle=\YAMLkeystyle\ttfamily,
   sensitive=false,
   comment=[l]{\#},
   morecomment=[s]{/*}{*/},
-  commentstyle=\color{codegreen}\ttfamily,
-  stringstyle=\YAMLvaluestyle\ttfamily,
+  commentstyle=\color{codegreen},
+  stringstyle=\YAMLvaluestyle,
   moredelim=[l][\color{orange}]{\&},
   moredelim=[l][\color{orange}]{*},
   % switch to value style at :
