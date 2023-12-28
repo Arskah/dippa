@@ -760,7 +760,7 @@ To combat this container breakout, several security mechanisms are adopted from 
 The mechanisms include Discretionary Access Control (DAC) mechanisms like Capability \cite{manpages-capabilities} and Secure computing mode (Seccomp) \cite{manpages-seccomp}, and Mandatory Access Control (MAC) mechanisms such as Security-Enhanced Linux (SELinux) and AppArmor \cite{apparmor}.
 With Capability, the superuser (i.e. the root user) privilege is divided into distinct units, each of which represents permission to process some specific kernel resources.
 The feature turns the binary "root/non-root" security mechanism into a fine-grained access control system, which makes it easier to follow the principle of least privilege.
-For example, processes like web servers that simply need to bind on an Internet domain privileged port (numbers below 1024) do not need to run as root; they can be granted with \lstinline{CAP\_NET\_BIND\_SERVICE} capability instead \cite{docker-security}.
+For example, processes like web servers that simply need to bind on an Internet domain privileged port (numbers below 1024) do not need to run as root; they can be granted with \lstinline{CAP_NET_BIND_SERVICE} capability instead \cite{docker-security}.
 The Seccomp mechanism constrains which system calls a process can invoke.
 The available system calls are defined for a container through the Seccomp profile which is defined as a JSON file.
 The default Docker Seccomp profile \cite{docker-default-seccomp} includes more than 300 system calls.
@@ -1024,7 +1024,7 @@ In this thesis, we focus on three different CNI plugins: Calico, Cilium, and Mul
 Calico \cite{calico} is an open-source CNI plugin with a modular architecture that supports a wide range of deployment options.
 Each Pod created in the Calico network receives one end of a virtual ethernet device link as its default \emph{eth0} network interface, while the other end is left dangling on the host Node \cite{calico-tkng}.
 The Pod end of the link receives an IP address from Pod CIDR, but the Node end does not.
-Instead, a \lstinline{proxy\_arp} flag is set on the host side of the interface, while containers have a route to link-local address \lstinline{169.254.1.1}, thus making the host behave like a gateway router.
+Instead, a \lstinline{proxy_arp} flag is set on the host side of the interface, while containers have a route to link-local address \lstinline{169.254.1.1}, thus making the host behave like a gateway router.
 For routing packets between Nodes, Calico creates a VXLAN overlay network.
 Optionally, Calico supports IP-in-IP overlay or non-overlay network with BGP protocol.
 
@@ -1124,7 +1124,7 @@ Similarly to the kernel community, the term BPF always refers to the eBPF in thi
 
 The eBPF programs are compiled to bytecode and loaded into the kernel with \lstinline{bpf()} system call \cite{miano2021framework}.
 Most often, programs are written in restricted C and compiled with the LLVM Clang compiler to bytecode.
-It is also possible to use the eBPF assembly instructions and \lstinline{bpf\_asm} utility for converting instructions to bytecode.
+It is also possible to use the eBPF assembly instructions and \lstinline{bpf_asm} utility for converting instructions to bytecode.
 eBPF programs follow an event-driven architecture: a loaded eBPF program is hooked to a particular type of event and each occurrence of the event triggers the program execution.
 
 There are two different network event interfaces in eBPF: eXpress Data Path (XDP) and Traffic Control (TC) \cite{miano2021framework}.
@@ -1138,16 +1138,16 @@ If the driver does not support XDP, generic XDP is used and the programs run aft
 XDP programs can read and modify the contents of packets \cite{vieira2020fast}.
 Since the packets are not parsed into the network stack, the programs have to work with raw packets and implement their own parsing functionality.
 The program's return value determines how the packet should be processed further.
-With \lstinline{XDP\_DROP} and \lstinline{XDP\_PASS} return values, the packet can be dropped or passed further to the networking stack, respectively.
-The packet can also be bounced back to the same NIC on which it arrived with \lstinline{XDP\_TX}, usually after modifying the contents of the packet.
-\lstinline{XDP\_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
+With \lstinline{XDP_DROP} and \lstinline{XDP_PASS} return values, the packet can be dropped or passed further to the networking stack, respectively.
+The packet can also be bounced back to the same NIC on which it arrived with \lstinline{XDP_TX}, usually after modifying the contents of the packet.
+\lstinline{XDP_REDIRECT} is used for redirecting the packet to a different NIC, CPU or even to another socket.
 
 TC programs are executed when both incoming and outgoing packets reach the kernel traffic control function within the Linux network stack \cite{vieira2020fast}.
 The ingress hook runs after the packet is parsed to \emph{skbuff} but before most of the network stack.
 On egress the stack is traversed in reverse; thus, the hook executes after most of the network stack.
 TC programs can read and write directly to a packet in memory.
 Similarly to XDP programs, the return value of the program determines the further processing of the packet.
-The packet can be passed further in the stack with \lstinline{TC\_ACT\_OK}, dropped with \lstinline{TC\_ACT\_SHOT}, or the modified packet can be redirected back to the start of the classification with \lstinline{TC\_ACT\_RECLASSIFY}, among others.
+The packet can be passed further in the stack with \lstinline{TC_ACT_OK}, dropped with \lstinline{TC_ACT_SHOT}, or the modified packet can be redirected back to the start of the classification with \lstinline{TC_ACT_RECLASSIFY}, among others.
 % \jb{Do we need this level of detail to understand your solution?}
 
 \clearpage
@@ -1326,7 +1326,7 @@ The Security Standard can be easily enforced by adding \lstinline{pod-security.k
 Table~\ref{table:pod-hardening} illustrates the fields that the restricted security standard affects.
 From the table, it can be noted that the standard already blocks 2 out of the 4 identified threats: the deployment of privileged containers and host directory mounts.
 However, it should be noted that the standard restricts the networking solution discussed in the following chapter.
-Since the security standard only allows for the \lstinline{NET\_BIND\_SERVICE} capability, any Pod attempting to modify the network stack will not work.
+Since the security standard only allows for the \lstinline{NET_BIND_SERVICE} capability, any Pod attempting to modify the network stack will not work.
 Therefore, the network modifications must be implemented outside the Pod's context, which is discussed in greater detail in Section \ref{sec:network-solution:deployment}.
 
 \begin{table}[H]
@@ -1342,16 +1342,16 @@ Therefore, the network modifications must be implemented outside the Pod's conte
     \textbf{Field name} & \textbf{Usage} & \textbf{Allowed values}\\ \hline
     \lstinline{hostPID}, \lstinline{hostIPC}, \lstinline{hostNetwork} & Controls whether the container uses the host's PID, IPC and network namespace. & \lstinline{false} \\ \hline
     \lstinline{privileged} & Controls whether Pod can run privileged containers. & \lstinline{false} \\ \hline
-    \lstinline{capabilities.add} / \lstinline{drop} & Defines Linux capabilities for the container. & Add NET\_BIND\_SERVICE allowed, drop ALL required \\ \hline
+    \lstinline{capabilities.add} / \lstinline{drop} & Defines Linux capabilities for the container. & Add \lstinline{NET_BIND_SERVICE} allowed, drop \lstinline{ALL} required \\ \hline
     \lstinline{volumes[*]} & All volume types are not allowed. For example, hostPath, which maps host directories, is not allowed. & \lstinline{configMap}, \lstinline{csi}, \lstinline{downwardAPI}, \lstinline{emptyDir}, \lstinline{ephemeral}, \lstinline{persistentVolumeClaim}, \lstinline{projected}, \lstinline{secret} \\ \hline
     \lstinline{hostPort} & Expose the container via the host's network port. & Must not be defined \\ \hline
     AppArmor annotation\footnote{\lstinline{container.apparmor.security.beta.kubernetes.io/*}} & Sets the AppArmor profile used by containers.
     On supported hosts, the \lstinline{runtime/default} AppArmor profile is applied by default. & \lstinline{runtime/default}, \lstinline{localhost/*} \\ \hline
     \lstinline{seLinuxOptions} & Sets the SELinux context of the container. & Set if supported by the environment. \\ \hline
-    \lstinline{procMount} & The default /proc masks are set up to reduce the attack surface and should be required. & \lstinline{Default} \\ \hline
+    \lstinline{procMount} & The default \lstinline{/proc} masks are set up to reduce the attack surface and should be required. & \lstinline{Default} \\ \hline
     \lstinline{seccompProfile.type} & Sets the Seccomp profile used to sandbox containers. & \lstinline{RuntimeDefault} or \lstinline{Localhost} \\ \hline
-    \lstinline{sysctls[*].name} & Sysctls can disable security mechanisms or affect all containers on a host, and should be disallowed except for an allowed "safe" subset. & \lstinline{kernel.shm\_rmid\_forced}, \lstinline{net.ipv4.ip\_local\_port\_range}, \lstinline{net.ipv4.ip\_unprivileged\_port\_start}, \lstinline{net.ipv4.tcp\_syncookies}, \lstinline{net.ipv4.ping\_group\_range} \\ \hline
-    \lstinline{allowPrivilegeEscalation} & Controls whether the process can gain more privileges than the parent \footnote{Controls the \lstinline{no\_new\_privs} flag} & \lstinline{false} \\ \hline
+    \lstinline{sysctls[*].name} & Sysctls can disable security mechanisms or affect all containers on a host and should be disallowed except for an allowed "safe" subset. & \lstinline{kernel.shm_rmid_forced}, \lstinline{net.ipv4.ip_local_port_range}, \lstinline{net.ipv4.ip_unprivileged_port_start}, \lstinline{net.ipv4.tcp_syncookies}, \lstinline{net.ipv4.ping_group_range} \\ \hline
+    \lstinline{allowPrivilegeEscalation} & Controls whether the process can gain more privileges than the parent \footnote{Controls the \lstinline{no_new_privs} flag} & \lstinline{false} \\ \hline
     \lstinline{runAsNonRoot} & Controls whether the container can run as the root user. & \\lstinlinelstinline{true} \\ \hline
     \lstinline{runAsUser}, \lstinline{runAsGroup} & Controls the user and group used by the container. & Set both to non-zero to run as non-root. \\ \hline
     \lstinline{windowsOptions.hostProcess} & Runs Windows containers as privileged HostProcess. & \lstinline{false} \\ \hline
@@ -1523,7 +1523,7 @@ The user ID itself is reserved for the proxy, and it is used to avoid re-routing
 eBPF programs were also considered as an option for IPTables.
 Since XDP programs support only ingress rules, they are not a valid option for solving the problem.
 However, a TC program that could distinguish sidecar container traffic from others could be a possible option.
-TC programs manipulate packets by modifying \lstinline{struct \_\_sk\_buff} in the user space.
+TC programs manipulate packets by modifying \lstinline{struct __sk_buff} in the user space.
 The complete C structure is listed as Listing~\ref{lst:sk-buff}.
 
 \lstinputlisting[
@@ -1542,7 +1542,7 @@ Furthermore, eBPF programs do not provide any performance gains for egressing tr
 \subsubsection{Deployment} \label{sec:network-solution:deployment}
 
 The commands for creating the IPTables rules could be applied to the Pod with an initContainer or postStart lifecycle handler.
-However, the commands require root user permissions with NET\_ADMIN and NET\_RAW capabilities and would require changing Pod's security admission level to privileged.
+However, the commands require root user permissions with \lstinline{NET_ADMIN} and \lstinline{NET_RAW} capabilities and would require changing Pod's security admission level to privileged.
 Thus, it is more optimal to apply the rules outside the Pod context and Namespace; for example, by using a controller in an operator pattern.
 The same capabilities are paramount to any CNI plugin controllers that enforce Network Policies using IPTables or eBPF.
 
