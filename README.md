@@ -1,8 +1,10 @@
 # Master's thesis written with TeX
 
-Based on <https://wiki.aalto.fi/display/Aaltothesis/Aalto+Thesis+LaTeX+Template>
+Based on <https://wiki.aalto.fi/display/Aaltothesis/Aalto+Thesis+LaTeX+Template> [29.12.2023]
 
-[aaltologo.sty](https://github.com/Arskah/dippa/blob/main/aaltologo.sty) updated from <https://version.aalto.fi/gitlab/latex/aaltologo> [29.1.2023]
+[aaltologo.sty](https://github.com/Arskah/dippa/blob/main/aaltologo.sty) updated from <https://version.aalto.fi/gitlab/latex/aaltologo> [29.12.2023]
+
+Repository for experiments: <https://github.com/Arskah/k8s-sidecar-security>
 
 ## Setup
 
