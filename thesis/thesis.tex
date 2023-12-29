@@ -974,8 +974,10 @@ The solution is tested and developed on a Minikube v1.32.0 cluster running on a 
 The cluster consists of two Nodes, the purpose of which is to deploy control plane components separately from worker ones.
 Furthermore, the setup also allows testing of network between components hosted on different Nodes.
 The complete setup is hosted on GitHub (https://github.com/Arskah/k8s-sidecar-security).
-Both Calico and Cilium are used as CNI plugins since the selection of CNI plugins has minor implications on the actual networking solution. %TODO:
-The implications are discussed in detail in Chapter~\ref{sec:network-solution}.
+
+Both Calico and Cilium were tested and considered as CNI plugins.
+Neither CNI had implications on the behavior of networking solutions.
+However, Cilium was selected on the basis that it does not use IPTables, and thus offered a less noisy debugging experience compared to Calico.
 
 A simple Node.js webserver with a StatsD metrics aggregation sidecar is used as the application workload.
 The source code for the webserver can be found in Appendix~\ref{app:node-webapp}, while a StatsD debugging container called \lstinline{hypnza/statsd_dumpmessages} is downloaded from Dockerhub \cite{statsd-container}.
