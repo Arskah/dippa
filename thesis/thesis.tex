@@ -206,7 +206,7 @@
 
 \keywords{Kubernetes, Container, Sidecar pattern, Network Security}
 
-\begin{abstractpage}[english]
+\thesisabstract{
   The widespread adoption of containers has been a driving force behind the shift from monolithic applications to microservices.
   The modular nature of microservice architecture has allowed the development of distributed system design patterns such as the sidecar pattern, in which peripheral tasks are separated from the application containers as their own distinct containers.
   The sidecar pattern is often used to implement observability, logging, and improving security with service meshes.
@@ -222,6 +222,10 @@
   Due to the challenges, the thesis explores the merits of sidecarless service mesh architectures such as Cilium and Istio Ambient Mesh, as an example of avoiding the risks with sidecars altogether.
 
   Ultimately, while the thesis presents viable proof-of-concept solutions for network isolation between application and sidecar containers, it advocates for a cautious approach, emphasizing the preference for established and well-tested components over custom-made implementations that need to be actively maintained.
+}
+
+\begin{abstractpage}[english]
+  \abstracttext{}
 \end{abstractpage}
 
 %% Force a new page so that the possible Finnish or Swedish abstract does not begin on the same page
@@ -319,9 +323,10 @@ Helsinki, 29 December 2023 \\
 
 \cleardoublepage
 
-\thispagestyle{empty}
-
 \section{Introduction} \label{sec:intro}
+
+%% Leave the page number of the first page empty
+\thispagestyle{empty}
 
 During the last decade, the IT industry has moved away from monolithic software applications and towards microservices.
 The microservice architecture divides an application into a set of smaller, independent services that each handle a part of the business logic \cite{fowler2014microservices}.

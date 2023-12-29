@@ -60,7 +60,7 @@
 %%
 %%
 \NeedsTeXFormat{LaTeX2e}%
-\ProvidesClass{aaltothesis}[2023-02-09 Aalto University thesis class v4.00]%
+\ProvidesClass{aaltothesis}[2023-09-21 Aalto University thesis class v4.01]%
 \RequirePackage{etoolbox}% Defines boolean/toggle variables, ifs, AtEndPreamble..
 %
 % Language options for user
@@ -413,13 +413,13 @@
 %
     \renewcommand{\coverdegprogramname}{%
     \iftoggle{BSc}{%
-     Bachelor's programme in \d@gpr@g%
+     Bachelor's Programme in \d@gpr@g%
     }{%
     \iftoggle{MSc}{%
-    Master's programme in \d@gpr@g%
+    Master's Programme in \d@gpr@g%
      }{%
      \iftoggle{Lic}{%
-    Licentiate programme in \d@gpr@g%
+    Licentiate Programme in \d@gpr@g%
     }{}}}%
   }%
   \renewcommand{\coverdegreename}{
@@ -481,13 +481,13 @@
 %
   \renewcommand{\coverdegprogramname}{%
     \iftoggle{BSc}{%
-    Kandidaatin \d@gpr@g{} koulutusohjelma%
+    \d@gpr@g{} kandidaattiohjelma%
     }{%
     \iftoggle{MSc}{%
-    Maisterin \d@gpr@g{} koulutusohjelma%
+    \d@gpr@g{} maisteriohjelma%
     }{%
     \iftoggle{Lic}{%
-    Lisenssiatin \d@gpr@g{} koulutusohjelma%
+    \d@gpr@g{} lisenssiatiohjelma%
     }{}}}%
   }%
   \renewcommand{\coverdegreename}{
