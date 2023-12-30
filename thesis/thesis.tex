@@ -245,7 +245,7 @@
   Työ keskittyy Kuberneteksen verkkototeutukseen ja nollaluottamuksen tietoturva-arkkitehtuuriin ja tutkii sivuvaunukontteihin liittyviä tietoturvariskejä, joita hyökkääjät voisivat hyödyntää.
   Kubernetes tarjoaa valmiita tietoturvaominaisuuksia vain Pod-abstraktiotasolla, mikä altistaa sivuvaunukontteja hyökkäyksille.
 
-  Työssä esotellään kaksi alustavaa ratkaisua, joiden avulla voidaan eristää sovellus- ja sivuvaunukonttien verkot toisistaan.
+  Työssä esitellään kaksi alustavaa ratkaisua, joiden avulla voidaan eristää sovellus- ja sivuvaunukonttien verkot toisistaan.
   Ensimmäinen ratkaisu perustuu IPTables-sääntöhin, kun taas toinen luo Multus-konttiverkkoliitännäisen avulla sivuvaunumallia imitoivan verkon kahden eristetyn kontin välille.
 
   Molemmat toteutukset ratkaisevat ongelman, mutta niiden monimutkaisuus ja tarve erikoistuneelle intrastruktuurille voi merkittävästi hankaloittaa ratkaisujen käyttöönottoa ja hyödyllisyyttä tuotantoympäristöissä.
